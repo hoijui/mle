@@ -87,10 +87,12 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
 }
 
 async fn absolute_target_path(source: &str, target: &PathBuf) -> PathBuf {
+    lazy_static! {
+        static ref ROOT: PathBuf = PathBuf::from(&format!("{}", MAIN_SEPARATOR));
+    }
     if target.is_relative() {
         let abs_source = canonicalize(source).await.expect(&format!("Path '{}' does not exist.", source));
-        let root = format!("{}", MAIN_SEPARATOR);
-        let parent = abs_source.parent().unwrap_or_else(|| Path::new(&root));
+        let parent = abs_source.parent().unwrap_or(&ROOT);
         let new_target = match target.strip_prefix(format!(".{}", MAIN_SEPARATOR)) {
             Ok(t) => t,
             Err(_) => target,
