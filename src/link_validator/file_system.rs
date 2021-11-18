@@ -8,7 +8,7 @@ use walkdir::WalkDir;
 
 pub async fn check_filesystem(target: &str, config: &Config) -> LinkCheckResult {
     let target = Path::new(target);
-    debug!("Absolute target path {:?}", target);
+    debug!("Absolute target path: '{:?}'", target);
     if target.exists().await {
         return LinkCheckResult::Ok;
     } else if !config.match_file_extension && target.extension().is_none() {
@@ -67,13 +67,13 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
         match canonicalize(&config.root_dir.as_ref().unwrap()).await {
             Ok(new_root) => fs_link_target = new_root.join(Path::new(&normalized_link[1..])),
             Err(e) => panic!(
-                "Root path could not be converted to an absolute path. Does the directory exit? {}",
+                "Root path could not be converted to an absolute path. Does the directory exit? '{}'",
                 e
             ),
         }
     }
 
-    debug!("Check file system link target {:?}", target);
+    debug!("Checking file system link target '{:?}' ...", target);
     let abs_path = absolute_target_path(source, &fs_link_target)
         .await
         .to_str()
