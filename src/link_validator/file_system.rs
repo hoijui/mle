@@ -77,7 +77,7 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
     let abs_path = absolute_target_path(source, &fs_link_target)
         .await
         .to_str()
-        .expect("Could not resolve target path")
+        .unwrap_or_else(|| panic!("Could not resolve target path '{}' ", target))
         .to_string();
     // Remove verbatim path identifier which causes trouble on windows when using ../../ in paths
     abs_path
@@ -91,7 +91,9 @@ async fn absolute_target_path(source: &str, target: &PathBuf) -> PathBuf {
         static ref ROOT: PathBuf = PathBuf::from(&format!("{}", MAIN_SEPARATOR));
     }
     if target.is_relative() {
-        let abs_source = canonicalize(source).await.expect(&format!("Path '{}' does not exist.", source));
+        let abs_source = canonicalize(source)
+            .await
+            .unwrap_or_else(|_| panic!("Path '{}' does not exist.", source));
         let parent = abs_source.parent().unwrap_or(&ROOT);
         let new_target = match target.strip_prefix(format!(".{}", MAIN_SEPARATOR)) {
             Ok(t) => t,
