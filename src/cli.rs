@@ -15,33 +15,33 @@ pub fn parse_args() -> Config {
             Arg::with_name("directory")
                 .help("Check all links in given directory and subdirectory")
                 .required(false)
-                .index(1),
+                .index(1)
         )
         .arg(
             Arg::with_name("debug")
                 .long("debug")
                 .short("d")
                 .help("Print debug information to console")
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("no_web_links")
                 .long("no-web-links")
                 .help("Do not check web links")
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("match-file-extension")
                 .long("match-file-extension")
                 .help("Do check for the exact file extension when searching for a file")
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("ignore_path")
                 .long("ignore-path")
                 .help("List of files and directories which will not be checked")
                 .min_values(1)
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("ignore_links")
@@ -49,7 +49,7 @@ pub fn parse_args() -> Config {
                 .short("i")
                 .help("List of links which will not be checked")
                 .min_values(1)
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("markup_types")
@@ -58,14 +58,14 @@ pub fn parse_args() -> Config {
                 .help("List of markup types which shall be checked")
                 .min_values(1)
                 .possible_values(&["md", "html"])
-                .required(false),
+                .required(false)
         )
         .arg(
             Arg::with_name("throttle")
                 .long("throttle")
                 .help("Wait between http request to the same host for a defined number of milliseconds")
                 .required(false)
-                .takes_value(true),
+                .takes_value(true)
         )
         .arg(
             Arg::with_name("root_dir")
@@ -73,7 +73,7 @@ pub fn parse_args() -> Config {
                 .takes_value(true)
                 .short("r")
                 .help("Path to the root folder used to resolve all relative paths")
-                .required(false),
+                .required(false)
         )
         .version(crate_version!())
         .author(crate_authors!())
