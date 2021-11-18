@@ -13,7 +13,7 @@ pub fn parse_args() -> Config {
     let matches = App::new(crate_name!())
         .arg(
             Arg::with_name("directory")
-                .help("Check all links in given directory and subdirectory")
+                .help("Check all links in given directory and subdirectories")
                 .required(false)
                 .index(1)
         )
@@ -38,7 +38,7 @@ pub fn parse_args() -> Config {
         )
         .arg(
             Arg::with_name("ignore_path")
-                .long("ignore-path")
+                .long("ignore-paths")
                 .help("List of files and directories which will not be checked; space separated")
                 .long_help("One or more files or directories which will not be checked, separated by white-space.")
                 .min_values(1)
