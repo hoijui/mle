@@ -44,6 +44,7 @@ pub fn parse_args() -> Config {
                 .min_values(1)
                 .required(false)
                 .empty_values(false)
+                .value_name("PATH")
         )
         .arg(
             Arg::with_name("ignore_links")
@@ -54,6 +55,7 @@ pub fn parse_args() -> Config {
                 .min_values(1)
                 .required(false)
                 .empty_values(false)
+                .value_name("GLOB")
         )
         .arg(
             Arg::with_name("markup_types")
