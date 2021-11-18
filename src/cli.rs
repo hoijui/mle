@@ -1,3 +1,4 @@
+use crate::ignore_path;
 use crate::ignore_path::IgnorePath;
 use crate::logger;
 use crate::markup::MarkupType;
@@ -45,6 +46,7 @@ pub fn parse_args() -> Config {
                 .required(false)
                 .empty_values(false)
                 .value_name("PATH")
+                .validator(ignore_path::is_valid_string)
         )
         .arg(
             Arg::with_name("ignore_links")
