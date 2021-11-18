@@ -73,13 +73,10 @@ pub async fn resolve_target_link(
 pub async fn check(link_target: &str, link_type: &LinkType, config: &Config) -> LinkCheckResult {
     info!("Check link {}.", &link_target);
     match link_type {
-        LinkType::Ftp => LinkCheckResult::NotImplemented(format!(
-            "Link type '{:?}' is not supported yet...",
-            &link_target
+        LinkType::Ftp | LinkType::UnknownUrlSchema => LinkCheckResult::NotImplemented(format!(
+            "Checking of link type '{:?}' is not implemented (yet).",
+            &link_type
         )),
-        LinkType::UnknownUrlSchema => LinkCheckResult::NotImplemented(
-            "Link type is not implemented yet and cannot be checked.".to_string(),
-        ),
         LinkType::Mail => check_mail(link_target),
         LinkType::Http => {
             if config.no_web_links {
