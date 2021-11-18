@@ -8,6 +8,8 @@ use crate::link_extractors::link_extractor::MarkupLink;
 use crate::link_validator::file_system::check_filesystem;
 use crate::link_validator::http::check_http;
 use crate::Config;
+use colored::ColoredString;
+use colored::Colorize;
 use mail::check_mail;
 
 pub use link_type::get_link_type;
@@ -20,6 +22,40 @@ pub enum LinkCheckResult {
     Warning(String),
     Ignored(String),
     NotImplemented(String),
+}
+
+impl LinkCheckResult {
+    #[must_use]
+    pub fn msg(&self) -> &'_ str {
+        match self {
+            Self::Ok => "",
+            Self::Failed(msg)
+            | Self::Warning(msg)
+            | Self::Ignored(msg)
+            | Self::NotImplemented(msg) => msg,
+        }
+    }
+
+    #[must_use]
+    pub fn status_code(&self) -> &'static ColoredString {
+        lazy_static! {
+            static ref CODE_OK: ColoredString = "OK".green();
+            static ref CODE_WARN: ColoredString = "Warn".yellow();
+            static ref CODE_SKIP: ColoredString = "Skip".green();
+            static ref CODE_ERR: ColoredString = "Err".red();
+        }
+        match self {
+            LinkCheckResult::Ok => &CODE_OK,
+            LinkCheckResult::NotImplemented(_) | LinkCheckResult::Warning(_) => &CODE_WARN,
+            LinkCheckResult::Ignored(_) => &CODE_SKIP,
+            LinkCheckResult::Failed(_) => &CODE_ERR,
+        }
+    }
+
+    #[must_use]
+    pub fn is_err(&self) -> bool {
+        matches!(self, LinkCheckResult::Failed(_))
+    }
 }
 
 pub async fn resolve_target_link(

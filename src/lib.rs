@@ -86,20 +86,8 @@ fn print_helper(
 
 fn print_result(result: &FinalResult, map: &HashMap<Target, Vec<MarkupLink>>) {
     for link in &map[&result.target] {
-        match &result.result_code {
-            LinkCheckResult::Ok => {
-                print_helper(link, &"OK".green(), "", false);
-            }
-            LinkCheckResult::NotImplemented(msg) | LinkCheckResult::Warning(msg) => {
-                print_helper(link, &"Warn".yellow(), msg, false);
-            }
-            LinkCheckResult::Ignored(msg) => {
-                print_helper(link, &"Skip".green(), msg, false);
-            }
-            LinkCheckResult::Failed(msg) => {
-                print_helper(link, &"Err".red(), msg, true);
-            }
-        }
+        let code = &result.result_code;
+        print_helper(link, code.status_code(), code.msg(), code.is_err());
     }
 }
 
