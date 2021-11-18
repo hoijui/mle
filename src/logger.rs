@@ -1,6 +1,6 @@
 extern crate simplelog;
 
-use simplelog::*;
+use simplelog::{ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode};
 
 arg_enum! {
     #[derive(Debug, Clone, Copy)]
