@@ -43,6 +43,7 @@ pub fn parse_args() -> Config {
                 .long_help("One or more files or directories which will not be checked, separated by white-space.")
                 .min_values(1)
                 .required(false)
+                .empty_values(false)
         )
         .arg(
             Arg::with_name("ignore_links")
@@ -52,6 +53,7 @@ pub fn parse_args() -> Config {
                 .long_help("One or more wildcard-patterns/globs, matching links which will not be checked, separated by white-space.")
                 .min_values(1)
                 .required(false)
+                .empty_values(false)
         )
         .arg(
             Arg::with_name("markup_types")
@@ -62,6 +64,7 @@ pub fn parse_args() -> Config {
                 .min_values(1)
                 .possible_values(&["md", "html"])
                 .required(false)
+                .empty_values(false)
         )
         .arg(
             Arg::with_name("throttle")
@@ -69,6 +72,7 @@ pub fn parse_args() -> Config {
                 .help("Wait between http request to the same host for a defined number of milliseconds")
                 .required(false)
                 .takes_value(true)
+                .empty_values(false)
         )
         .arg(
             Arg::with_name("root_dir")
