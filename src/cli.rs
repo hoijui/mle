@@ -31,7 +31,7 @@ pub fn parse_args() -> Config {
                 .required(false)
         )
         .arg(
-            Arg::with_name("match-file-extension")
+            Arg::with_name("match_file_extension")
                 .long("match-file-extension")
                 .help("Do check for the exact file extension when searching for a file")
                 .required(false)
@@ -106,7 +106,7 @@ pub fn parse_args() -> Config {
 
     let no_web_links = matches.is_present("no_web_links");
 
-    let match_file_extension = matches.is_present("match-file-extension");
+    let match_file_extension = matches.is_present("match_file_extension");
 
     let ignore_links: Vec<WildMatch> = matches
         .values_of("ignore_links")
