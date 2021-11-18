@@ -5,13 +5,15 @@ use crate::Config;
 use std::fs;
 use walkdir::WalkDir;
 
+/// Searches for markup source files acording to the configuration,
+/// and stores them in `result`.
 pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
     let root = &config.folder;
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_path;
 
     info!(
-        "Search for files of markup types '{:?}' in directory '{:?}'",
+        "Searching for files of markup types '{:?}' in directory '{:?}' ...",
         markup_types, root
     );
 
@@ -36,7 +38,7 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                 }
             }) {
                 debug!(
-                    "Ignore file {:?}, because it is in the ignore path list.",
+                    "Ignoring file '{:?}', because it is in the ignore path list.",
                     path
                 );
             } else {
@@ -44,13 +46,15 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                     markup_type,
                     path: path.to_string_lossy().to_string(),
                 };
-                debug!("Found file: {:?}.", file);
+                debug!("Found file: '{:?}'", file);
                 result.push(file);
             }
         }
     }
 }
 
+/// Identifies the markup type a file path belongs to,
+/// if any, out of a given set of markup types.
 fn markup_type(file: &str, markup_types: &[MarkupType]) -> Option<MarkupType> {
     let file_low = file.to_lowercase();
     for markup_type in markup_types {
