@@ -10,7 +10,7 @@ pub async fn check_filesystem(target: &str, config: &Config) -> LinkCheckResult 
     let target = Path::new(target);
     debug!("Absolute target path {:?}", target);
     if target.exists().await {
-        LinkCheckResult::Ok
+        return LinkCheckResult::Ok;
     } else if !config.match_file_extension && target.extension().is_none() {
         // Check if file exists ignoring the file extension
         let target_file_name = match target.file_name() {
@@ -43,18 +43,12 @@ pub async fn check_filesystem(target: &str, config: &Config) -> LinkCheckResult 
                             return LinkCheckResult::Ok;
                         }
                     }
-                    None => {
-                        return LinkCheckResult::Failed("Target filename not found.".to_string())
-                    }
+                    None => break,
                 }
             }
-            LinkCheckResult::Failed("Target not found.".to_string())
-        } else {
-            LinkCheckResult::Failed("Target not found.".to_string())
         }
-    } else {
-        LinkCheckResult::Failed("Target filename not found.".to_string())
     }
+    LinkCheckResult::Failed("Target filename not found.".to_string())
 }
 
 pub async fn resolve_target_link(source: &str, target: &str, config: &Config) -> String {
