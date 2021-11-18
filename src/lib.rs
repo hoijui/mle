@@ -17,6 +17,7 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep_until, Duration, Instant};
 pub mod cli;
 pub mod file_traversal;
+pub mod ignore_path;
 pub mod link_extractors;
 pub mod link_validator;
 pub mod logger;
@@ -25,6 +26,7 @@ pub use colored::*;
 pub use wildmatch::WildMatch;
 
 use futures::{stream, StreamExt};
+use ignore_path::IgnorePath;
 use link_validator::LinkCheckResult;
 use url::Url;
 
@@ -38,7 +40,7 @@ pub struct Config {
     pub no_web_links: bool,
     pub match_file_extension: bool,
     pub ignore_links: Vec<WildMatch>,
-    pub ignore_paths: Vec<PathBuf>,
+    pub ignore_paths: Vec<IgnorePath>,
     pub root_dir: Option<PathBuf>,
     pub throttle: u32,
 }

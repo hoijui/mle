@@ -5,7 +5,7 @@ use helper::benches_dir;
 use mlc::logger;
 use mlc::markup::MarkupType;
 use mlc::Config;
-use std::fs;
+use std::convert::TryInto;
 
 #[tokio::test]
 async fn end_to_end() {
@@ -18,8 +18,12 @@ async fn end_to_end() {
         throttle: 0,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
         ignore_paths: vec![
-            fs::canonicalize("benches/benchmark/markdown/ignore_me.md").unwrap(),
-            fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
+            "benches/benchmark/markdown/ignore_me.md"
+                .try_into()
+                .unwrap(),
+            "./benches/benchmark/markdown/ignore_me_dir"
+                .try_into()
+                .unwrap(),
         ],
         root_dir: None,
     };
