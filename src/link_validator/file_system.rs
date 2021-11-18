@@ -93,8 +93,8 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
 }
 
 async fn absolute_target_path(source: &str, target: &PathBuf) -> PathBuf {
-    let abs_source = canonicalize(source).await.expect("Expected path to exist.");
     if target.is_relative() {
+        let abs_source = canonicalize(source).await.expect(&format!("Path '{}' does not exist.", source));
         let root = format!("{}", MAIN_SEPARATOR);
         let parent = abs_source.parent().unwrap_or_else(|| Path::new(&root));
         let new_target = match target.strip_prefix(format!(".{}", MAIN_SEPARATOR)) {
