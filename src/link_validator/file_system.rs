@@ -57,7 +57,7 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
         .replace('\\', &MAIN_SEPARATOR.to_string());
     if let Some(idx) = normalized_link.find('#') {
         warn!(
-            "Strip everything after #. The chapter part '{}' is not checked.",
+            "Strip everything after #. The chapter (aka anchor aka fragment) part '{}' is not checked.",
             &normalized_link[idx..]
         );
         normalized_link = normalized_link[..idx].to_string();

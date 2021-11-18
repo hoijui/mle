@@ -13,7 +13,7 @@ pub async fn check_http(target: &str) -> LinkCheckResult {
 
     match http_request(&url).await {
         Ok(response) => response,
-        Err(error_msg) => LinkCheckResult::Failed(format!("Http(s) request failed. {}", error_msg)),
+        Err(error_msg) => LinkCheckResult::Failed(format!("Http(s) request failed: {}", error_msg)),
     }
 }
 
