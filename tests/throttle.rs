@@ -22,7 +22,7 @@ async fn throttle_different_hosts() {
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
-        ignore_path: vec![],
+        ignore_paths: vec![],
         root_dir: None,
     };
 
@@ -43,7 +43,7 @@ async fn throttle_same_hosts() {
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
-        ignore_path: vec![],
+        ignore_paths: vec![],
         root_dir: None,
     };
 
@@ -64,7 +64,7 @@ async fn throttle_same_ip() {
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
-        ignore_path: vec![],
+        ignore_paths: vec![],
         root_dir: None,
     };
 

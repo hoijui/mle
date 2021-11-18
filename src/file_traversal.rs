@@ -10,7 +10,7 @@ use walkdir::WalkDir;
 pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
     let root = &config.folder;
     let markup_types = &config.markup_types;
-    let ignore_paths = &config.ignore_path;
+    let ignore_paths = &config.ignore_paths;
 
     info!(
         "Searching for files of markup types '{:?}' in directory '{:?}' ...",
@@ -38,7 +38,7 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                 }
             }) {
                 debug!(
-                    "Ignoring file '{:?}', because it is in the ignore path list.",
+                    "Ignoring file '{:?}', because it is in the ignore paths list.",
                     path
                 );
             } else {

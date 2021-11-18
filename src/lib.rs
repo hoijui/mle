@@ -38,7 +38,7 @@ pub struct Config {
     pub no_web_links: bool,
     pub match_file_extension: bool,
     pub ignore_links: Vec<WildMatch>,
-    pub ignore_path: Vec<PathBuf>,
+    pub ignore_paths: Vec<PathBuf>,
     pub root_dir: Option<PathBuf>,
     pub throttle: u32,
 }

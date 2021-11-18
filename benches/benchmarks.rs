@@ -15,7 +15,7 @@ fn end_to_end_benchmark() {
         markup_types: vec![MarkupType::Markdown],
         ignore_links: vec![],
         match_file_extension: false,
-        ignore_path: vec![],
+        ignore_paths: vec![],
         root_dir: None,
         throttle: 0,
         no_web_links: false,
