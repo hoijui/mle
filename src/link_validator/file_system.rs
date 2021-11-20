@@ -81,7 +81,7 @@ pub async fn resolve_target_link(source: &str, target: &str, config: &Config) ->
         .to_string();
     // Remove verbatim path identifier which causes trouble on windows when using ../../ in paths
     abs_path
-        .strip_prefix("\\\\?\\")
+        .strip_prefix(r#"\\?\"#)
         .unwrap_or(&abs_path)
         .to_string()
 }
