@@ -1,6 +1,6 @@
 extern crate walkdir;
 
-use crate::markup::{MarkupFile, MarkupType};
+use crate::markup::{Content, MarkupFile, MarkupType};
 use crate::Config;
 use std::fs;
 use walkdir::WalkDir;
@@ -37,9 +37,11 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                     path
                 );
             } else {
+                let path_str = path.to_str().unwrap(); //ok_or_else(|| Err("")).unwrap();
                 let file = MarkupFile {
                     markup_type,
-                    path: path.to_string_lossy().to_string(),
+                    locator: path_str,
+                    content: Content::LocalFile(path_str),
                 };
                 debug!("Found file: '{:?}'", file);
                 result.push(file);
@@ -50,7 +52,7 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
 
 /// Identifies the markup type a file path belongs to,
 /// if any, out of a given set of markup types.
-fn markup_type(file: &str, markup_types: &[MarkupType]) -> Option<MarkupType> {
+pub fn markup_type(file: &str, markup_types: &[MarkupType]) -> Option<MarkupType> {
     let file_low = file.to_lowercase();
     for markup_type in markup_types {
         let extensions = markup_type.file_extensions();

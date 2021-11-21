@@ -51,17 +51,19 @@ pub async fn check_filesystem(target: &str, config: &Config) -> LinkCheckResult 
     LinkCheckResult::Failed("Target filename not found.".to_string())
 }
 
+/// Converts any valid file path, pointing to a en existing,
+/// local file-system entry, into its canonical, absolute form.
 pub async fn resolve_target_link(source: &str, target: &str, config: &Config) -> String {
-    let mut normalized_link = target
+    let /*mut*/ normalized_link = target
         .replace('/', &MAIN_SEPARATOR.to_string())
         .replace('\\', &MAIN_SEPARATOR.to_string());
-    if let Some(idx) = normalized_link.find('#') {
-        warn!(
-            "Strip everything after #. The chapter (aka anchor aka fragment) part '{}' is not checked.",
-            &normalized_link[idx..]
-        );
-        normalized_link = normalized_link[..idx].to_string();
-    }
+    // if let Some(idx) = normalized_link.find('#') {
+    //     warn!(
+    //         "Strip everything after #. The chapter (aka anchor aka fragment) part '{}' is not checked.",
+    //         &normalized_link[idx..]
+    //     );
+    //     normalized_link = normalized_link[..idx].to_string();
+    // }
     let mut fs_link_target = Path::new(&normalized_link).to_path_buf();
     if normalized_link.starts_with(MAIN_SEPARATOR) && config.root_dir.is_some() {
         match canonicalize(&config.root_dir.as_ref().unwrap()).await {

@@ -1,9 +1,29 @@
-use std::str::FromStr;
+
+use std::{borrow::Cow, fs, str::FromStr};
+
+#[derive(Debug, PartialEq, Clone)]
+pub enum Content<'a> {
+    LocalFile(&'a str), // stores the file-name
+    InMemory(&'a str),  // stores the whole content of the file as a string
+                        // URL(Url, &'a str)
+}
+
+impl<'a> Content<'a> {
+    pub fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
+        match self {
+            &Self::LocalFile(file_name) => {
+                fs::read_to_string(file_name).map(|content| Cow::Owned(content))
+            }
+            &Self::InMemory(content) => Ok(Cow::Borrowed(content)),
+        }
+    }
+}
 
 #[derive(Debug)]
-pub struct MarkupFile {
+pub struct MarkupFile<'a> {
     pub markup_type: MarkupType,
-    pub path: String,
+    pub locator: &'a str, // local file path or URL
+    pub content: Content<'a>,
 }
 
 #[derive(Debug, Clone, Copy)]

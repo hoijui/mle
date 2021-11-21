@@ -32,6 +32,12 @@ pub fn parse_args() -> Config {
                 .required(false)
         )
         .arg(
+            Arg::with_name("no_web_anchors")
+                .long("no-web-anchors")
+                .help("Do not check web anchors (potentially huge speedup)")
+                .required(false),
+        )
+        .arg(
             Arg::with_name("match_file_extension")
                 .long("match-file-extension")
                 .help("Do check for the exact file extension when searching for a file")
@@ -117,6 +123,8 @@ pub fn parse_args() -> Config {
 
     let no_web_links = matches.is_present("no_web_links");
 
+    let no_web_anchors = matches.is_present("no_web_anchors");
+
     let match_file_extension = matches.is_present("match_file_extension");
 
     let ignore_links: Vec<WildMatch> = matches
@@ -153,6 +161,7 @@ pub fn parse_args() -> Config {
         folder: directory,
         markup_types,
         no_web_links,
+        no_web_anchors,
         match_file_extension,
         ignore_links,
         ignore_paths,

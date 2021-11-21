@@ -5,10 +5,13 @@ extern crate clap;
 #[macro_use]
 extern crate lazy_static;
 
+use crate::file_traversal::markup_type;
+use crate::link_extractors::link_extractor::MarkupAnchorTarget;
 use crate::link_extractors::link_extractor::MarkupLink;
 use crate::link_validator::link_type::get_link_type;
 use crate::link_validator::link_type::LinkType;
 use crate::link_validator::resolve_target_link;
+use crate::markup::Content;
 use crate::markup::MarkupFile;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -32,17 +35,65 @@ use url::Url;
 
 const PARALLEL_REQUESTS: usize = 20;
 
-#[derive(Default, Debug)]
+/// If a URL is not stored in the map (the URL does not appear as a key),
+/// it means that URL has not yet been checked.
+/// If the Result is Err, it means the URL has been checked,
+/// but was not available, or anchor parsing has failed.
+/// If the Option is None, it means the URL was checked and evaluated as for available,
+/// but no parsing of anchors was tried.
+/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
+//type CheckResult = Option<Vec<MarkupAnchorTarget>>;
+
+/// If a URL is not stored in the map (the URL does not appear as a key),
+/// it means that URL has not yet been checked.
+/// If the Result is Err, it means the URL has been checked,
+/// but was not available, or anchor parsing has failed.
+/// If the Option is None, it means the URL was checked and evaluated as for available,
+/// but no parsing of anchors was tried.
+/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
+//pub type RemoteCache = HashMap<reqwest::Url, LinkCheckResult>;
+//type AnchorsCache = HashMap<reqwest::Url, Option<reqwest::Result<Vec<MarkupAnchorTarget>>>>;
+//type AnchorsCache = HashMap<reqwest::Url, reqwest::Result<Vec<MarkupAnchorTarget>>>;
+
+/// If a URL is not stored in the map (the URL does not appear as a key),
+/// it means that URL has not yet been checked.
+/// If the Result is Err, it means the URL has been checked,
+/// but was not available, or anchor parsing has failed.
+/// If the Option is None, it means the URL was checked and evaluated as for available,
+/// but no parsing of anchors was tried.
+/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
+pub type AnchorTargets = Option<Vec<MarkupAnchorTarget>>;
+
+/// If a URL is not stored in the map (the URL does not appear as a key),
+/// it means that URL has not yet been checked.
+/// If the Result is Err, it means the URL has been checked,
+/// but was not available, or anchor parsing has failed.
+/// If the Option is None, it means the URL was checked and evaluated as for available,
+/// but no parsing of anchors was tried.
+/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
+type RemoteCache = HashMap<reqwest::Url, reqwest::Result<AnchorTargets>>;
+//type AnchorsCache = HashMap<reqwest::Url, LinkCheckResult>;
+//type AnchorsCache = HashMap<reqwest::Url, Option<reqwest::Result<Vec<MarkupAnchorTarget>>>>;
+//type AnchorsCache = HashMap<reqwest::Url, reqwest::Result<Vec<MarkupAnchorTarget>>>;
+
+#[derive(Default, Debug, Clone)]
 pub struct Config {
     pub log_level: logger::LogLevel,
     pub folder: PathBuf,
     pub markup_types: Vec<markup::MarkupType>,
     pub no_web_links: bool,
+    pub no_web_anchors: bool,
     pub match_file_extension: bool,
     pub ignore_links: Vec<WildMatch>,
     pub ignore_paths: Vec<IgnorePath>,
     pub root_dir: Option<PathBuf>,
     pub throttle: u32,
+}
+
+#[derive(Default, Debug)]
+pub struct State {
+    pub config: Config,
+    pub remote_cache: RemoteCache,
 }
 
 #[derive(Debug, Clone)]
@@ -55,16 +106,41 @@ struct FinalResult {
 struct Target {
     target: String,
     link_type: LinkType,
+    anchor: Option<String>,
 }
 
-fn find_all_links(config: &Config) -> Vec<MarkupLink> {
+impl Target {
+    // TODO I think we have this elsewehere already, nicer.. search for '#'
+    pub fn new(link: String, link_type: LinkType) -> Target {
+        let (target, anchor) = match link.find('#') {
+            Some(idx) => {
+                // warn!(
+                //     "Strip everything after #. The chapter part ´{}´ is not checked.",
+                //     &normalized_link[idx..]
+                // );
+                (link[..idx].to_owned(), Some(link[idx..].to_owned()))
+            }
+            None => (link, None),
+        };
+        Target {
+            target,
+            link_type,
+            anchor,
+        }
+    }
+}
+
+fn find_all_links(config: &Config) -> (Vec<MarkupLink>, Vec<MarkupAnchorTarget>) {
     let mut files: Vec<MarkupFile> = Vec::new();
     file_traversal::find(config, &mut files);
     let mut links = vec![];
+    let mut anchor_targets = vec![];
     for file in files {
-        links.append(&mut link_extractors::link_extractor::find_links(&file));
+        let (file_links, file_anchor_targets) = link_extractors::link_extractor::find_links(&file, false);
+        links.append(&mut file_links);
+        anchor_targets.append(&mut file_anchor_targets);
     }
-    links
+    (links, anchor_targets)
 }
 
 fn print_helper(
@@ -91,14 +167,22 @@ fn print_result(result: &FinalResult, map: &HashMap<Target, Vec<MarkupLink>>) {
     }
 }
 
-pub async fn run(config: &Config) -> Result<(), ()> {
-    let links = find_all_links(config);
-    let mut link_target_groups: HashMap<Target, Vec<MarkupLink>> = HashMap::new();
+pub async fn run(state: &mut State) -> Result<(), ()> {
+    let (links, mut primary_anchors) = find_all_links(&state.config); // TODO use the anchors!
+    let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
+    primary_anchors.append(&mut secondary_anchors);
+    // <target, (links, requires_anchors)>
+    let mut link_target_groups: HashMap<Target, (Vec<MarkupLink>, bool)> = HashMap::new();
 
     let mut skipped = 0;
 
     for link in &links {
-        if config.ignore_links.iter().any(|m| m.matches(&link.target)) {
+        if state
+            .config
+            .ignore_links
+            .iter()
+            .any(|m| m.matches(&link.target))
+        {
             print_helper(
                 link,
                 &"Skip".green(),
@@ -109,23 +193,30 @@ pub async fn run(config: &Config) -> Result<(), ()> {
             continue;
         }
         let link_type = get_link_type(&link.target);
-        let target = resolve_target_link(link, &link_type, config).await;
-        let t = Target { target, link_type };
+        let target = resolve_target_link(link, &link_type, &state.config).await;
+        let t = Target::new(target, link_type);
         match link_target_groups.get_mut(&t) {
-            Some(v) => v.push(link.clone()),
+            Some(v) => {
+                v.0.push(link.clone());
+                v.1 = v.1 || link.anchor.is_some();
+            }
             None => {
-                link_target_groups.insert(t, vec![link.clone()]);
+                link_target_groups.insert(t, (vec![link.clone()], link.anchor.is_some()));
             }
         }
     }
 
-    let throttle = config.throttle > 0;
+    let throttle = state.config.throttle > 0;
     info!("Throttle HTTP requests to same host: {:?}", throttle);
     let waits = Arc::new(Mutex::new(HashMap::new()));
+    let throttle_val = state.config.throttle;
+    let config = &state.config; //.clone();
+    let remote_cache = Arc::new(Mutex::new(&mut state.remote_cache));
     // See also http://patshaughnessy.net/2020/1/20/downloading-100000-files-using-async-rust
-    let mut buffered_stream = stream::iter(link_target_groups.keys())
-        .map(|target| {
+    let mut buffered_stream = stream::iter(link_target_groups.iter())
+        .map(|(target, (links, requires_anchor))| {
             let waits = waits.clone();
+            // TODO State is modified inside here, but this is a multi-threaded context ... :/ -> check online how to solve this, with error message given here
             async move {
                 if throttle && target.link_type == LinkType::Http {
                     let parsed = match Url::parse(&target.target) {
@@ -157,9 +248,9 @@ pub async fn run(config: &Config) -> Result<(), ()> {
                     let next_wait = match waits.get(&host) {
                         Some(old) => {
                             wait_until = Some(*old);
-                            *old + Duration::from_millis(config.throttle.into())
+                            *old + Duration::from_millis(throttle_val.into())
                         }
-                        None => Instant::now() + Duration::from_millis(config.throttle.into()),
+                        None => Instant::now() + Duration::from_millis(throttle_val.into()),
                     };
                     waits.insert(host, next_wait);
                     drop(waits);
@@ -169,8 +260,19 @@ pub async fn run(config: &Config) -> Result<(), ()> {
                     }
                 }
 
-                let result_code =
-                    link_validator::check(&target.target, &target.link_type, config).await;
+                let remote_cache = Arc::clone(&remote_cache);
+                let result_code = link_validator::check(
+                    config,
+                    remote_cache,
+                    &target.target,
+                    target.anchor,
+                    &target.link_type,
+                    *requires_anchor,
+                )
+                .await;
+                // LinkCheckResult::Ignored(
+                //     "Ignore web link because of the no-web-link flag.".to_string(),
+                // ); // stub for testing/debugging -> this one resolves the threadding issue -> prove that the issue is here!
 
                 FinalResult {
                     target: target.clone(),
@@ -188,13 +290,13 @@ pub async fn run(config: &Config) -> Result<(), ()> {
         print_result(&result, &link_target_groups);
         match &result.result_code {
             LinkCheckResult::Ok => {
-                oks += link_target_groups[&result.target].len();
+                oks += link_target_groups[&result.target].0.len();
             }
             LinkCheckResult::NotImplemented(_) | LinkCheckResult::Warning(_) => {
-                warnings += link_target_groups[&result.target].len();
+                warnings += link_target_groups[&result.target].0.len();
             }
             LinkCheckResult::Ignored(_) => {
-                skipped += link_target_groups[&result.target].len();
+                skipped += link_target_groups[&result.target].0.len();
             }
             LinkCheckResult::Failed(_) => {
                 errors.push(result.clone());
@@ -209,7 +311,7 @@ pub async fn run(config: &Config) -> Result<(), ()> {
     println!();
     let error_sum: usize = errors
         .iter()
-        .map(|e| link_target_groups[&e.target].len())
+        .map(|e| link_target_groups[&e.target].0.len())
         .sum();
     let sum = skipped + error_sum + warnings + oks;
     println!("Result ({} links):", sum);
@@ -227,7 +329,7 @@ pub async fn run(config: &Config) -> Result<(), ()> {
         eprintln!("The following links could not be resolved:");
         println!();
         for res in errors {
-            for link in &link_target_groups[&res.target] {
+            for link in &link_target_groups[&res.target].0 {
                 eprintln!(
                     "{} ({}, {}) => {}.",
                     link.source, link.line, link.column, link.target
