@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: CC0-1.0
+-->
+
 # Markup Link Checker Reference
 
 ## CLI Arguments

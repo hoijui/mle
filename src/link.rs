@@ -1,4 +1,8 @@
-// use std::convert::TryFrom;
+// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use std::ops::{Add, Sub};
 use std::rc::Rc;
 use std::{convert::Infallible, fmt, str::FromStr};
