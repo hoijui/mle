@@ -16,14 +16,18 @@ is-it-maintained-issue-resolution = { repository = "hoijui/mle" }
 
 [dependencies]
 async-std = "1.9.0"
-clap = "2.33.3"
+clap = { version = "3.2", features = ["cargo", "wrap_help"] }
+clap_derive = "3.2"
 colored = "2"
+const_format = "0.2"
+# email_address = "0.2"
 futures = "0.3"
 lazy_static = "1.4.0"
 log = "0.4.11"
 #pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
 pulldown-cmark = "0.9.1"
 regex = "1"
+relative-path = "1.7"
 reqwest = { version = "0.11.3", features = ["native-tls-vendored"] }
 simplelog = "0.10"
 tokio = { version = "1.5", features = ["rt-multi-thread", "macros", "time"] }

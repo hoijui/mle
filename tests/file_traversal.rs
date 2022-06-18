@@ -1,7 +1,7 @@
 #[cfg(test)]
 use mle::file_traversal;
 use mle::markup::{MarkupFile, MarkupType};
-use mle::Config;
+use mle::config::Config;
 use std::path::Path;
 
 #[test]

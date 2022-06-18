@@ -1,7 +1,7 @@
 use super::html_link_extractor::HtmlLinkExtractor;
 use super::markdown_link_extractor::MarkdownLinkExtractor;
+use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
 use crate::markup::{MarkupFile, MarkupType};
-use crate::types::{MarkupLink, MarkupAnchorType, MarkupAnchorTarget};
 
 pub fn remove_anchor(link: &mut String) -> Option<String> {
     match link.find('#') {
@@ -18,29 +18,34 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 pub fn find_links(
     file: &MarkupFile,
     anchors_only: bool,
-) -> (Vec<MarkupLink>, Vec<MarkupAnchorTarget>) {
+) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
-    info!("Scannig file at location '{}' for links ...", file.locator);
-    match file.content.fetch() {
-        Ok(text) => {
-            let (mut links, anchor_targets) =
-                link_extractor.find_links_and_anchors(&text, anchors_only);
-            for l in &mut links {
-                l.source = file.locator.to_string();
-                l.anchor = remove_anchor(&mut l.target);
-                //println!("XXX {:?}", l);
-            }
-            (links, anchor_targets)
-        }
-        Err(e) => {
-            warn!(
-                "File '{}'. IO Error: '{}'. Check your file encoding.",
-                file.locator, e
-            );
-            (vec![], vec![])
-        }
-    }
+    info!(
+        "Scannig file at location '{:#?}' for links ...",
+        file.locator
+    );
+    link_extractor.find_links_and_anchors(file, anchors_only) //;
+                                                              // match file.content.fetch() {
+                                                              //     Ok(text) => {
+                                                              //         // let (mut links, anchor_targets) =
+                                                              //             link_extractor.find_links_and_anchors(&file, anchors_only)//;
+                                                              //         // for l in &mut links {
+                                                              //         //     l.source = file.locator.to_string();
+                                                              //         //     l.anchor = remove_anchor(&mut l.target);
+                                                              //         //     //println!("XXX {:?}", l);
+                                                              //         // }
+                                                              //         // (links, anchor_targets)
+                                                              //     }
+                                                              //     Err(e) => {
+                                                              //         warn!(
+                                                              //             "File '{:#?}'. IO Error: '{}'. Check your file encoding.",
+                                                              //             file.locator, e
+                                                              //         );
+                                                              //         // (vec![], vec![])
+                                                              //         Err(...)
+                                                              //     }
+                                                              // }
 }
 
 fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {
@@ -53,12 +58,13 @@ fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {
 pub trait LinkExtractor {
     fn find_links_and_anchors(
         &self,
-        text: &str,
+        // text: &str,
+        file: &MarkupFile,
         anchors_only: bool,
-    ) -> (Vec<MarkupLink>, Vec<MarkupAnchorTarget>);
+    ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)>;
 
-    fn find_links(&self, text: &str) -> Vec<MarkupLink> {
-        let (result, _) = self.find_links_and_anchors(text, true);
-        result
+    fn find_links(&self, file: &MarkupFile) -> std::io::Result<Vec<Link>> {
+        let (result, _) = self.find_links_and_anchors(file, true)?;
+        Ok(result)
     }
 }

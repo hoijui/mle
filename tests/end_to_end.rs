@@ -2,9 +2,10 @@
 mod helper;
 
 use helper::benches_dir;
-use mle::{State, logger};
 use mle::markup::MarkupType;
-use mle::Config;
+use mle::config::Config;
+use mle::state::State;
+use mle::{logger};
 use std::convert::TryInto;
 
 #[tokio::test]

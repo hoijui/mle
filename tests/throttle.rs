@@ -2,9 +2,9 @@
 mod helper;
 
 use helper::benches_dir;
-use mle::{State, logger};
 use mle::markup::MarkupType;
 use mle::Config;
+use mle::{logger, State};
 use std::time::{Duration, Instant};
 
 const TEST_THROTTLE_MS: u32 = 100;

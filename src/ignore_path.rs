@@ -3,6 +3,9 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
+use clap::builder::ValueParser;
+use wildmatch::WildMatch;
+
 #[derive(Debug)]
 pub enum Error {
     /// Ignore path '{:?}' not found: {:?}.
@@ -60,12 +63,29 @@ impl TryFrom<&str> for IgnorePath {
     }
 }
 
+pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
+    // TODO Should be moved to an other file, probably.
+    Ok(WildMatch::new(link_glob))
+    // IgnorePath::try_from(path_str)
+    // .map(|_| ())
+    // .map_err(|err| format!("{:?}", err))
+}
+
+pub fn parse_ignore_path(path_str: &str) -> Result<IgnorePath, String> {
+    IgnorePath::try_from(path_str)
+        // .map(|_| ())
+        .map_err(|err| format!("{:?}", err))
+}
+
 pub fn is_valid(path_str: &str) -> Result<(), String> {
     IgnorePath::try_from(path_str)
         .map(|_| ())
         .map_err(|err| format!("{:?}", err))
 }
 
+// struct IgnorePathValueParser : ValueParser {
+
+// }
 pub fn is_valid_string(path_str: String) -> Result<(), String> {
     is_valid(path_str.as_ref())
 }

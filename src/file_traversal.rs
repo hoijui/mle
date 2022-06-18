@@ -1,14 +1,17 @@
 extern crate walkdir;
 
+use crate::link::{FileLoc, FileSystemLoc, Position};
 use crate::markup::{Content, MarkupFile, MarkupType};
 use crate::Config;
 use std::fs;
+use std::rc::Rc;
+use std::str::FromStr;
 use walkdir::WalkDir;
 
 /// Searches for markup source files acording to the configuration,
 /// and stores them in `result`.
 pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
-    let root = &config.folder;
+    let root = &config.scan_root;
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
 
@@ -40,8 +43,12 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                 let path_str = path.to_str().unwrap(); //ok_or_else(|| Err("")).unwrap();
                 let file = MarkupFile {
                     markup_type,
-                    locator: path_str.to_string(),
+                    locator: Rc::new(FileLoc::System(
+                        FileSystemLoc::from_str(path_str)
+                            .expect("FileSystemLoc creation from str should never fail"),
+                    )),
                     content: Content::LocalFile(path_str.to_string()),
+                    start: Position::new(),
                 };
                 debug!("Found file: '{:?}'", file);
                 result.push(file);

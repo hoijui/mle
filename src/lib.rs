@@ -3,134 +3,73 @@ extern crate log;
 #[macro_use]
 extern crate clap;
 #[macro_use]
+extern crate clap_derive;
+#[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate relative_path;
+// extern crate email_address;
+#[macro_use]
+extern crate const_format;
 
 // use crate::file_traversal::markup_type;
-use crate::types::MarkupAnchorTarget;
-use crate::types::MarkupLink;
-use crate::link_resolver::resolve_target_link;
-use crate::link_type::get_link_type;
+use crate::link::Link;
+use crate::link::MarkupAnchorTarget;
+// use crate::target_resolver::resolve_target_link;
+// use crate::link_type::get_link_type;
 // use crate::markup::Content;
 use crate::markup::MarkupFile;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
-use types::LinkType;
+// use link::Type;
 use tokio::sync::Mutex;
 use tokio::time::{sleep_until, Duration, Instant};
 pub mod cli;
 pub mod file_traversal;
 pub mod ignore_path;
+pub mod link;
 pub mod link_extractors;
-pub mod types;
 pub mod link_type;
-pub mod link_resolver;
+// pub mod target_resolver;
 pub mod logger;
 pub mod markup;
 pub use colored::*;
-use types::Target;
+pub mod config;
+pub mod state;
+use config::Config;
+use link::Target;
+use state::State;
 pub use wildmatch::WildMatch;
 
 use futures::{stream, StreamExt};
 use ignore_path::IgnorePath;
-use url::Url;
+// use url::Url;
 
-const PARALLEL_REQUESTS: usize = 20;
-
-/// If a URL is not stored in the map (the URL does not appear as a key),
-/// it means that URL has not yet been checked.
-/// If the Result is Err, it means the URL has been checked,
-/// but was not available, or anchor parsing has failed.
-/// If the Option is None, it means the URL was checked and evaluated as for available,
-/// but no parsing of anchors was tried.
-/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-//type CheckResult = Option<Vec<MarkupAnchorTarget>>;
-
-/// If a URL is not stored in the map (the URL does not appear as a key),
-/// it means that URL has not yet been checked.
-/// If the Result is Err, it means the URL has been checked,
-/// but was not available, or anchor parsing has failed.
-/// If the Option is None, it means the URL was checked and evaluated as for available,
-/// but no parsing of anchors was tried.
-/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-//pub type RemoteCache = HashMap<reqwest::Url, LinkCheckResult>;
-//type AnchorsCache = HashMap<reqwest::Url, Option<reqwest::Result<Vec<MarkupAnchorTarget>>>>;
-//type AnchorsCache = HashMap<reqwest::Url, reqwest::Result<Vec<MarkupAnchorTarget>>>;
-
-/// If a URL is not stored in the map (the URL does not appear as a key),
-/// it means that URL has not yet been checked.
-/// If the Result is Err, it means the URL has been checked,
-/// but was not available, or anchor parsing has failed.
-/// If the Option is None, it means the URL was checked and evaluated as for available,
-/// but no parsing of anchors was tried.
-/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-pub type AnchorTargets = Option<Vec<MarkupAnchorTarget>>;
-
-/// If a URL is not stored in the map (the URL does not appear as a key),
-/// it means that URL has not yet been checked.
-/// If the Result is Err, it means the URL has been checked,
-/// but was not available, or anchor parsing has failed.
-/// If the Option is None, it means the URL was checked and evaluated as for available,
-/// but no parsing of anchors was tried.
-/// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-pub type RemoteCache = HashMap<reqwest::Url, reqwest::Result<AnchorTargets>>;
-//type AnchorsCache = HashMap<reqwest::Url, LinkCheckResult>;
-//type AnchorsCache = HashMap<reqwest::Url, Option<reqwest::Result<Vec<MarkupAnchorTarget>>>>;
-//type AnchorsCache = HashMap<reqwest::Url, reqwest::Result<Vec<MarkupAnchorTarget>>>;
-
-#[derive(Default, Debug, Clone)]
-pub struct Config {
-    pub log_level: logger::LogLevel,
-    pub folder: PathBuf,
-    pub markup_types: Vec<markup::MarkupType>,
-    pub no_web_links: bool,
-    pub no_web_anchors: bool,
-    pub match_file_extension: bool,
-    pub ignore_links: Vec<WildMatch>,
-    pub ignore_paths: Vec<IgnorePath>,
-    pub root_dir: Option<PathBuf>,
-    pub throttle: u32,
-}
-
-#[derive(Default, Debug)]
-pub struct State {
-    pub config: Config,
-    pub remote_cache: RemoteCache,
-}
-
-impl State {
-    pub fn new(config: Config) -> State {
-        State {
-            remote_cache: RemoteCache::new(),
-            config,
-        }
-    }
-}
-
-fn find_all_links(config: &Config) -> (Vec<MarkupLink>, Vec<MarkupAnchorTarget>) {
+fn find_all_links(config: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std::io::Error>) {
     let mut files: Vec<MarkupFile> = Vec::new();
     file_traversal::find(config, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];
+    let mut errors = vec![];
     for file in files {
-        let (mut file_links, mut file_anchor_targets) = link_extractors::link_extractor::find_links(&file, false);
-        links.append(&mut file_links);
-        anchor_targets.append(&mut file_anchor_targets);
+        // let (mut file_links, mut file_anchor_targets)
+        match link_extractors::link_extractor::find_links(&file, false) {
+            Ok((mut file_links, mut file_anchor_targets)) => {
+                links.append(&mut file_links);
+                anchor_targets.append(&mut file_anchor_targets);
+            }
+            Err(err) => {
+                errors.push(err);
+            }
+        }
     }
-    (links, anchor_targets)
+    (links, anchor_targets, errors)
 }
 
-fn print_helper(
-    link: &MarkupLink,
-    status_code: &colored::ColoredString,
-    msg: &str,
-    error_channel: bool,
-) {
-    let link_str = format!(
-        "[{:^4}] {} ({}, {}) => {} - {}",
-        status_code, link.source, link.line, link.column, link.target, msg
-    );
+fn print_helper(link: &Link, status_code: &colored::ColoredString, msg: &str, error_channel: bool) {
+    let link_str = format!("[{:^4}] {:#?} - {}", status_code, link, msg);
     if error_channel {
         eprintln!("{}", link_str);
     } else {
@@ -146,49 +85,64 @@ fn print_helper(
 // }
 
 pub async fn run(state: &mut State) -> Result<(), ()> {
-    let (links, mut primary_anchors) = find_all_links(&state.config); // TODO use the anchors!
-    // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
-    // primary_anchors.append(&mut secondary_anchors);
-    // <target, (links, requires_anchors)>
-    let mut link_target_groups: HashMap<Target, (Vec<MarkupLink>, bool)> = HashMap::new();
+    let (links, mut primary_anchors, errors) = find_all_links(&state.config); // TODO use the anchors!
+                                                                              // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
+                                                                              // primary_anchors.append(&mut secondary_anchors);
 
-    let mut skipped = 0;
+    // // <target, (links, requires_anchors)>
+    // let mut link_target_groups: HashMap<Target, (Vec<Link>, bool)> = HashMap::new();
 
-    for link in &links {
-        if state
-            .config
-            .ignore_links
-            .iter()
-            .any(|m| m.matches(&link.target))
-        {
-            print_helper(
-                link,
-                &"Skip".green(),
-                "Ignore link because of ignore-links option.",
-                false,
-            );
-            skipped += 1;
-            continue;
-        }
-        let link_type = get_link_type(&link.target);
-        let target = resolve_target_link(link, &link_type, &state.config).await;
-        let t = Target::new(target, link_type);
-        match link_target_groups.get_mut(&t) {
-            Some(v) => {
-                v.0.push(link.clone());
-                v.1 = v.1 || link.anchor.is_some();
-            }
-            None => {
-                link_target_groups.insert(t, (vec![link.clone()], link.anchor.is_some()));
-            }
-        }
+    // let mut skipped = 0;
+
+    // for link in &links {
+    //     if state
+    //         .config
+    //         .ignore_links
+    //         .iter()
+    //         .any(|m| m.matches(&link.target1))
+    //     {
+    //         print_helper(
+    //             link,
+    //             &"Skip".green(),
+    //             "Ignore link because of ignore-links option.",
+    //             false,
+    //         );
+    //         skipped += 1;
+    //         continue;
+    //     }
+    //     let target = resolve_target_link(link, &link.target.r#type, &state.config).await;
+    //     let t = Target::new(target, link_type);
+    //     match link_target_groups.get_mut(&t) {
+    //         Some(v) => {
+    //             v.0.push(link.clone());
+    //             v.1 = v.1 || link.target.anchor.is_some();
+    //         }
+    //         None => {
+    //             link_target_groups.insert(t, (vec![link.clone()], link.target.anchor.is_some()));
+    //         }
+    //     }
+    // }
+
+    // for (target, (links, _)) in link_target_groups {
+    //     for link in links {
+    //         // println!("{}#{}", target, link);
+    //         println!("{:?}", link);
+    //     }
+    // }
+
+    println!("Links ...");
+    for link in links {
+        println!("{:#?}", link);
     }
 
-    for (target, (links, _)) in link_target_groups {
-        for link in links {
-            // println!("{}#{}", target, link);
-            println!("{:?}", link);
-        }
+    println!("\nAnchors ...");
+    for anchor in primary_anchors {
+        println!("{}", anchor);
+    }
+
+    println!("\nErrors ...");
+    for error in errors {
+        println!("{:#?}", error);
     }
 
     // let throttle = state.config.throttle > 0;

@@ -3,9 +3,9 @@
 extern crate criterion;
 
 use criterion::Criterion;
-use mle::{State, logger};
 use mle::markup::MarkupType;
 use mle::Config;
+use mle::{logger, State};
 use std::fs;
 
 fn end_to_end_benchmark() {

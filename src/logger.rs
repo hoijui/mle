@@ -2,13 +2,11 @@ extern crate simplelog;
 
 use simplelog::{ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode};
 
-arg_enum! {
-    #[derive(Debug, Clone, Copy)]
-    pub enum LogLevel {
-        Info,
-        Warn,
-        Debug
-    }
+#[derive(Debug, Clone, Copy, ArgEnum)]
+pub enum LogLevel {
+    Info,
+    Warn,
+    Debug,
 }
 
 impl Default for LogLevel {

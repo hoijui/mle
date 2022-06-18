@@ -1,6 +1,8 @@
+use crate::link::MarkupAnchorTarget;
+use crate::link::{Link, Position};
 use crate::link_extractors::link_extractor::LinkExtractor;
-use crate::types::MarkupAnchorTarget;
-use crate::types::MarkupLink;
+// use crate::link::MarkupLink;
+use crate::markup::MarkupFile;
 
 pub struct HtmlLinkExtractor();
 
@@ -23,15 +25,17 @@ enum Attribute {
 impl LinkExtractor for HtmlLinkExtractor {
     fn find_links_and_anchors(
         &self,
-        text: &str,
+        file: &MarkupFile,
+        // text: &str,
+        // source_file: Rc<FileLoc>,
         anchors_only: bool,
-    ) -> (Vec<MarkupLink>, Vec<MarkupAnchorTarget>) {
-        let mut links: Vec<MarkupLink> = Vec::new();
-        let mut anchors: Vec<MarkupAnchorTarget> = Vec::new();
+    ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+        let mut links: Vec<Link> = Vec::new();
+        let mut anchors: Vec<MarkupAnchorTarget> = Vec::new(); // TODO FIXME This is never added to!
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
         let mut element_part: Option<Attribute>;
-        for (line, line_str) in text.lines().enumerate() {
+        for (line, line_str) in file.content.fetch()?.as_ref().lines().enumerate() {
             let line_chars: Vec<char> = line_str.chars().collect();
             let mut column: usize = 0;
             while line_chars.get(column).is_some() {
@@ -107,10 +111,15 @@ impl LinkExtractor for HtmlLinkExtractor {
                                     }
                                     column += 1;
                                 }
-                                let link = (&line_chars[link_column..column])
+                                let link_target = &(&line_chars[link_column..column])
                                     .iter()
                                     .collect::<String>();
-                                links.push(MarkupLink::new(&link, line + 1, link_column + 1));
+                                // let link_target = line_chars[link_column..column]; // TODO FIXME Do it somehow like this (should be faster)
+                                let pos = Position {
+                                    line: line + 1,
+                                    column: link_column + 1,
+                                } + &file.start;
+                                links.push(Link::new(file.locator.clone(), pos, link_target));
                                 state = ParserState::Text;
                             }
                             Some(_) | None => {}
@@ -120,29 +129,37 @@ impl LinkExtractor for HtmlLinkExtractor {
                 column += 1;
             }
         }
-        (links, anchors)
+        Ok((links, anchors))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::{link::FileLoc, markup::MarkupType};
+
     use super::*;
     use ntest::test_case;
 
-    #[test]
-    fn no_link() {
+    fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let le = HtmlLinkExtractor();
-        let input = "]This is not a <has> no link <h1>Bla</h1> attribute.";
-        let result = le.find_links(&input);
-        assert!(result.is_empty());
+        let markup_file = MarkupFile::dummy(content, MarkupType::Html);
+        le.find_links(&markup_file)
     }
 
     #[test]
-    fn commented() {
-        let le = HtmlLinkExtractor();
-        let input = "df <!-- <a href=\"http://wiki.selfhtml.org\"> haha</a> -->";
-        let result = le.find_links(&input);
+    fn no_link() -> std::io::Result<()> {
+        let input = "]This is not a <has> no link <h1>Bla</h1> attribute.";
+        let result = find_links(input)?;
         assert!(result.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn commented() -> std::io::Result<()> {
+        let input = "df <!-- <a href=\"http://wiki.selfhtml.org\"> haha</a> -->";
+        let result = find_links(input)?;
+        assert!(result.is_empty());
+        Ok(())
     }
 
     #[test_case(
@@ -166,9 +183,12 @@ mod tests {
         24
     )]
     fn links(input: &str, line: usize, column: usize) {
-        let le = HtmlLinkExtractor();
-        let result = le.find_links(&input);
-        let expected = MarkupLink::new("https://www.w3schools.com", line, column);
+        let result = find_links(input).expect("No error");
+        let expected = Link::new(
+            FileLoc::dummy(),
+            Position { line, column },
+            "https://www.w3schools.com",
+        );
         assert_eq!(vec![expected], result);
     }
 }

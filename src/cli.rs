@@ -1,171 +1,411 @@
+// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 use crate::ignore_path;
 use crate::ignore_path::IgnorePath;
 use crate::logger;
 use crate::markup::MarkupType;
 use crate::Config;
-use clap::{App, Arg};
-use std::convert::TryFrom;
-use std::path::Path;
-use std::path::MAIN_SEPARATOR;
+use clap::builder::{NonEmptyStringValueParser, PossibleValuesParser, ValueParser};
+use clap::Arg;
+use clap::{ArgAction, Command, ValueHint};
+use std::collections::HashSet;
+use std::env;
+use std::path::PathBuf;
 use wildmatch::WildMatch;
 
-#[must_use]
-pub fn parse_args() -> Config {
-    let matches = App::new(crate_name!())
-        .arg(
-            Arg::with_name("directory")
-                .help("Check all links in given directory and subdirectories")
-                .required(false)
-                .index(1)
-        )
-        .arg(
-            Arg::with_name("debug")
-                .long("debug")
-                .short("d")
-                .help("Print debug information to console")
-                .required(false)
-        )
-        .arg(
-            Arg::with_name("no_web_links")
-                .long("no-web-links")
-                .help("Do not check web links")
-                .required(false)
-        )
-        .arg(
-            Arg::with_name("no_web_anchors")
-                .long("no-web-anchors")
-                .help("Do not check web anchors (potentially huge speedup)")
-                .required(false),
-        )
-        .arg(
-            Arg::with_name("match_file_extension")
-                .long("match-file-extension")
-                .help("Do check for the exact file extension when searching for a file")
-                .required(false)
-        )
-        .arg(
-            Arg::with_name("ignore_path")
-                .long("ignore-paths")
-                .help("List of files and directories which will not be checked; space separated")
-                .long_help("One or more files or directories which will not be checked, separated by white-space.")
-                .min_values(1)
-                .required(false)
-                .empty_values(false)
-                .value_name("PATH")
-                .validator(ignore_path::is_valid_string)
-        )
-        .arg(
-            Arg::with_name("ignore_links")
-                .long("ignore-links")
-                .short("i")
-                .help("List of links which will not be checked; space separated")
-                .long_help("One or more wildcard-patterns/globs, matching links which will not be checked, separated by white-space.")
-                .min_values(1)
-                .required(false)
-                .empty_values(false)
-                .value_name("GLOB")
-        )
-        .arg(
-            Arg::with_name("markup_types")
-                .long("markup-types")
-                .short("t")
-                .help("List of markup types which shall be checked; space separated")
-                .long_help("One or more markup file types which shall be checked, separated by white-space.")
-                .min_values(1)
-                .possible_values(&["md", "html"])
-                .required(false)
-                .empty_values(false)
-        )
-        .arg(
-            Arg::with_name("throttle")
-                .long("throttle")
-                .help("Wait between http request to the same host for a defined number of milliseconds")
-                .required(false)
-                .takes_value(true)
-                .empty_values(false)
-        )
-        .arg(
-            Arg::with_name("root_dir")
-                .long("root-dir")
-                .takes_value(true)
-                .short("r")
-                .help("Path to the root folder used to resolve all relative paths")
-                .required(false)
-        )
-        .version(crate_version!())
-        .author(crate_authors!())
-        .about(crate_description!())
-        .get_matches();
-    let debug = matches.is_present("debug");
+const A_L_SCAN_ROOT: &str = "scann-root";
+const A_S_SCAN_ROOT: char = 'S';
+const A_L_NON_RECURSIVE: &str = "non-recursive";
+const A_S_NON_RECURSIVE: char = 'N';
+const A_L_DEBUG: &str = "debug";
+const A_S_DEBUG: char = 'D';
+const A_L_NO_LINKS: &str = "no-links";
+const A_S_NO_LINKS: char = 'n';
+const A_L_ANCHORS: &str = "anchors";
+const A_S_ANCHORS: char = 'a';
+//const A_L_MATCH_FILE_EXTENSION: &str = "match-file-extension";
+//const A_S_MATCH_FILE_EXTENSION: char = 'M';
+const A_L_IGNORE_PATHS: &str = "ignore-paths";
+const A_S_IGNORE_PATHS: char = 'I';
+const A_L_IGNORE_LINKS: &str = "ignore-links";
+const A_S_IGNORE_LINKS: char = 'i';
+const A_L_MARKUP_TYPES: &str = "markup-types";
+const A_S_MARKUP_TYPES: char = 'm';
+const A_L_RESOLVE_ROOT: &str = "resolve-root";
+const A_S_RESOLVE_ROOT: char = 'R';
+//const A_L_DRY: &str = "dry";
+//const A_S_DRY: char = 'd';
+const A_L_LOG_FILE: &str = "log-file";
+const A_S_LOG_FILE: char = 'l';
+const A_L_RESULT_FILE: &str = "result-file";
+const A_S_RESULT_FILE: char = 'P';
+const A_L_RESULT_FORMAT: &str = "result-format";
+const A_S_RESULT_FORMAT: char = 'F';
 
-    let throttle = match matches.value_of("throttle") {
-        Some(v) => v
-            .parse()
-            .expect("Integer expected. Throttle time in milliseconds"),
-        None => 0,
+fn arg_scan_root() -> Arg<'static> {
+    Arg::new(A_L_SCAN_ROOT)
+        .help("The root dir to scann for markup files")
+        .long_help(formatcp!(
+            "The root directory to scann for markup files. \
+            See also --{A_L_NON_RECURSIVE}."
+        ))
+        .takes_value(true)
+        // .forbid_empty_values(true)
+        // .value_parser(NonEmptyStringValueParser::new())
+        .value_parser(value_parser!(std::path::PathBuf))
+        .value_name("DIR")
+        .value_hint(ValueHint::DirPath)
+        .short(A_S_SCAN_ROOT)
+        .long(A_L_SCAN_ROOT)
+        // .multiple_occurrences(false)
+        .action(ArgAction::Set)
+        .required(false)
+        .default_value(".")
+}
+
+fn arg_non_recursive() -> Arg<'static> {
+    Arg::new(A_L_NON_RECURSIVE)
+        .help("Do not scan for files recursively")
+        .takes_value(false)
+        .short(A_S_NON_RECURSIVE)
+        .long(A_L_NON_RECURSIVE)
+        // .multiple_occurrences(false)
+        // .value_parser(value_parser!(bool))
+        .action(ArgAction::SetTrue)
+        .required(false)
+}
+
+fn arg_debug() -> Arg<'static> {
+    Arg::new(A_L_DEBUG)
+        .help("Print debug information to the console")
+        .takes_value(false)
+        .short(A_S_DEBUG)
+        .long(A_L_DEBUG)
+        // .multiple_occurrences(false)
+        .required(false)
+}
+
+fn arg_no_links() -> Arg<'static> {
+    Arg::new(A_L_NO_LINKS)
+        .help("Do not extract links")
+        .long_help(
+            "Do not extract links. \
+            See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
+        )
+        .takes_value(false)
+        .short(A_S_NO_LINKS)
+        .long(A_L_NO_LINKS)
+        .requires(A_L_ANCHORS)
+        // .multiple_occurrences(false)
+        .required(false)
+}
+
+fn arg_anchors() -> Arg<'static> {
+    Arg::new(A_L_ANCHORS)
+        .help("Extract anchors")
+        //.long_help("XXX")
+        .takes_value(false)
+        .short(A_S_ANCHORS)
+        .long(A_L_ANCHORS)
+        // .multiple_occurrences(false)
+        .required(false)
+}
+
+/*
+fn arg_match_file_extension() -> Arg<'static> {
+    Arg::new(A_L_MATCH_FILE_EXTENSION)
+        .help("Do check for the exact file extension when searching for a file")
+        .takes_value(false)
+        .short(A_S_MATCH_FILE_EXTENSION)
+        .long(A_L_MATCH_FILE_EXTENSION)
+        .required(false)
+}
+*/
+
+fn arg_ignore_paths() -> Arg<'static> {
+    Arg::new(A_L_IGNORE_PATHS)
+        .help("List of files and directories which will not be scanned; space separated")
+        .long_help(
+            "One or more files or directories which will not be scanned, \
+            separated by white-space.",
+        )
+        .takes_value(true)
+        // .forbid_empty_values(true)
+        // .value_parser(NonEmptyStringValueParser::new())
+        .value_name("PATH/GLOB")
+        .value_hint(ValueHint::FilePath)
+        .min_values(1)
+        .required(false)
+        .short(A_S_IGNORE_PATHS)
+        .long(A_L_IGNORE_PATHS)
+        // .multiple_occurrences(true)
+        .action(ArgAction::Append)
+        // .validator(ignore_path::is_valid_string)
+        .value_parser(ValueParser::new(ignore_path::parse_ignore_path))
+}
+
+fn arg_ignore_links() -> Arg<'static> {
+    Arg::new(A_L_IGNORE_LINKS)
+        .help("List of links which will not be extracted; space separated")
+        .long_help(
+            "One or more wildcard-patterns/globs, matching links \
+            which will not be extracted, separated by white-space.",
+        )
+        .takes_value(true)
+        .min_values(1)
+        // .forbid_empty_values(true)
+        // .value_parser(NonEmptyStringValueParser::new())
+        .value_parser(ValueParser::new(ignore_path::parse_ignore_link))
+        .value_name("GLOB")
+        .short(A_S_IGNORE_LINKS)
+        .long(A_L_IGNORE_LINKS)
+        // .multiple_occurrences(true)
+        .action(ArgAction::Append)
+        .required(false)
+}
+
+fn arg_markup_types() -> Arg<'static> {
+    Arg::new(A_L_MARKUP_TYPES)
+        .help("List of markup types from which links shall be extracted; space separated")
+        .long_help(
+            "One or more markup file types from which links shall be extracted, \
+            separated by white-space.",
+        )
+        .takes_value(true)
+        .min_values(1)
+        // .possible_values(&["md", "html"])
+        .value_parser(PossibleValuesParser::new(&["md", "html"]))
+        .short(A_S_MARKUP_TYPES)
+        .long(A_L_MARKUP_TYPES)
+        // .multiple_occurrences(true)
+        .action(ArgAction::Append)
+        .required(false)
+}
+
+fn arg_resolve_root() -> Arg<'static> {
+    Arg::new(A_L_RESOLVE_ROOT)
+        .help("Path or URL used to resolve all relative paths to")
+        .takes_value(true)
+        // .forbid_empty_values(false)
+        .value_name("PATH/URL")
+        .value_hint(ValueHint::FilePath)
+        .short(A_S_RESOLVE_ROOT)
+        .long(A_L_RESOLVE_ROOT)
+        // .multiple_occurrences(false)
+        .required(false)
+        .conflicts_with(A_L_NO_LINKS)
+}
+
+/*
+fn arg_dry() -> Arg<'static> {
+    Arg::new(A_L_DRY)
+        .help("Do not write any files or set any environment variables")
+        .long_help("Set Whether to skip the actual setting of environment variables.")
+        .takes_value(false)
+        .short(A_S_DRY)
+        .long(A_L_DRY)
+        .multiple_occurrences(false)
+        .required(false)
+}
+*/
+
+fn arg_log_file() -> Arg<'static> {
+    lazy_static! {
+        static ref LOG_FILE_NAME: String = format!("{}.log.txt", crate_name!());
+    }
+    Arg::new(A_L_LOG_FILE)
+        .help("Write log output to a file")
+        .long_help("Writes a detailed log to the specifed file.")
+        .takes_value(true)
+        // .forbid_empty_values(true)
+        .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
+        .value_hint(ValueHint::FilePath)
+        .short(A_S_LOG_FILE)
+        .long(A_L_LOG_FILE)
+        // .multiple_occurrences(false)
+        .required(false)
+        .default_missing_value(&LOG_FILE_NAME)
+}
+
+fn arg_result_file() -> Arg<'static> {
+    Arg::new(A_L_RESULT_FILE)
+        .help("Where to store the extracted data to")
+        /*.long_help(
+            "Shows a list (in Markdown syntax) of all properties \
+            and the primary values retrieved for each, \
+            accumulated over the sources. \
+            Writes to log(Info), if no target file is given as argument.",
+        )*/
+        .takes_value(true)
+        .value_hint(ValueHint::FilePath)
+        .value_name("FILE")
+        // .forbid_empty_values(true)
+        .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
+        .short(A_S_RESULT_FILE)
+        .long(A_L_RESULT_FILE)
+        // .multiple_occurrences(false)
+        .required(false)
+}
+
+fn arg_result_format() -> Arg<'static> {
+    Arg::new(A_L_RESULT_FORMAT)
+        .help("In what data format to output the extracted data")
+        /*.long_help(
+            "Shows a list (in Markdown syntax) of all properties \
+            and the primary values retrieved for each, \
+            accumulated over the sources. \
+            Writes to log(Info), if no target file is given as argument.",
+        )*/
+        .takes_value(true)
+        // .possible_values(&["md", "json", "csv", "grep"])
+        .value_parser(PossibleValuesParser::new(&["md", "json", "csv", "grep"]))
+        .value_name("FORMAT")
+        // .forbid_empty_values(true)
+        .short(A_S_RESULT_FORMAT)
+        .long(A_L_RESULT_FORMAT)
+        // .multiple_occurrences(false)
+        .required(false)
+}
+
+lazy_static! {
+    static ref ARGS: [Arg<'static>; 12] = [
+        arg_scan_root(),
+        arg_non_recursive(),
+        arg_debug(),
+        arg_no_links(),
+        arg_anchors(),
+        //arg_match_file_extension(),
+        arg_ignore_paths(),
+        arg_ignore_links(),
+        arg_markup_types(),
+        arg_resolve_root(),
+        //arg_dry(),
+        arg_log_file(),
+        arg_result_file(),
+        arg_result_format(),
+    ];
+}
+
+fn find_duplicate_short_options() -> Vec<char> {
+    let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
+    short_options.push('h'); // standard option --help
+    short_options.push('V'); // standard option --version
+    short_options.sort_unstable();
+    let mut duplicate_short_options = HashSet::new();
+    let mut last_chr = '&';
+    for chr in &short_options {
+        if *chr == last_chr {
+            duplicate_short_options.insert(*chr);
+        }
+        last_chr = *chr;
+    }
+    duplicate_short_options.iter().copied().collect()
+}
+
+fn arg_matcher() -> Command<'static> {
+    let app = command!().bin_name("osh").args(ARGS.iter());
+    let duplicate_short_options = find_duplicate_short_options();
+    assert!(
+        duplicate_short_options.is_empty(),
+        "Duplicate argument short options: {:?}",
+        duplicate_short_options
+    );
+    app
+}
+
+pub fn parse_args() -> Result<Config, std::io::Error> {
+    let args = arg_matcher().get_matches();
+
+    let scan_root = match args.get_one::<PathBuf>(A_L_SCAN_ROOT) {
+        Some(dir) => dir.to_owned(), //PathBuf::from(dir),
+        None => env::current_dir()?,
     };
+    /*let directory = matches
+    .value_of("directory")
+    .unwrap_or("./")
+    .parse()
+    .unwrap();*/
+    let recursive = !args.contains_id(A_L_NON_RECURSIVE);
+    let debug = args.contains_id(A_L_DEBUG);
+    let links = !args.contains_id(A_L_NO_LINKS);
+    let anchors = args.contains_id(A_L_ANCHORS);
+    //let match_file_extension = args.value_of(A_L_MATCH_FILE_EXTENSION);
+    //let ignore_paths = args.value_of(A_L_IGNORE_PATHS);
+    let ignore_paths: Vec<IgnorePath> = args
+        // .get_many::<IgnorePath>(A_L_IGNORE_PATHS)
+        .get_many::<Result<IgnorePath, String>>(A_L_IGNORE_PATHS)
+        .unwrap_or_default()
+        .map(ToOwned::to_owned)
+        // .map(ToOwned::to_owned)
+        // .unwrap_or_default()
+        // .map(IgnorePath::try_from)
+        .collect::<Result<Vec<IgnorePath>, _>>()
+        .unwrap();
+    // .map(ToOwned::to_owned)
+    // .collect();
+    //let ignore_links = args.value_of(A_L_IGNORE_LINKS);
+    let ignore_links: Vec<WildMatch> = args
+        .get_many::<WildMatch>(A_L_IGNORE_LINKS)
+        .unwrap_or_default()
+        // .map(|x| WildMatch::new(x))
+        .map(ToOwned::to_owned)
+        .collect();
+    //let markup_types = args.value_of(A_L_MARKUP_TYPES);
+    let mut markup_types = vec![MarkupType::Markdown, MarkupType::Html];
+    if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
+        markup_types = types.map(|x| x.parse().unwrap()).collect();
+    }
+    // let resolve_root = match args.get_one(A_L_RESOLVE_ROOT) {
+    //     Some(dir) => PathBuf::from(dir),
+    //     None => env::current_dir()?,
+    // };
+    let resolve_root = args.get_one::<PathBuf>(A_L_RESOLVE_ROOT).map(PathBuf::from);
+    /*let resolve_root = if let Some(resolve_root) = matches.value_of(A_L_RESOLVE_ROOT) {
+        let resolve_root = Path::new(
+            &resolve_root
+                .replace('/', &MAIN_SEPARATOR.to_string())
+                .replace('\\', &MAIN_SEPARATOR.to_string()),
+        )
+        .to_path_buf();
+        if !resolve_root.is_dir() {
+            eprintln!("Resolve root '{:?}' must be a directory!", resolve_root);
+            std::process::exit(1);
+        }
+        Some(resolve_root)
+    } else {
+        None
+    };*/
+    //let dry = args.value_of(A_L_DRY);
+    let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
+    let result_file = args.get_one::<PathBuf>(A_L_RESULT_FILE).map(PathBuf::from);
+    let result_format = args
+        .get_one::<&str>(A_L_RESULT_FORMAT)
+        .unwrap_or(&"csv")
+        .to_owned()
+        .to_owned();
 
     let log_level = if debug {
         logger::LogLevel::Debug
     } else {
         logger::LogLevel::Warn
     };
-    let directory = matches
-        .value_of("directory")
-        .unwrap_or("./")
-        .parse()
-        .unwrap();
 
-    let mut markup_types = vec![MarkupType::Markdown, MarkupType::Html];
-    if let Some(types) = matches.values_of("markup_types") {
-        markup_types = types.map(|x| x.parse().unwrap()).collect();
-    }
-
-    let no_web_links = matches.is_present("no_web_links");
-
-    let no_web_anchors = matches.is_present("no_web_anchors");
-
-    let match_file_extension = matches.is_present("match_file_extension");
-
-    let ignore_links: Vec<WildMatch> = matches
-        .values_of("ignore_links")
-        .unwrap_or_default()
-        .map(|x| WildMatch::new(x))
-        .collect();
-
-    let ignore_paths: Vec<IgnorePath> = matches
-        .values_of("ignore_path")
-        .unwrap_or_default()
-        .map(IgnorePath::try_from)
-        .collect::<Result<Vec<IgnorePath>, _>>()
-        .unwrap();
-
-    let root_dir = if let Some(root_path) = matches.value_of("root_dir") {
-        let root_path = Path::new(
-            &root_path
-                .replace('/', &MAIN_SEPARATOR.to_string())
-                .replace('\\', &MAIN_SEPARATOR.to_string()),
-        )
-        .to_path_buf();
-        if !root_path.is_dir() {
-            eprintln!("Root path '{:?}' must be a directory!", root_path);
-            std::process::exit(1);
-        }
-        Some(root_path)
-    } else {
-        None
-    };
-
-    Config {
+    Ok(Config {
         log_level,
-        folder: directory,
-        markup_types,
-        no_web_links,
-        no_web_anchors,
-        match_file_extension,
-        ignore_links,
+        log_file,
+        scan_root,
+        recursive,
+        links,
+        anchors,
+        //match_file_extension,
         ignore_paths,
-        root_dir,
-        throttle,
-    }
+        ignore_links,
+        markup_types,
+        resolve_root,
+        //dry,
+        result_file,
+        result_format,
+    })
 }
