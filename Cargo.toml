@@ -4,7 +4,7 @@ version = "0.14.4-alpha.0"
 authors = ["Robin Vobruba <hoijui.quaero@gmail.com>"]
 edition = "2018"
 description = "The markup link extractor (mle) extracts links from markup files (Markdown and HTML)."
-keywords = [ "link-extractor", "markup", "html", "markdown"]
+keywords = ["link-extractor", "markup", "html", "markdown"]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/hoijui/mle"
@@ -15,25 +15,25 @@ is-it-maintained-open-issues = { repository = "hoijui/mle" }
 is-it-maintained-issue-resolution = { repository = "hoijui/mle" }
 
 [dependencies]
-clap = "2.33.3"
-log = "0.4.11"
-simplelog = "0.10"
-walkdir = "2.3.1"
-regex = "1"
-lazy_static = "1.4.0"
-url = "2.2.1"
-colored = "2"
 async-std = "1.9.0"
-reqwest = {version="0.11.3", features = ["native-tls-vendored"] }
-tokio = {version="1.5", features = ["rt-multi-thread", "macros", "time"] }
+clap = "2.33.3"
+colored = "2"
 futures = "0.3"
-wildmatch = "2.1.0"
+lazy_static = "1.4.0"
+log = "0.4.11"
 #pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
 pulldown-cmark = "0.9.1"
+regex = "1"
+reqwest = { version = "0.11.3", features = ["native-tls-vendored"] }
+simplelog = "0.10"
+tokio = { version = "1.5", features = ["rt-multi-thread", "macros", "time"] }
+url = "2.2.1"
+walkdir = "2.3.1"
+wildmatch = "2.1.0"
 
 [dev-dependencies]
-ntest = "0.7.3"
 criterion = "0.3.4"
+ntest = "0.7.3"
 
 [[bench]]
 name = "benchmarks"
