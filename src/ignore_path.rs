@@ -19,7 +19,7 @@ pub enum Type {
     Prefix,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct IgnorePath {
     pub r#type: Type,
     pub path: PathBuf,

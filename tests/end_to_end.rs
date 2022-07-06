@@ -2,9 +2,9 @@
 mod helper;
 
 use helper::benches_dir;
-use mlc::logger;
-use mlc::markup::MarkupType;
-use mlc::Config;
+use mle::{State, logger};
+use mle::markup::MarkupType;
+use mle::Config;
 use std::convert::TryInto;
 
 #[tokio::test]
@@ -14,6 +14,7 @@ async fn end_to_end() {
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
         no_web_links: false,
+        no_web_anchors: false,
         match_file_extension: false,
         throttle: 0,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
@@ -27,7 +28,8 @@ async fn end_to_end() {
         ],
         root_dir: None,
     };
-    if let Err(e) = mlc::run(&config).await {
+    let mut state = State::new(config);
+    if let Err(e) = mle::run(&mut state).await {
         panic!("Test with custom root failed. {:?}", e);
     }
 }
@@ -40,13 +42,15 @@ async fn end_to_end_different_root() {
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
         no_web_links: false,
+        no_web_anchors: false,
         match_file_extension: false,
         ignore_links: vec![],
         ignore_paths: vec![],
         throttle: 0,
         root_dir: Some(test_files),
     };
-    if let Err(e) = mlc::run(&config).await {
+    let mut state = State::new(config);
+    if let Err(e) = mle::run(&mut state).await {
         panic!("Test with custom root failed. {:?}", e);
     }
 }

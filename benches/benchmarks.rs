@@ -3,7 +3,7 @@
 extern crate criterion;
 
 use criterion::Criterion;
-use mlc::logger;
+use mlc::{RemoteCache, State, logger};
 use mlc::markup::MarkupType;
 use mlc::Config;
 use std::fs;
@@ -13,14 +13,16 @@ fn end_to_end_benchmark() {
         folder: fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
+        no_web_links: true,
+        no_web_anchors: true,
         ignore_links: vec![],
         match_file_extension: false,
         ignore_paths: vec![],
         root_dir: None,
         throttle: 0,
-        no_web_links: false,
     };
-    let _ = mlc::run(&config);
+    let mut state = State::new(config);
+    let _ = mlc::run(&mut state);
 }
 
 fn criterion_benchmark(c: &mut Criterion) {

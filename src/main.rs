@@ -1,8 +1,9 @@
 #[macro_use]
 extern crate log;
 
-use mlc::cli;
-use mlc::logger;
+use mle::State;
+use mle::cli;
+use mle::logger;
 use std::process;
 
 #[macro_use]
@@ -10,7 +11,7 @@ extern crate clap;
 
 fn print_header() {
     let width = 60;
-    let header = format!("markup link checker - mlc v{:}", crate_version!());
+    let header = format!("markup link extractor - mle v{:}", crate_version!());
     println!();
     println!("{:+<1$}", "", width);
     print!("+");
@@ -30,9 +31,10 @@ fn print_header() {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
     let config = cli::parse_args();
-    logger::init(&config.log_level);
-    info!("Config: {:?}", &config);
-    if mlc::run(&config).await.is_err() {
+    let mut state = State::new(config);
+    logger::init(&state.config.log_level);
+    info!("Config: {:?}", &state.config);
+    if mle::run(&mut state).await.is_err() {
         process::exit(1);
     } else {
         process::exit(0);

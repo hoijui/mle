@@ -3,7 +3,7 @@ use std::{borrow::Cow, fs, str::FromStr};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Content<'a> {
-    LocalFile(&'a str), // stores the file-name
+    LocalFile(String), // stores the file-name
     InMemory(&'a str),  // stores the whole content of the file as a string
                         // URL(Url, &'a str)
 }
@@ -11,10 +11,10 @@ pub enum Content<'a> {
 impl<'a> Content<'a> {
     pub fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
         match self {
-            &Self::LocalFile(file_name) => {
+            Self::LocalFile(file_name) => {
                 fs::read_to_string(file_name).map(|content| Cow::Owned(content))
             }
-            &Self::InMemory(content) => Ok(Cow::Borrowed(content)),
+            Self::InMemory(content) => Ok(Cow::Borrowed(content)),
         }
     }
 }
@@ -22,7 +22,7 @@ impl<'a> Content<'a> {
 #[derive(Debug)]
 pub struct MarkupFile<'a> {
     pub markup_type: MarkupType,
-    pub locator: &'a str, // local file path or URL
+    pub locator: String, // local file path or URL
     pub content: Content<'a>,
 }
 

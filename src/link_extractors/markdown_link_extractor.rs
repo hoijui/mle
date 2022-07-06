@@ -199,10 +199,10 @@ mod tests {
     fn nested_links() {
         let le = MarkdownLinkExtractor();
         let input =
-            "\n\r\t\n[![](http://meritbadge.herokuapp.com/mlc)](https://crates.io/crates/mlc)";
+            "\n\r\t\n[![](http://meritbadge.herokuapp.com/mle)](https://crates.io/crates/mlc)";
         let result = le.find_links(&input);
-        let img = MarkupLink::new("http://meritbadge.herokuapp.com/mlc", 3, 2);
-        let link = MarkupLink::new("https://crates.io/crates/mlc", 3, 1);
+        let img = MarkupLink::new("http://meritbadge.herokuapp.com/mle", 3, 2);
+        let link = MarkupLink::new("https://crates.io/crates/mle", 3, 1);
         assert_eq!(vec![img, link], result);
     }
 

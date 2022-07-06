@@ -862,7 +862,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mlc"
+name = "mle"
 version = "0.14.4-alpha.0"
 dependencies = [
  "async-std",
@@ -1144,8 +1144,9 @@ dependencies = [
 
 [[package]]
 name = "pulldown-cmark"
-version = "0.8.0"
-source = "git+https://github.com/lo48576/pulldown-cmark?branch=feature/heading-attrs#4ce6d11dff48f4549c585400ac5a137269103a6b"
+version = "0.9.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "34f197a544b0c9ab3ae46c359a7ec9cbbb5c7bf97054266fecb7ead794a181d6"
 dependencies = [
  "bitflags",
  "getopts",

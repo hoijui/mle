@@ -1,59 +1,42 @@
-use crate::link_validator::LinkCheckResult;
+// mod file_system;
+// mod http;
+// mod mail;
+
+// pub mod link_type;
+
+use std::sync::Arc;
+
+use crate::link_extractors::link_extractor::MarkupAnchorTarget;
+use crate::link_extractors::link_extractor::MarkupLink;
 use crate::Config;
+use crate::RemoteCache;
+use crate::State;
+use crate::link_type::LinkType;
+use colored::ColoredString;
+use colored::Colorize;
+use reqwest::Url;
+use tokio::sync::Mutex;
 use async_std::fs::canonicalize;
 use async_std::path::Path;
 use async_std::path::PathBuf;
 use std::path::MAIN_SEPARATOR;
 use walkdir::WalkDir;
 
-pub async fn check_filesystem(target: &str, config: &Config) -> LinkCheckResult {
-    let target = Path::new(target);
-    debug!("Absolute target path: '{:?}'", target);
-    if target.exists().await {
-        return LinkCheckResult::Ok;
-    } else if !config.match_file_extension && target.extension().is_none() {
-        // Check if file exists ignoring the file extension
-        let target_file_name = match target.file_name() {
-            Some(s) => s,
-            None => return LinkCheckResult::Failed("Target path not found.".to_string()),
-        };
-        let target_parent = match target.parent() {
-            Some(s) => s,
-            None => return LinkCheckResult::Failed("Target parent not found.".to_string()),
-        };
-        debug!("Check if file ignoring the extension exists.");
-        if target_parent.exists().await {
-            debug!(
-                "Parent {:?} exists. Search dir for file ignoring the extension.",
-                target_parent
-            );
-            for entry in WalkDir::new(target_parent)
-                .follow_links(false)
-                .max_depth(1)
-                .into_iter()
-                .filter_map(Result::ok)
-                .filter(|e| !e.file_type().is_dir())
-            {
-                let mut file_on_system = entry.into_path();
-                file_on_system.set_extension("");
-                match file_on_system.file_name() {
-                    Some(file_name) => {
-                        if target_file_name == file_name {
-                            info!("Found file {:?}", file_on_system);
-                            return LinkCheckResult::Ok;
-                        }
-                    }
-                    None => break,
-                }
-            }
-        }
+pub async fn resolve_target_link(
+    link: &MarkupLink,
+    link_type: &LinkType,
+    config: &Config,
+) -> String {
+    if link_type == &LinkType::FileSystem {
+        resolve_target_link_fs(&link.source, &link.target, config).await
+    } else {
+        link.target.to_string()
     }
-    LinkCheckResult::Failed("Target filename not found.".to_string())
 }
 
 /// Converts any valid file path, pointing to a en existing,
 /// local file-system entry, into its canonical, absolute form.
-pub async fn resolve_target_link(source: &str, target: &str, config: &Config) -> String {
+pub async fn resolve_target_link_fs(source: &str, target: &str, config: &Config) -> String {
     let /*mut*/ normalized_link = target
         .replace('/', &MAIN_SEPARATOR.to_string())
         .replace('\\', &MAIN_SEPARATOR.to_string());

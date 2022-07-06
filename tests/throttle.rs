@@ -2,9 +2,9 @@
 mod helper;
 
 use helper::benches_dir;
-use mlc::logger;
-use mlc::markup::MarkupType;
-use mlc::Config;
+use mle::{State, logger};
+use mle::markup::MarkupType;
+use mle::Config;
 use std::time::{Duration, Instant};
 
 const TEST_THROTTLE_MS: u32 = 100;
@@ -19,15 +19,17 @@ async fn throttle_different_hosts() {
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
         no_web_links: false,
+        no_web_anchors: false,
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
         ignore_paths: vec![],
         root_dir: None,
     };
+    let mut state = State::new(config);
 
     let start = Instant::now();
-    mlc::run(&config).await.unwrap_or(());
+    mle::run(&mut state).await.unwrap_or(());
     let duration = start.elapsed();
     assert!(duration < Duration::from_millis(THROTTLED_TIME_MS))
 }
@@ -40,15 +42,17 @@ async fn throttle_same_hosts() {
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
         no_web_links: false,
+        no_web_anchors: false,
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
         ignore_paths: vec![],
         root_dir: None,
     };
+    let mut state = State::new(config);
 
     let start = Instant::now();
-    mlc::run(&config).await.unwrap_or(());
+    mle::run(&mut state).await.unwrap_or(());
     let duration = start.elapsed();
     assert!(duration > Duration::from_millis(THROTTLED_TIME_MS))
 }
@@ -61,15 +65,17 @@ async fn throttle_same_ip() {
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
         no_web_links: false,
+        no_web_anchors: false,
         match_file_extension: false,
         throttle: TEST_THROTTLE_MS,
         ignore_links: vec![],
         ignore_paths: vec![],
         root_dir: None,
     };
+    let mut state = State::new(config);
 
     let start = Instant::now();
-    mlc::run(&config).await.unwrap_or(());
+    mle::run(&mut state).await.unwrap_or(());
     let duration = start.elapsed();
     assert!(duration > Duration::from_millis(THROTTLED_TIME_MS))
 }

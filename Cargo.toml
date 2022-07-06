@@ -1,18 +1,18 @@
 [package]
-name = "mlc"
+name = "mle"
 version = "0.14.4-alpha.0"
-authors = ["Armin Becher <becherarmin@gmail.com>"]
+authors = ["Robin Vobruba <hoijui.quaero@gmail.com>"]
 edition = "2018"
-description = "The markup link checker (mlc) checks for broken links in markup files."
-keywords = [ "link-checker", "broken", "markup", "html", "markdown"]
+description = "The markup link extractor (mle) extracts links from markup files (Markdown and HTML)."
+keywords = [ "link-extractor", "markup", "html", "markdown"]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/becheran/mlc"
+repository = "https://github.com/hoijui/mle"
 
 [badges]
 maintenance = { status = "actively-developed" }
-is-it-maintained-open-issues = { repository = "becheran/mlc" }
-is-it-maintained-issue-resolution = { repository = "becheran/mlc" }
+is-it-maintained-open-issues = { repository = "hoijui/mle" }
+is-it-maintained-issue-resolution = { repository = "hoijui/mle" }
 
 [dependencies]
 clap = "2.33.3"
@@ -28,7 +28,8 @@ reqwest = {version="0.11.3", features = ["native-tls-vendored"] }
 tokio = {version="1.5", features = ["rt-multi-thread", "macros", "time"] }
 futures = "0.3"
 wildmatch = "2.1.0"
-pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
+#pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
+pulldown-cmark = "0.9.1"
 
 [dev-dependencies]
 ntest = "0.7.3"

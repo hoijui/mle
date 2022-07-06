@@ -40,8 +40,8 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                 let path_str = path.to_str().unwrap(); //ok_or_else(|| Err("")).unwrap();
                 let file = MarkupFile {
                     markup_type,
-                    locator: path_str,
-                    content: Content::LocalFile(path_str),
+                    locator: path_str.to_string(),
+                    content: Content::LocalFile(path_str.to_string()),
                 };
                 debug!("Found file: '{:?}'", file);
                 result.push(file);

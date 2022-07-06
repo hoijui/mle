@@ -1,25 +1,27 @@
 #[cfg(test)]
-use mlc::link_extractors::link_extractor::find_links;
-use mlc::markup::{MarkupFile, MarkupType};
+use mle::link_extractors::link_extractor::find_links;
+use mle::markup::{Content, MarkupFile, MarkupType};
 
 #[test]
 fn no_links() {
-    let path = "./benches/benchmark/markdown/no_links/no_links.md".to_string();
+    let locator = "./benches/benchmark/markdown/no_links/no_links.md";
     let file = MarkupFile {
-        path,
         markup_type: MarkupType::Markdown,
+        locator: locator.to_string(),
+        content: Content::LocalFile(locator.to_string()),
     };
-    let result = find_links(&file);
-    assert!(result.is_empty());
+    let (links, _anchors) = find_links(&file, false);
+    assert!(links.is_empty());
 }
 
 #[test]
 fn some_links() {
-    let path = "./benches/benchmark/markdown/many_links/many_links.md".to_string();
+    let locator = "./benches/benchmark/markdown/many_links/many_links.md";
     let file = MarkupFile {
-        path,
         markup_type: MarkupType::Markdown,
+        locator: locator.to_string(),
+        content: Content::LocalFile(locator.to_string()),
     };
-    let result = find_links(&file);
-    assert_eq!(result.len(), 11);
+    let (links, _anchors) = find_links(&file, false);
+    assert_eq!(links.len(), 11);
 }
