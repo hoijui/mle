@@ -1,16 +1,9 @@
 extern crate url;
 
-use self::url::Url;
-use regex::Regex;
+use crate::types::LinkType;
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum LinkType {
-    Http,
-    Ftp,
-    Mail,
-    FileSystem,
-    UnknownUrlSchema,
-}
+use url::Url;
+use regex::Regex;
 
 #[must_use]
 pub fn get_link_type(link: &str) -> LinkType {

@@ -11,7 +11,7 @@ use crate::types::MarkupLink;
 use crate::Config;
 use crate::RemoteCache;
 use crate::State;
-use crate::link_type::LinkType;
+use crate::types::LinkType;
 use colored::ColoredString;
 use colored::Colorize;
 use reqwest::Url;

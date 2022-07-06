@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::PathBuf;
 use std::sync::Arc;
-use link_type::LinkType;
+use types::LinkType;
 use tokio::sync::Mutex;
 use tokio::time::{sleep_until, Duration, Instant};
 pub mod cli;
@@ -29,6 +29,7 @@ pub mod link_resolver;
 pub mod logger;
 pub mod markup;
 pub use colored::*;
+use types::Target;
 pub use wildmatch::WildMatch;
 
 use futures::{stream, StreamExt};
@@ -103,44 +104,6 @@ impl State {
         State {
             remote_cache: RemoteCache::new(),
             config,
-        }
-    }
-}
-
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
-struct Target {
-    target: String,
-    link_type: LinkType,
-    anchor: Option<String>,
-}
-
-impl std::fmt::Display for Target {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&self.target)?;
-        if let Some(anchor) = &self.anchor {
-            f.write_fmt(format_args!("#{}", anchor))?;
-        }
-        Ok(())
-    }
-}
-
-impl Target {
-    // TODO I think we have this elsewehere already, nicer.. search for '#'
-    pub fn new(link: String, link_type: LinkType) -> Target {
-        let (target, anchor) = match link.find('#') {
-            Some(idx) => {
-                // warn!(
-                //     "Strip everything after #. The chapter part ´{}´ is not checked.",
-                //     &normalized_link[idx..]
-                // );
-                (link[..idx].to_owned(), Some(link[idx..].to_owned()))
-            }
-            None => (link, None),
-        };
-        Target {
-            target,
-            link_type,
-            anchor,
         }
     }
 }

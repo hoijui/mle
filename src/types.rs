@@ -133,3 +133,42 @@ impl fmt::Debug for MarkupAnchorTarget {
         )
     }
 }
+
+
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+pub struct Target {
+    target: String,
+    link_type: LinkType,
+    anchor: Option<String>,
+}
+
+impl std::fmt::Display for Target {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.target)?;
+        if let Some(anchor) = &self.anchor {
+            f.write_fmt(format_args!("#{}", anchor))?;
+        }
+        Ok(())
+    }
+}
+
+impl Target {
+    // TODO I think we have this elsewehere already, nicer.. search for '#'
+    pub fn new(link: String, link_type: LinkType) -> Target {
+        let (target, anchor) = match link.find('#') {
+            Some(idx) => {
+                // warn!(
+                //     "Strip everything after #. The chapter part ´{}´ is not checked.",
+                //     &normalized_link[idx..]
+                // );
+                (link[..idx].to_owned(), Some(link[idx..].to_owned()))
+            }
+            None => (link, None),
+        };
+        Target {
+            target,
+            link_type,
+            anchor,
+        }
+    }
+}
