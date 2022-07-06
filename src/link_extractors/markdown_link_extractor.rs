@@ -1,8 +1,8 @@
 use super::html_link_extractor::HtmlLinkExtractor;
 use crate::link_extractors::link_extractor::LinkExtractor;
-use crate::link_extractors::link_extractor::MarkupAnchorTarget;
-use crate::link_extractors::link_extractor::MarkupAnchorType;
-use crate::link_extractors::link_extractor::MarkupLink;
+use crate::types::MarkupAnchorTarget;
+use crate::types::MarkupAnchorType;
+use crate::types::MarkupLink;
 use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;

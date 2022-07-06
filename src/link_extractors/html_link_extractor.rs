@@ -1,6 +1,6 @@
 use crate::link_extractors::link_extractor::LinkExtractor;
-use crate::link_extractors::link_extractor::MarkupAnchorTarget;
-use crate::link_extractors::link_extractor::MarkupLink;
+use crate::types::MarkupAnchorTarget;
+use crate::types::MarkupLink;
 
 pub struct HtmlLinkExtractor();
 

@@ -6,8 +6,8 @@
 
 use std::sync::Arc;
 
-use crate::link_extractors::link_extractor::MarkupAnchorTarget;
-use crate::link_extractors::link_extractor::MarkupLink;
+use crate::types::MarkupAnchorTarget;
+use crate::types::MarkupLink;
 use crate::Config;
 use crate::RemoteCache;
 use crate::State;

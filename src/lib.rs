@@ -6,8 +6,8 @@ extern crate clap;
 extern crate lazy_static;
 
 // use crate::file_traversal::markup_type;
-use crate::link_extractors::link_extractor::MarkupAnchorTarget;
-use crate::link_extractors::link_extractor::MarkupLink;
+use crate::types::MarkupAnchorTarget;
+use crate::types::MarkupLink;
 use crate::link_resolver::resolve_target_link;
 use crate::link_type::get_link_type;
 // use crate::markup::Content;
@@ -23,6 +23,7 @@ pub mod cli;
 pub mod file_traversal;
 pub mod ignore_path;
 pub mod link_extractors;
+pub mod types;
 pub mod link_type;
 pub mod link_resolver;
 pub mod logger;
