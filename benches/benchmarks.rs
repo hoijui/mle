@@ -3,9 +3,9 @@
 extern crate criterion;
 
 use criterion::Criterion;
-use mlc::{RemoteCache, State, logger};
-use mlc::markup::MarkupType;
-use mlc::Config;
+use mle::{State, logger};
+use mle::markup::MarkupType;
+use mle::Config;
 use std::fs;
 
 fn end_to_end_benchmark() {
@@ -22,7 +22,7 @@ fn end_to_end_benchmark() {
         throttle: 0,
     };
     let mut state = State::new(config);
-    let _ = mlc::run(&mut state);
+    let _ = mle::run(&mut state);
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
