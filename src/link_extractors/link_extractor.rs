@@ -25,27 +25,27 @@ pub fn find_links(
         "Scannig file at location '{:#?}' for links ...",
         file.locator
     );
-    link_extractor.find_links_and_anchors(file, anchors_only) //;
-                                                              // match file.content.fetch() {
-                                                              //     Ok(text) => {
-                                                              //         // let (mut links, anchor_targets) =
-                                                              //             link_extractor.find_links_and_anchors(&file, anchors_only)//;
-                                                              //         // for l in &mut links {
-                                                              //         //     l.source = file.locator.to_string();
-                                                              //         //     l.anchor = remove_anchor(&mut l.target);
-                                                              //         //     //println!("XXX {:?}", l);
-                                                              //         // }
-                                                              //         // (links, anchor_targets)
-                                                              //     }
-                                                              //     Err(e) => {
-                                                              //         warn!(
-                                                              //             "File '{:#?}'. IO Error: '{}'. Check your file encoding.",
-                                                              //             file.locator, e
-                                                              //         );
-                                                              //         // (vec![], vec![])
-                                                              //         Err(...)
-                                                              //     }
-                                                              // }
+    link_extractor.find_links_and_anchors(file, anchors_only)
+    // match file.content.fetch() {
+    //     Ok(text) => {
+    //         // let (mut links, anchor_targets) =
+    //             link_extractor.find_links_and_anchors(&file, anchors_only)//;
+    //         // for l in &mut links {
+    //         //     l.source = file.locator.to_string();
+    //         //     l.anchor = remove_anchor(&mut l.target);
+    //         //     //println!("XXX {:?}", l);
+    //         // }
+    //         // (links, anchor_targets)
+    //     }
+    //     Err(e) => {
+    //         warn!(
+    //             "File '{:#?}'. IO Error: '{}'. Check your file encoding.",
+    //             file.locator, e
+    //         );
+    //         // (vec![], vec![])
+    //         Err(...)
+    //     }
+    // }
 }
 
 fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {

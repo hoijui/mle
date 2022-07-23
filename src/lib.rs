@@ -132,7 +132,7 @@ pub async fn run(state: &mut State) -> Result<(), ()> {
 
     println!("Links ...");
     for link in links {
-        println!("{:#?}", link);
+        println!("{}", link);
     }
 
     println!("\nAnchors ...");

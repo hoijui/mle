@@ -3,23 +3,17 @@
 extern crate criterion;
 
 use criterion::Criterion;
+use mle::config::Config;
 use mle::markup::MarkupType;
-use mle::Config;
-use mle::{logger, State};
+use mle::{logger, state::State};
 use std::fs;
 
 fn end_to_end_benchmark() {
     let config = Config {
-        folder: fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
+        scan_root: fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
         log_level: logger::LogLevel::Debug,
         markup_types: vec![MarkupType::Markdown],
-        no_web_links: true,
-        no_web_anchors: true,
-        ignore_links: vec![],
-        match_file_extension: false,
-        ignore_paths: vec![],
-        root_dir: None,
-        throttle: 0,
+        ..Default::default()
     };
     let mut state = State::new(config);
     let _ = mle::run(&mut state);

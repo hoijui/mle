@@ -18,7 +18,13 @@ impl<'a> Content<'a> {
     }
 }
 
-#[derive(Debug)]
+impl Default for Content<'_> {
+    fn default() -> Self {
+        Self::InMemory("")
+    }
+}
+
+#[derive(Debug, Default)]
 pub struct MarkupFile<'a> {
     pub markup_type: MarkupType,
     pub locator: Rc<FileLoc>,
@@ -34,6 +40,12 @@ pub struct MarkupFile<'a> {
 pub enum MarkupType {
     Markdown,
     Html,
+}
+
+impl Default for MarkupType {
+    fn default() -> Self {
+        Self::Markdown
+    }
 }
 
 impl FromStr for MarkupType {

@@ -1,5 +1,6 @@
+use std::fmt::Display;
 // use std::convert::TryFrom;
-use std::ops::Add;
+use std::ops::{Add, Sub};
 use std::rc::Rc;
 use std::{convert::Infallible, fmt, str::FromStr};
 
@@ -84,9 +85,15 @@ pub struct Link {
     pub target: Target,
 }
 
+impl Default for FileLoc {
+    fn default() -> Self {
+        Self::System(FileSystemLoc::Absolute(PathBuf::new()))
+    }
+}
+
 impl FileLoc {
     pub fn dummy() -> Rc<Self> {
-        Rc::new(Self::System(FileSystemLoc::Absolute(PathBuf::new())))
+        Rc::new(Self::default())
     }
 }
 
@@ -151,6 +158,20 @@ impl From<&str> for Target {
             Self::FileSystem(FileSystemTarget { file, anchor })
         } else {
             Self::Invalid(value.to_owned())
+        }
+    }
+}
+
+impl std::fmt::Display for Target {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Http(url) => write!(f, "{}", url),
+            Self::Ftp(url) => write!(f, "{}", url),
+            Self::EMail(url) => write!(f, "{}", url),
+            Self::FileUrl(url) => write!(f, "{}", url),
+            Self::FileSystem(fs_target) => write!(f, "{}", fs_target),
+            Self::UnknownUrlSchema(url) => write!(f, "{}", url),
+            Self::Invalid(msg) => write!(f, "{}", msg),
         }
     }
 }
@@ -326,6 +347,28 @@ impl Add<&Position> for Position {
     }
 }
 
+impl Sub for Position {
+    type Output = Position;
+
+    fn sub(self, rrhs: Self) -> Self::Output {
+        Position {
+            line: self.line - rrhs.line,
+            column: self.column - rrhs.column,
+        }
+    }
+}
+
+impl Sub<&Position> for Position {
+    type Output = Position;
+
+    fn sub(self, rrhs: &Self) -> Self::Output {
+        Position {
+            line: self.line - rrhs.line,
+            column: self.column - rrhs.column,
+        }
+    }
+}
+
 impl Default for Position {
     fn default() -> Self {
         Self::new()
@@ -423,6 +466,12 @@ impl FromStr for FileSystemTarget {
 impl fmt::Debug for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{:#?} => {:#?}", self.source, self.target,)
+    }
+}
+
+impl fmt::Display for Link {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{} - {}", self.source, self.target,)
     }
 }
 

@@ -1,14 +1,14 @@
+use mle::config::Config;
 #[cfg(test)]
 use mle::file_traversal;
 use mle::markup::{MarkupFile, MarkupType};
-use mle::config::Config;
 use std::path::Path;
 
 #[test]
 fn find_markdown_files() {
     let path = Path::new("./benches/benchmark/markdown/md_file_endings").to_path_buf();
     let config: Config = Config {
-        folder: path,
+        scan_root: path,
         markup_types: vec![MarkupType::Markdown],
         ..Default::default()
     };
@@ -22,7 +22,7 @@ fn find_markdown_files() {
 fn empty_folder() {
     let path = Path::new("./benches/benchmark/markdown/empty").to_path_buf();
     let config: Config = Config {
-        folder: path,
+        scan_root: path,
         markup_types: vec![MarkupType::Markdown],
         ..Default::default()
     };

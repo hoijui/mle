@@ -2,22 +2,27 @@
 mod helper;
 
 use helper::benches_dir;
-use mle::markup::MarkupType;
 use mle::config::Config;
+use mle::logger;
+use mle::markup::MarkupType;
 use mle::state::State;
-use mle::{logger};
 use std::convert::TryInto;
 
 #[tokio::test]
 async fn end_to_end() {
     let config = Config {
-        folder: benches_dir().join("benchmark"),
+        scan_root: benches_dir().join("benchmark"),
         log_level: logger::LogLevel::Debug,
+        log_file: None,
+        recursive: true,
+        links: true,
+        anchors: true,
+        result_file: None,
+        result_format: "json".to_owned(),
+        resolve_root: None,
         markup_types: vec![MarkupType::Markdown],
-        no_web_links: false,
-        no_web_anchors: false,
-        match_file_extension: false,
-        throttle: 0,
+        // match_file_extension: false,
+        // throttle: 0,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
         ignore_paths: vec![
             "benches/benchmark/markdown/ignore_me.md"
@@ -27,7 +32,7 @@ async fn end_to_end() {
                 .try_into()
                 .unwrap(),
         ],
-        root_dir: None,
+        // root_dir: None,
     };
     let mut state = State::new(config);
     if let Err(e) = mle::run(&mut state).await {
@@ -39,16 +44,21 @@ async fn end_to_end() {
 async fn end_to_end_different_root() {
     let test_files = benches_dir().join("different_root");
     let config = Config {
-        folder: test_files.clone(),
+        scan_root: test_files.clone(),
         log_level: logger::LogLevel::Debug,
+        log_file: None,
+        recursive: true,
+        links: true,
+        anchors: true,
+        result_file: None,
+        result_format: "json".to_owned(),
+        resolve_root: Some(test_files),
         markup_types: vec![MarkupType::Markdown],
-        no_web_links: false,
-        no_web_anchors: false,
-        match_file_extension: false,
+        // match_file_extension: false,
+        // throttle: 0,
         ignore_links: vec![],
         ignore_paths: vec![],
-        throttle: 0,
-        root_dir: Some(test_files),
+        // root_dir: None,
     };
     let mut state = State::new(config);
     if let Err(e) = mle::run(&mut state).await {
