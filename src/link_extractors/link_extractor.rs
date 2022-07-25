@@ -15,6 +15,12 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
     }
 }
 
+/// Finds links (and optionally anchors),
+/// using the markup file specific link extractor internally.
+///
+/// # Errors
+///
+/// If fetching the markup file content failed.
 pub fn find_links(
     file: &MarkupFile,
     anchors_only: bool,
@@ -56,6 +62,11 @@ fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {
 }
 
 pub trait LinkExtractor {
+    /// Finds links (and optionally anchors),
+    /// using the markup file specific link extractor internally.
+    ///
+    /// # Errors
+    /// If fetching the markup file content failed.
     fn find_links_and_anchors(
         &self,
         // text: &str,
@@ -63,6 +74,10 @@ pub trait LinkExtractor {
         anchors_only: bool,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)>;
 
+    /// Finds links only, using the markup file specific link extractor internally.
+    ///
+    /// # Errors
+    /// If fetching the markup file content failed.
     fn find_links(&self, file: &MarkupFile) -> std::io::Result<Vec<Link>> {
         let (result, _) = self.find_links_and_anchors(file, true)?;
         Ok(result)

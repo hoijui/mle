@@ -84,6 +84,12 @@ fn print_helper(link: &Link, status_code: &colored::ColoredString, msg: &str, er
 //     }
 // }
 
+/// Runs the markup link extractor.
+/// This is the main entry point of this library.
+///
+/// # Errors
+///
+/// If reading of any input or writing of the log or result-file failed.
 pub async fn run(state: &mut State) -> Result<(), ()> {
     let (links, mut primary_anchors, errors) = find_all_links(&state.config); // TODO use the anchors!
                                                                               // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);

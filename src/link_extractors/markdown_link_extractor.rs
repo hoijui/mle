@@ -37,6 +37,24 @@ fn generate_id(text: &str, gfm_style: bool) -> String {
     id
 }
 
+impl MarkdownLinkExtractor {
+    fn create_pos_from_idx(content: &str) -> impl Fn(usize) -> Position {
+        let line_lengths: Vec<usize> = content.lines().map(str::len).collect();
+        move |idx: usize| -> Position {
+            let mut line = 1;
+            let mut column = idx + 1;
+            for line_length in &line_lengths {
+                if *line_length >= column {
+                    return Position { line, column };
+                }
+                column -= line_length + 1;
+                line += 1;
+            }
+            Position { line, column }
+        }
+    }
+}
+
 impl LinkExtractor for MarkdownLinkExtractor {
     fn find_links_and_anchors(
         &self,
@@ -55,19 +73,8 @@ impl LinkExtractor for MarkdownLinkExtractor {
             None
         };
 
-        let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
-        let pos_from_idx = |idx: usize| -> Position {
-            let mut line = 1;
-            let mut column = idx + 1;
-            for line_length in &line_lengths {
-                if *line_length >= column {
-                    return Position { line, column };
-                }
-                column -= line_length + 1;
-                line += 1;
-            }
-            Position { line, column }
-        };
+        // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
+        let pos_from_idx = Self::create_pos_from_idx(&file.content.fetch()?);
 
         let text = file.content.fetch()?;
         let parser = Parser::new_with_broken_link_callback(
@@ -107,7 +114,7 @@ impl LinkExtractor for MarkdownLinkExtractor {
                                 file.locator.clone(),
                                 pos,
                                 &destination,
-                            ))
+                            ));
                         }
                         Tag::Heading(_level, id, _classes) => {
                             let pos = pos_from_idx(range.start) + &file.start;
@@ -146,7 +153,7 @@ impl LinkExtractor for MarkdownLinkExtractor {
                                 source,
                                 name: id_str,
                                 r#type,
-                            })
+                            });
                         }
                         _ => (),
                     };

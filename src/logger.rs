@@ -15,6 +15,11 @@ impl Default for LogLevel {
     }
 }
 
+/// Inits the logger with the given log-level
+///
+/// # Panics
+/// If logger initilaization failed due to it already having been in progress
+/// (from a previous call to initilaize the logger).
 pub fn init(log_level: &LogLevel) {
     let level_filter = match log_level {
         LogLevel::Info => LevelFilter::Info,
@@ -28,8 +33,6 @@ pub fn init(log_level: &LogLevel) {
         TerminalMode::Mixed,
         ColorChoice::Auto,
     )]);
-    if err.is_err() {
-        panic!("Failed to init logger! Error: {:?}", err);
-    }
+    assert!(err.is_ok(), "Failed to init logger! Error: {:?}", err);
     debug!("Initialized logging");
 }

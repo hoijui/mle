@@ -10,6 +10,11 @@ pub enum Content<'a> {
 }
 
 impl<'a> Content<'a> {
+    /// Returns the actual content as str
+    ///
+    /// # Errors
+    /// If the content has to be read from a URL or the File-System,
+    /// there might be an read error.
     pub fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
         match self {
             Self::LocalFile(file_name) => fs::read_to_string(file_name).map(Cow::Owned),
@@ -49,13 +54,13 @@ impl Default for MarkupType {
 }
 
 impl FromStr for MarkupType {
-    type Err = ();
+    type Err = &'static str;
 
-    fn from_str(s: &str) -> Result<MarkupType, ()> {
+    fn from_str(s: &str) -> Result<MarkupType, Self::Err> {
         match s {
             "md" => Ok(MarkupType::Markdown),
             "html" => Ok(MarkupType::Html),
-            _ => Err(()),
+            _ => Err("Unknown markup file extension"),
         }
     }
 }
@@ -82,6 +87,7 @@ impl MarkupType {
 }
 
 impl<'a> MarkupFile<'a> {
+    #[must_use]
     pub fn dummy(content: &'a str, markup_type: MarkupType) -> Self {
         Self {
             content: Content::InMemory(content),

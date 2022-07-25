@@ -63,6 +63,11 @@ impl TryFrom<&str> for IgnorePath {
     }
 }
 
+/// Parses the argument into a [`WildMatch`].
+///
+/// # Errors
+///
+/// If the argument is not a valid link glob.
 pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
     // TODO Should be moved to an other file, probably.
     Ok(WildMatch::new(link_glob))
@@ -71,21 +76,24 @@ pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
     // .map_err(|err| format!("{:?}", err))
 }
 
+/// Parses the argument into an [`IgnorePath`].
+///
+/// # Errors
+///
+/// If the argument is not a valid path glob.
 pub fn parse_ignore_path(path_str: &str) -> Result<IgnorePath, String> {
-    IgnorePath::try_from(path_str)
-        // .map(|_| ())
-        .map_err(|err| format!("{:?}", err))
+    IgnorePath::try_from(path_str).map_err(|err| format!("{:?}", err))
 }
 
-pub fn is_valid(path_str: &str) -> Result<(), String> {
-    IgnorePath::try_from(path_str)
-        .map(|_| ())
-        .map_err(|err| format!("{:?}", err))
+/// Checks if the argument is a valid ignore path (=> path glob).
+///
+/// # Errors
+/// If the argument is not a valid path glob.
+// pub fn is_valid(path_str: &str) -> Result<(), String> {
+pub fn is_valid<S: AsRef<str>>(path_str: S) -> Result<(), String> {
+    parse_ignore_path(path_str.as_ref()).map(|_| ())
 }
 
 // struct IgnorePathValueParser : ValueParser {
 
 // }
-pub fn is_valid_string(path_str: String) -> Result<(), String> {
-    is_valid(path_str.as_ref())
-}

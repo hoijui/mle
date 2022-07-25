@@ -64,7 +64,7 @@ impl LinkExtractor for HtmlLinkExtractor {
                             state = ParserState::Element;
                             is_anchor = true;
                         } else if line_chars.get(column) == Some(&'<')
-                            && line_chars.get(column + 1) == Some(&'a')
+                            && line_chars.get(column + 1) != Some(&'a')
                         {
                             column += 1;
                             while line_chars.get(column).is_some()

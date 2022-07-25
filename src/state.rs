@@ -50,6 +50,7 @@ pub struct State {
 }
 
 impl State {
+    #[must_use]
     pub fn new(config: Config) -> State {
         State {
             remote_cache: RemoteCache::new(),

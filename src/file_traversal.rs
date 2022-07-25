@@ -59,6 +59,7 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
 
 /// Identifies the markup type a file path belongs to,
 /// if any, out of a given set of markup types.
+#[must_use]
 pub fn markup_type(file: &str, markup_types: &[MarkupType]) -> Option<MarkupType> {
     let file_low = file.to_lowercase();
     for markup_type in markup_types {

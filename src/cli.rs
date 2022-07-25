@@ -13,6 +13,7 @@ use clap::{ArgAction, Command, ValueHint};
 use std::collections::HashSet;
 use std::env;
 use std::path::PathBuf;
+use std::str::FromStr;
 use wildmatch::WildMatch;
 
 const A_L_SCAN_ROOT: &str = "scann-root";
@@ -315,11 +316,16 @@ fn arg_matcher() -> Command<'static> {
     app
 }
 
-pub fn parse_args() -> Result<Config, std::io::Error> {
+/// Parses CLI arguments into our own config structure.
+///
+/// # Errors
+///
+/// If fetching the CWD failed.
+pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
     let args = arg_matcher().get_matches();
 
     let scan_root = match args.get_one::<PathBuf>(A_L_SCAN_ROOT) {
-        Some(dir) => dir.to_owned(), //PathBuf::from(dir),
+        Some(dir) => dir.clone(), //PathBuf::from(dir),
         None => env::current_dir()?,
     };
     /*let directory = matches
@@ -341,8 +347,7 @@ pub fn parse_args() -> Result<Config, std::io::Error> {
         // .map(ToOwned::to_owned)
         // .unwrap_or_default()
         // .map(IgnorePath::try_from)
-        .collect::<Result<Vec<IgnorePath>, _>>()
-        .unwrap();
+        .collect::<Result<Vec<IgnorePath>, _>>()?;
     // .map(ToOwned::to_owned)
     // .collect();
     //let ignore_links = args.value_of(A_L_IGNORE_LINKS);
@@ -355,7 +360,10 @@ pub fn parse_args() -> Result<Config, std::io::Error> {
     //let markup_types = args.value_of(A_L_MARKUP_TYPES);
     let mut markup_types = vec![MarkupType::Markdown, MarkupType::Html];
     if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
-        markup_types = types.map(|x| x.parse().unwrap()).collect();
+        markup_types = types
+            .map(AsRef::as_ref)
+            .map(MarkupType::from_str)
+            .collect::<Result<Vec<MarkupType>, _>>()?;
     }
     // let resolve_root = match args.get_one(A_L_RESOLVE_ROOT) {
     //     Some(dir) => PathBuf::from(dir),

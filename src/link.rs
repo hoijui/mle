@@ -92,12 +92,14 @@ impl Default for FileLoc {
 }
 
 impl FileLoc {
+    #[must_use]
     pub fn dummy() -> Rc<Self> {
         Rc::new(Self::default())
     }
 }
 
 impl Link {
+    #[must_use]
     pub fn new(file: Rc<FileLoc>, pos: Position, raw_target: &str) -> Self {
         Self {
             source: Locator { file, pos },
@@ -165,12 +167,12 @@ impl From<&str> for Target {
 impl std::fmt::Display for Target {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Http(url) => write!(f, "{}", url),
-            Self::Ftp(url) => write!(f, "{}", url),
-            Self::EMail(url) => write!(f, "{}", url),
-            Self::FileUrl(url) => write!(f, "{}", url),
+            Self::Http(url)
+            | Self::Ftp(url)
+            | Self::EMail(url)
+            | Self::FileUrl(url)
+            | Self::UnknownUrlSchema(url) => write!(f, "{}", url),
             Self::FileSystem(fs_target) => write!(f, "{}", fs_target),
-            Self::UnknownUrlSchema(url) => write!(f, "{}", url),
             Self::Invalid(msg) => write!(f, "{}", msg),
         }
     }
@@ -179,47 +181,44 @@ impl std::fmt::Display for Target {
 impl Target {
     /// Whether this target definitely points to a local resource.
     /// Note: This is **not** the same as the inversion of `::is_remote()`!
+    #[must_use]
     pub fn is_local(&self) -> bool {
         match self {
-            Self::Http(_) => false,
-            Self::Ftp(_) => false,
-            Self::EMail(_) => false,
-            Self::FileUrl(_) => true,
-            Self::FileSystem(_) => true,
-            Self::UnknownUrlSchema(_) => false,
-            Self::Invalid(_) => false,
+            Self::Http(_)
+            | Self::Ftp(_)
+            | Self::EMail(_)
+            | Self::UnknownUrlSchema(_)
+            | Self::Invalid(_) => false,
+            Self::FileUrl(_) | Self::FileSystem(_) => true,
         }
     }
 
     /// Whether this target most likely points to a remote resource.
     /// Note: This is **not** the same as the inversion of `::is_local()`!
+    #[must_use]
     pub fn is_remote(&self) -> bool {
         match self {
-            Self::Http(_) => true,
-            Self::Ftp(_) => true,
-            Self::EMail(_) => false,
-            Self::FileUrl(_) => false,
-            Self::FileSystem(_) => false,
-            Self::UnknownUrlSchema(_) => true,
-            Self::Invalid(_) => false,
+            Self::Http(_) | Self::Ftp(_) | Self::UnknownUrlSchema(_) => true,
+            Self::EMail(_) | Self::FileUrl(_) | Self::FileSystem(_) | Self::Invalid(_) => false,
         }
     }
 
     /// Whether this target is encoded as a file-system path.
+    #[must_use]
     pub fn is_file_system(&self) -> bool {
         matches!(self, Self::FileSystem(_))
     }
 
     /// Whether this target is encoded as a URL.
+    #[must_use]
     pub fn is_url(&self) -> bool {
         match self {
-            Self::Http(_) => true,
-            Self::Ftp(_) => true,
-            Self::EMail(_) => true,
-            Self::FileUrl(_) => true,
-            Self::FileSystem(_) => false,
-            Self::UnknownUrlSchema(_) => true,
-            Self::Invalid(_) => false,
+            Self::Http(_)
+            | Self::Ftp(_)
+            | Self::EMail(_)
+            | Self::FileUrl(_)
+            | Self::UnknownUrlSchema(_) => true,
+            Self::FileSystem(_) | Self::Invalid(_) => false,
         }
     }
 
@@ -245,15 +244,14 @@ impl Target {
     /// content in one of our supported markup languages,
     /// (usually) judging from the file-extension,
     /// if not already given by the enum item type alone.
+    #[must_use]
     pub fn is_markup_content(&self) -> bool {
         match self {
-            Self::Http(url) => Self::is_markup_url(url),
-            Self::Ftp(url) => Self::is_markup_url(url),
-            Self::EMail(_uri) => false,
-            Self::FileUrl(url) => Self::is_markup_url(url),
+            Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url) => {
+                Self::is_markup_url(url)
+            }
             Self::FileSystem(target) => target.file.is_markup(),
-            Self::UnknownUrlSchema(url) => Self::is_markup_url(url),
-            Self::Invalid(_str) => false,
+            Self::EMail(_) | Self::Invalid(_) => false,
         }
     }
 }
@@ -393,6 +391,7 @@ impl fmt::Display for Position {
 // }
 
 impl Position {
+    #[must_use]
     pub fn new() -> Self {
         Self { line: 0, column: 0 }
     }
@@ -426,6 +425,7 @@ impl std::fmt::Display for FileSystemTarget {
 impl FileSystemTarget {
     /// Splitting `link` of form `"file#anchor"` into `"file"` and `Option("anchor")`.
     /// TODO tests/samples here
+    #[must_use]
     pub fn split(link: &str) -> (&str, Option<String>) {
         match link.find('#') {
             Some(anchor_sep) => (
