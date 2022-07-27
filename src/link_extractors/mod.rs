@@ -1,8 +1,6 @@
 mod html;
 mod markdown;
 
-use html::HtmlLinkExtractor;
-use markdown::MarkdownLinkExtractor;
 use crate::config::Config;
 use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
 use crate::markup::{MarkupFile, MarkupType};
@@ -60,8 +58,8 @@ pub fn find_links(
 
 fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {
     match markup_type {
-        MarkupType::Markdown => Box::new(MarkdownLinkExtractor()),
-        MarkupType::Html => Box::new(HtmlLinkExtractor()),
+        MarkupType::Markdown => Box::new(markdown::LinkExtractor()),
+        MarkupType::Html => Box::new(html::LinkExtractor()),
     }
 }
 

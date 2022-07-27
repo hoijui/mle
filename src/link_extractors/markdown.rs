@@ -1,5 +1,3 @@
-use super::LinkExtractor;
-use super::html::HtmlLinkExtractor;
 use crate::config::Config;
 use crate::link::Locator;
 use crate::link::Link;
@@ -13,7 +11,7 @@ use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;
 
-pub struct MarkdownLinkExtractor();
+pub struct LinkExtractor();
 
 lazy_static! {
     static ref NON_ID_CHARS: Regex = Regex::new(r"[^A-Za-z0-9 -]").unwrap();
@@ -34,7 +32,7 @@ fn generate_id(text: &str, gfm_style: bool) -> String {
     id
 }
 
-impl MarkdownLinkExtractor {
+impl LinkExtractor {
     fn create_pos_from_idx(content: &str) -> impl Fn(usize) -> Position {
         let line_lengths: Vec<usize> = content.lines().map(str::len).collect();
         move |idx: usize| -> Position {
@@ -68,13 +66,13 @@ impl BrokenLinkBuf {
     }
 }
 
-impl LinkExtractor for MarkdownLinkExtractor {
+impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
         file: &MarkupFile,
         conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
-        let html_extractor = HtmlLinkExtractor();
+        let html_le = super::html::LinkExtractor();
 
         // Setup callback that sets the URL and title when it encounters
         // a reference to our home page.
@@ -179,7 +177,7 @@ impl LinkExtractor for MarkdownLinkExtractor {
                         content: Content::InMemory(cont.as_ref()),
                         start: cur_pos,
                     };
-                    let (mut sub_links, mut sub_anchors) = html_extractor.find_links_and_anchors(&sub_markup, conf)?;
+                    let (mut sub_links, mut sub_anchors) = html_le.find_links_and_anchors(&sub_markup, conf)?;
                     links.append(&mut sub_links);
                     anchors.append(&mut sub_anchors);
 
@@ -209,10 +207,9 @@ mod tests {
     use ntest::test_case;
 
     fn find_links(content: &str) -> Vec<Link> {
-        let le = MarkdownLinkExtractor();
-        let markup_file = MarkupFile::dummy(content, MarkupType::Html);
+        let markup_file = MarkupFile::dummy(content, MarkupType::Markdown);
         let conf = Config::default();
-        le.find_links_and_anchors(&markup_file, &conf)
+        super::super::find_links(&markup_file, &conf)
             .map(|(links, _anchors)| links)
             .expect("No error")
     }
