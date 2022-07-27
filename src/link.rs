@@ -224,7 +224,7 @@ impl Target {
     /// Analyzes whether a name of a file is likely to contain
     /// content in one of our supported markup languages,
     /// (usually) judging from the file-extension.
-    fn is_markup_file(file_name: &str) -> bool {
+    fn is_markup_file(_file_name: &str) -> bool {
         true // TODO FIXME Check file-extension against set of known file-extensions
     }
 

@@ -70,8 +70,8 @@ fn print_helper(link: &Link, status_code: &colored::ColoredString, msg: &str, er
 /// # Errors
 ///
 /// If reading of any input or writing of the log or result-file failed.
-pub async fn run(state: &mut State) -> Result<(), ()> {
-    let (links, mut anchors, errors) = find_all_links(&state.config);
+pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
+    let (links, anchors, errors) = find_all_links(&state.config);
     // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
     // primary_anchors.append(&mut secondary_anchors);
 

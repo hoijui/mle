@@ -169,12 +169,12 @@ impl super::LinkExtractor for LinkExtractor {
                         _ => (),
                     };
                 }
-                Event::Html(cont) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
+                Event::Html(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 1 };
                     let sub_markup = File {
                         markup_type: Type::Html,
                         locator: file.locator.clone(),
-                        content: Content::InMemory(cont.as_ref()),
+                        content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
                     };
                     let (mut sub_links, mut sub_anchors) = html_le.find_links_and_anchors(&sub_markup, conf)?;
@@ -182,14 +182,14 @@ impl super::LinkExtractor for LinkExtractor {
                     anchors.append(&mut sub_anchors);
 
                     if gathering_for_header { // TODO ... OR_THIS (see TODO above)
-                        header_content.push(cont.into_string());
+                        header_content.push(content.into_string());
                     }
                 }
-                Event::Text(cont)
-                | Event::Code(cont)
-                | Event::FootnoteReference(cont) => {
+                Event::Text(content)
+                | Event::Code(content)
+                | Event::FootnoteReference(content) => {
                     if gathering_for_header {
-                        header_content.push(cont.into_string());
+                        header_content.push(content.into_string());
                     }
                 }
                 _ => (),

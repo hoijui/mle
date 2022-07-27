@@ -25,10 +25,10 @@ impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
         file: &File,
-        conf: &Config,
+        _conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
         let mut links: Vec<Link> = Vec::new();
-        let mut anchors: Vec<MarkupAnchorTarget> = Vec::new(); // TODO FIXME This is never added to!
+        let anchors: Vec<MarkupAnchorTarget> = Vec::new(); // TODO FIXME This is never added to!
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
         // let mut element_part: Option<Attribute>;

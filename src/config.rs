@@ -4,8 +4,6 @@ use wildmatch::WildMatch;
 
 use crate::{ignore_path::IgnorePath, logger::LogLevel, markup::Type};
 
-const PARALLEL_REQUESTS: usize = 20;
-
 #[derive(Default, Debug, Clone)]
 pub struct Config {
     pub log_level: LogLevel,

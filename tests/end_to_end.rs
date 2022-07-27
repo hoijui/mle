@@ -35,7 +35,7 @@ async fn end_to_end() {
         // root_dir: None,
     };
     let mut state = State::new(config);
-    if let Err(e) = mle::run(&mut state).await {
+    if let Err(e) = mle::run(&mut state) {
         panic!("Test with custom root failed. {:?}", e);
     }
 }
@@ -61,7 +61,7 @@ async fn end_to_end_different_root() {
         // root_dir: None,
     };
     let mut state = State::new(config);
-    if let Err(e) = mle::run(&mut state).await {
+    if let Err(e) = mle::run(&mut state) {
         panic!("Test with custom root failed. {:?}", e);
     }
 }
