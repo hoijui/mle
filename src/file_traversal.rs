@@ -66,7 +66,7 @@ pub fn markup_type(file: &str, markup_types: &[Type]) -> Option<Type> {
         let extensions = markup_type.file_extensions();
         for ext in extensions {
             let mut ext_low = String::from(".");
-            ext_low.push_str(&ext);
+            ext_low.push_str(ext);
             if file_low.ends_with(&ext_low) {
                 return Some(*markup_type);
             }

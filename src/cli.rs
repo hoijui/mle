@@ -134,7 +134,7 @@ fn arg_ignore_paths() -> Arg<'static> {
         .short(A_S_IGNORE_PATHS)
         .long(A_L_IGNORE_PATHS)
         .action(ArgAction::Append)
-        .value_parser(ValueParser::new(ignore_path::parse_ignore_path))
+        .value_parser(ValueParser::new(ignore_path::parse))
 }
 
 fn arg_ignore_links() -> Arg<'static> {

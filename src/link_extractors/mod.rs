@@ -2,7 +2,7 @@ mod html;
 mod markdown;
 
 use crate::config::Config;
-use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
+use crate::link::{Link, MarkupAnchorTarget};
 use crate::markup::{File, Type};
 
 pub fn remove_anchor(link: &mut String) -> Option<String> {

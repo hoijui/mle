@@ -77,7 +77,7 @@ pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
 /// # Errors
 ///
 /// If the argument is not a valid path glob.
-pub fn parse_ignore_path(path_str: &str) -> Result<IgnorePath, String> {
+pub fn parse(path_str: &str) -> Result<IgnorePath, String> {
     IgnorePath::try_from(path_str).map_err(|err| format!("{:?}", err))
 }
 
@@ -87,5 +87,5 @@ pub fn parse_ignore_path(path_str: &str) -> Result<IgnorePath, String> {
 /// If the argument is not a valid path glob.
 // pub fn is_valid(path_str: &str) -> Result<(), String> {
 pub fn is_valid<S: AsRef<str>>(path_str: S) -> Result<(), String> {
-    parse_ignore_path(path_str.as_ref()).map(|_| ())
+    parse(path_str.as_ref()).map(|_| ())
 }
