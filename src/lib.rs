@@ -35,7 +35,7 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std
     let mut anchor_targets = vec![];
     let mut errors = vec![];
     for file in files {
-        match link_extractors::link_extractor::find_links(&file, conf) {
+        match link_extractors::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {
                 links.append(&mut file_links);
                 anchor_targets.append(&mut file_anchor_targets);

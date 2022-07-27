@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::link::MarkupAnchorTarget;
 use crate::link::{Link, Position};
-use crate::link_extractors::link_extractor::LinkExtractor;
+use super::LinkExtractor;
 // use crate::link::MarkupLink;
 use crate::markup::MarkupFile;
 

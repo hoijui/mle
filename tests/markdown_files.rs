@@ -1,7 +1,7 @@
 use std::{rc::Rc, str::FromStr};
 
 #[cfg(test)]
-use mle::link_extractors::link_extractor::find_links;
+use mle::link_extractors::find_links;
 use mle::{
     config::Config,
     link::{FileLoc, FileSystemLoc},

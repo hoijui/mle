@@ -1,15 +1,11 @@
-// use std::rc::Rc;
-
+use super::LinkExtractor;
 use super::html_link_extractor::HtmlLinkExtractor;
 use crate::config::Config;
-// use crate::link::FileLoc;
 use crate::link::Locator;
-// use crate::link::MarkupContent;
 use crate::link::Link;
 use crate::link::MarkupAnchorTarget;
 use crate::link::MarkupAnchorType;
 use crate::link::Position;
-use crate::link_extractors::link_extractor::LinkExtractor;
 use crate::markup::Content;
 use crate::markup::MarkupFile;
 use crate::markup::MarkupType;
