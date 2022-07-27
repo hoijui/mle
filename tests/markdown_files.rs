@@ -3,6 +3,7 @@ use std::{rc::Rc, str::FromStr};
 #[cfg(test)]
 use mle::link_extractors::link_extractor::find_links;
 use mle::{
+    config::Config,
     link::{FileLoc, FileSystemLoc},
     markup::{Content, MarkupFile, MarkupType},
 };
@@ -19,7 +20,8 @@ fn no_links() {
         locator,
         ..Default::default()
     };
-    let (links, _anchors) = find_links(&file, false).expect("No errors");
+    let conf = Config::default();
+    let (links, _anchors) = find_links(&file, &conf).expect("No errors");
     assert!(links.is_empty());
 }
 
@@ -35,6 +37,7 @@ fn some_links() {
         locator,
         ..Default::default()
     };
-    let (links, _anchors) = find_links(&file, false).expect("No errors");
+    let conf = Config::default();
+    let (links, _anchors) = find_links(&file, &conf).expect("No errors");
     assert_eq!(links.len(), 11);
 }

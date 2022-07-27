@@ -19,13 +19,13 @@ use crate::link::MarkupAnchorTarget;
 // use crate::link_type::get_link_type;
 // use crate::markup::Content;
 use crate::markup::MarkupFile;
-use std::collections::HashMap;
-use std::fmt::Write;
-use std::path::PathBuf;
-use std::sync::Arc;
+// use std::collections::HashMap;
+// use std::fmt::Write;
+// use std::path::PathBuf;
+// use std::sync::Arc;
 // use link::Type;
-use tokio::sync::Mutex;
-use tokio::time::{sleep_until, Duration, Instant};
+// use tokio::sync::Mutex;
+// use tokio::time::{sleep_until, Duration, Instant};
 pub mod cli;
 pub mod file_traversal;
 pub mod ignore_path;
@@ -39,23 +39,22 @@ pub use colored::*;
 pub mod config;
 pub mod state;
 use config::Config;
-use link::Target;
 use state::State;
 pub use wildmatch::WildMatch;
 
-use futures::{stream, StreamExt};
-use ignore_path::IgnorePath;
+// use futures::{stream, StreamExt};
+// use ignore_path::IgnorePath;
 // use url::Url;
 
-fn find_all_links(config: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std::io::Error>) {
+fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std::io::Error>) {
     let mut files: Vec<MarkupFile> = Vec::new();
-    file_traversal::find(config, &mut files);
+    file_traversal::find(conf, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];
     let mut errors = vec![];
     for file in files {
         // let (mut file_links, mut file_anchor_targets)
-        match link_extractors::link_extractor::find_links(&file, false) {
+        match link_extractors::link_extractor::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {
                 links.append(&mut file_links);
                 anchor_targets.append(&mut file_anchor_targets);

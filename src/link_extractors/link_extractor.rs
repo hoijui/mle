@@ -1,5 +1,6 @@
 use super::html_link_extractor::HtmlLinkExtractor;
 use super::markdown_link_extractor::MarkdownLinkExtractor;
+use crate::config::Config;
 use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
 use crate::markup::{MarkupFile, MarkupType};
 
@@ -23,7 +24,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// If fetching the markup file content failed.
 pub fn find_links(
     file: &MarkupFile,
-    anchors_only: bool,
+    conf: &Config,
 ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
@@ -31,7 +32,7 @@ pub fn find_links(
         "Scannig file at location '{:#?}' for links ...",
         file.locator
     );
-    link_extractor.find_links_and_anchors(file, anchors_only)
+    link_extractor.find_links_and_anchors(file, conf)
     // match file.content.fetch() {
     //     Ok(text) => {
     //         // let (mut links, anchor_targets) =
@@ -69,17 +70,7 @@ pub trait LinkExtractor {
     /// If fetching the markup file content failed.
     fn find_links_and_anchors(
         &self,
-        // text: &str,
         file: &MarkupFile,
-        anchors_only: bool,
+        conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)>;
-
-    /// Finds links only, using the markup file specific link extractor internally.
-    ///
-    /// # Errors
-    /// If fetching the markup file content failed.
-    fn find_links(&self, file: &MarkupFile) -> std::io::Result<Vec<Link>> {
-        let (result, _) = self.find_links_and_anchors(file, true)?;
-        Ok(result)
-    }
 }

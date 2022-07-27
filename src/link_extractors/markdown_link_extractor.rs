@@ -1,6 +1,7 @@
 // use std::rc::Rc;
 
 use super::html_link_extractor::HtmlLinkExtractor;
+use crate::config::Config;
 // use crate::link::FileLoc;
 use crate::link::Locator;
 // use crate::link::MarkupContent;
@@ -55,21 +56,37 @@ impl MarkdownLinkExtractor {
     }
 }
 
+pub struct BrokenLinkBuf {
+    pub span: std::ops::Range<usize>,
+    pub link_type: pulldown_cmark::LinkType,
+    pub reference: String,
+}
+
+impl BrokenLinkBuf {
+    pub fn from_ref(other: BrokenLink<'_>) -> BrokenLinkBuf {
+        BrokenLinkBuf {
+            span: other.span,
+            link_type: other.link_type,
+            reference: other.reference.as_ref().to_owned(),
+        }
+    }
+}
+
 impl LinkExtractor for MarkdownLinkExtractor {
     fn find_links_and_anchors(
         &self,
         file: &MarkupFile,
-        // text: &str,
-        // source_file: Rc<FileLoc>,
-        anchors_only: bool,
+        conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
         let html_extractor = HtmlLinkExtractor();
 
         // Setup callback that sets the URL and title when it encounters
         // a reference to our home page.
+        let mut parser_err = None;
         let callback = &mut |broken_link: BrokenLink| {
             warn!("Broken reference link: {:?}", broken_link.reference);
-            // TODO: Return error state
+            parser_err = Some(BrokenLinkBuf::from_ref(broken_link));
+            // TODO: Return parser_err
             None
         };
 
@@ -166,7 +183,7 @@ impl LinkExtractor for MarkdownLinkExtractor {
                         content: Content::InMemory(cont.as_ref()),
                         start: cur_pos,
                     };
-                    let (mut sub_links, mut sub_anchors) = html_extractor.find_links_and_anchors(&sub_markup, anchors_only)?;
+                    let (mut sub_links, mut sub_anchors) = html_extractor.find_links_and_anchors(&sub_markup, conf)?;
                     links.append(&mut sub_links);
                     anchors.append(&mut sub_anchors);
 
@@ -198,7 +215,10 @@ mod tests {
     fn find_links(content: &str) -> Vec<Link> {
         let le = MarkdownLinkExtractor();
         let markup_file = MarkupFile::dummy(content, MarkupType::Html);
-        le.find_links(&markup_file).expect("No error")
+        let conf = Config::default();
+        le.find_links_and_anchors(&markup_file, &conf)
+            .map(|(links, _anchors)| links)
+            .expect("No error")
     }
 
     fn link_new(target_raw: &str, line: usize, column: usize) -> Link {

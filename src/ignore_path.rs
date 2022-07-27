@@ -3,7 +3,6 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-use clap::builder::ValueParser;
 use wildmatch::WildMatch;
 
 #[derive(Debug)]

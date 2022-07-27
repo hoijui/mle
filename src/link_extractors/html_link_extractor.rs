@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::link::MarkupAnchorTarget;
 use crate::link::{Link, Position};
 use crate::link_extractors::link_extractor::LinkExtractor;
@@ -15,26 +16,24 @@ enum ParserState {
     Link,
 }
 
-#[derive(Clone, Copy, Debug)]
-enum Attribute {
-    Href,
-    Name,
-    Id,
-}
+// #[derive(Clone, Copy, Debug)]
+// enum Attribute {
+//     Href,
+//     Name,
+//     Id,
+// }
 
 impl LinkExtractor for HtmlLinkExtractor {
     fn find_links_and_anchors(
         &self,
         file: &MarkupFile,
-        // text: &str,
-        // source_file: Rc<FileLoc>,
-        anchors_only: bool,
+        conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
         let mut links: Vec<Link> = Vec::new();
         let mut anchors: Vec<MarkupAnchorTarget> = Vec::new(); // TODO FIXME This is never added to!
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
-        let mut element_part: Option<Attribute>;
+        // let mut element_part: Option<Attribute>;
         for (line, line_str) in file.content.fetch()?.as_ref().lines().enumerate() {
             let line_chars: Vec<char> = line_str.chars().collect();
             let mut column: usize = 0;
@@ -142,8 +141,10 @@ mod tests {
 
     fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let le = HtmlLinkExtractor();
+        let conf = Config::default();
         let markup_file = MarkupFile::dummy(content, MarkupType::Html);
-        le.find_links(&markup_file)
+        le.find_links_and_anchors(&markup_file, &conf)
+            .map(|(links, _anchors)| links)
     }
 
     #[test]
