@@ -3,7 +3,7 @@ mod markdown;
 
 use crate::config::Config;
 use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
-use crate::markup::{MarkupFile, MarkupType};
+use crate::markup::{File, Type};
 
 pub fn remove_anchor(link: &mut String) -> Option<String> {
     match link.find('#') {
@@ -24,7 +24,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 ///
 /// If fetching the markup file content failed.
 pub fn find_links(
-    file: &MarkupFile,
+    file: &File,
     conf: &Config,
 ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
     let link_extractor = link_extractor_factory(file.markup_type);
@@ -56,10 +56,10 @@ pub fn find_links(
     // }
 }
 
-fn link_extractor_factory(markup_type: MarkupType) -> Box<dyn LinkExtractor> {
+fn link_extractor_factory(markup_type: Type) -> Box<dyn LinkExtractor> {
     match markup_type {
-        MarkupType::Markdown => Box::new(markdown::LinkExtractor()),
-        MarkupType::Html => Box::new(html::LinkExtractor()),
+        Type::Markdown => Box::new(markdown::LinkExtractor()),
+        Type::Html => Box::new(html::LinkExtractor()),
     }
 }
 
@@ -71,7 +71,7 @@ pub trait LinkExtractor {
     /// If fetching the markup file content failed.
     fn find_links_and_anchors(
         &self,
-        file: &MarkupFile,
+        file: &File,
         conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)>;
 }

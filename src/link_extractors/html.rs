@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::link::MarkupAnchorTarget;
 use crate::link::{Link, Position};
-use crate::markup::MarkupFile;
+use crate::markup::File;
 
 pub struct LinkExtractor();
 
@@ -24,7 +24,7 @@ enum ParserState {
 impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
-        file: &MarkupFile,
+        file: &File,
         conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
         let mut links: Vec<Link> = Vec::new();
@@ -132,14 +132,14 @@ impl super::LinkExtractor for LinkExtractor {
 
 #[cfg(test)]
 mod tests {
-    use crate::{link::FileLoc, markup::MarkupType};
+    use crate::{link::FileLoc, markup::Type};
 
     use super::*;
     use ntest::test_case;
 
     fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let conf = Config::default();
-        let markup_file = MarkupFile::dummy(content, MarkupType::Html);
+        let markup_file = File::dummy(content, Type::Html);
         super::super::find_links(&markup_file, &conf)
             .map(|(links, _anchors)| links)
     }

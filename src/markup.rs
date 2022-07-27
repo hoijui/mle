@@ -32,8 +32,8 @@ impl Default for Content<'_> {
 }
 
 #[derive(Debug, Default)]
-pub struct MarkupFile<'a> {
-    pub markup_type: MarkupType,
+pub struct File<'a> {
+    pub markup_type: Type,
     pub locator: Rc<FileLoc>,
     pub content: Content<'a>,
     /// The first position of the above `content` is at this location.
@@ -44,34 +44,34 @@ pub struct MarkupFile<'a> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum MarkupType {
+pub enum Type {
     Markdown,
     Html,
 }
 
-impl Default for MarkupType {
+impl Default for Type {
     fn default() -> Self {
         Self::Markdown
     }
 }
 
-impl FromStr for MarkupType {
+impl FromStr for Type {
     type Err = &'static str;
 
-    fn from_str(s: &str) -> Result<MarkupType, Self::Err> {
+    fn from_str(s: &str) -> Result<Type, Self::Err> {
         match s {
-            "md" => Ok(MarkupType::Markdown),
-            "html" => Ok(MarkupType::Html),
+            "md" => Ok(Type::Markdown),
+            "html" => Ok(Type::Html),
             _ => Err("Unknown markup file extension"),
         }
     }
 }
 
-impl MarkupType {
+impl Type {
     #[must_use]
     pub fn file_extensions(&self) -> Vec<&'static str> {
         match self {
-            MarkupType::Markdown => vec![
+            Type::Markdown => vec![
                 "md",
                 "markdown",
                 "mkdown",
@@ -83,14 +83,14 @@ impl MarkupType {
                 "text",
                 "rmd",
             ],
-            MarkupType::Html => vec!["htm", "html", "xhtml"],
+            Type::Html => vec!["htm", "html", "xhtml"],
         }
     }
 }
 
-impl<'a> MarkupFile<'a> {
+impl<'a> File<'a> {
     #[must_use]
-    pub fn dummy(content: &'a str, markup_type: MarkupType) -> Self {
+    pub fn dummy(content: &'a str, markup_type: Type) -> Self {
         Self {
             content: Content::InMemory(content),
             markup_type,
@@ -106,7 +106,7 @@ mod tests {
 
     #[test]
     fn all_lowercase_file_extensions() {
-        for mt in [MarkupType::Markdown, MarkupType::Html] {
+        for mt in [Type::Markdown, Type::Html] {
             for ext in mt.file_extensions() {
                 assert_eq!(ext, ext.to_lowercase());
             }

@@ -13,7 +13,7 @@ extern crate const_format;
 
 use crate::link::Link;
 use crate::link::MarkupAnchorTarget;
-use crate::markup::MarkupFile;
+use crate::markup::File;
 pub mod cli;
 pub mod file_traversal;
 pub mod ignore_path;
@@ -29,7 +29,7 @@ use state::State;
 pub use wildmatch::WildMatch;
 
 fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std::io::Error>) {
-    let mut files: Vec<MarkupFile> = Vec::new();
+    let mut files: Vec<File> = Vec::new();
     file_traversal::find(conf, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];

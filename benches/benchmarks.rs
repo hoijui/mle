@@ -4,7 +4,7 @@ extern crate criterion;
 
 use criterion::Criterion;
 use mle::config::Config;
-use mle::markup::MarkupType;
+use mle::markup::Type;
 use mle::{logger, state::State};
 use std::fs;
 
@@ -12,7 +12,7 @@ fn end_to_end_benchmark() {
     let config = Config {
         scan_root: fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
         log_level: logger::LogLevel::Debug,
-        markup_types: vec![MarkupType::Markdown],
+        markup_types: vec![Type::Markdown],
         ..Default::default()
     };
     let mut state = State::new(config);

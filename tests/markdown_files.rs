@@ -5,7 +5,7 @@ use mle::link_extractors::find_links;
 use mle::{
     config::Config,
     link::{FileLoc, FileSystemLoc},
-    markup::{Content, MarkupFile, MarkupType},
+    markup::{Content, File, Type},
 };
 
 #[test]
@@ -14,8 +14,8 @@ fn no_links() {
         FileSystemLoc::from_str("./benches/benchmark/markdown/no_links/no_links.md")
             .expect("To never fail"),
     ));
-    let file = MarkupFile {
-        markup_type: MarkupType::Markdown,
+    let file = File {
+        markup_type: Type::Markdown,
         content: Content::LocalFile(locator.to_string()),
         locator,
         ..Default::default()
@@ -31,8 +31,8 @@ fn some_links() {
         FileSystemLoc::from_str("./benches/benchmark/markdown/many_links/many_links.md")
             .expect("To never fail"),
     ));
-    let file = MarkupFile {
-        markup_type: MarkupType::Markdown,
+    let file = File {
+        markup_type: Type::Markdown,
         content: Content::LocalFile(locator.to_string()),
         locator,
         ..Default::default()

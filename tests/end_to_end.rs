@@ -4,7 +4,7 @@ mod helper;
 use helper::benches_dir;
 use mle::config::Config;
 use mle::logger;
-use mle::markup::MarkupType;
+use mle::markup::Type;
 use mle::state::State;
 use std::convert::TryInto;
 
@@ -20,7 +20,7 @@ async fn end_to_end() {
         result_file: None,
         result_format: "json".to_owned(),
         resolve_root: None,
-        markup_types: vec![MarkupType::Markdown],
+        markup_types: vec![Type::Markdown],
         // match_file_extension: false,
         // throttle: 0,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
@@ -53,7 +53,7 @@ async fn end_to_end_different_root() {
         result_file: None,
         result_format: "json".to_owned(),
         resolve_root: Some(test_files),
-        markup_types: vec![MarkupType::Markdown],
+        markup_types: vec![Type::Markdown],
         // match_file_extension: false,
         // throttle: 0,
         ignore_links: vec![],

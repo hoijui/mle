@@ -5,7 +5,7 @@
 use crate::ignore_path;
 use crate::ignore_path::IgnorePath;
 use crate::logger;
-use crate::markup::MarkupType;
+use crate::markup::Type;
 use crate::Config;
 use clap::builder::{NonEmptyStringValueParser, PossibleValuesParser, ValueParser};
 use clap::Arg;
@@ -320,12 +320,12 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
         .unwrap_or_default()
         .map(ToOwned::to_owned)
         .collect();
-    let mut markup_types = vec![MarkupType::Markdown, MarkupType::Html];
+    let mut markup_types = vec![Type::Markdown, Type::Html];
     if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
         markup_types = types
             .map(AsRef::as_ref)
-            .map(MarkupType::from_str)
-            .collect::<Result<Vec<MarkupType>, _>>()?;
+            .map(Type::from_str)
+            .collect::<Result<Vec<Type>, _>>()?;
     }
     let resolve_root = args.get_one::<PathBuf>(A_L_RESOLVE_ROOT).map(PathBuf::from);
     /*let resolve_root = if let Some(resolve_root) = matches.value_of(A_L_RESOLVE_ROOT) {

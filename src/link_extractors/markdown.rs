@@ -5,8 +5,8 @@ use crate::link::MarkupAnchorTarget;
 use crate::link::MarkupAnchorType;
 use crate::link::Position;
 use crate::markup::Content;
-use crate::markup::MarkupFile;
-use crate::markup::MarkupType;
+use crate::markup::File;
+use crate::markup::Type;
 use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;
@@ -69,7 +69,7 @@ impl BrokenLinkBuf {
 impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
-        file: &MarkupFile,
+        file: &File,
         conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
         let html_le = super::html::LinkExtractor();
@@ -171,8 +171,8 @@ impl super::LinkExtractor for LinkExtractor {
                 }
                 Event::Html(cont) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 1 };
-                    let sub_markup = MarkupFile {
-                        markup_type: MarkupType::Html,
+                    let sub_markup = File {
+                        markup_type: Type::Html,
                         locator: file.locator.clone(),
                         content: Content::InMemory(cont.as_ref()),
                         start: cur_pos,
@@ -207,7 +207,7 @@ mod tests {
     use ntest::test_case;
 
     fn find_links(content: &str) -> Vec<Link> {
-        let markup_file = MarkupFile::dummy(content, MarkupType::Markdown);
+        let markup_file = File::dummy(content, Type::Markdown);
         let conf = Config::default();
         super::super::find_links(&markup_file, &conf)
             .map(|(links, _anchors)| links)
