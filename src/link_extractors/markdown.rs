@@ -1,5 +1,5 @@
 use super::LinkExtractor;
-use super::html_link_extractor::HtmlLinkExtractor;
+use super::html::HtmlLinkExtractor;
 use crate::config::Config;
 use crate::link::Locator;
 use crate::link::Link;

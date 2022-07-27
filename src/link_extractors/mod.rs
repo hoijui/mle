@@ -1,8 +1,8 @@
-mod html_link_extractor;
-mod markdown_link_extractor;
+mod html;
+mod markdown;
 
-use html_link_extractor::HtmlLinkExtractor;
-use markdown_link_extractor::MarkdownLinkExtractor;
+use html::HtmlLinkExtractor;
+use markdown::MarkdownLinkExtractor;
 use crate::config::Config;
 use crate::link::{Link, MarkupAnchorTarget, MarkupAnchorType};
 use crate::markup::{MarkupFile, MarkupType};
