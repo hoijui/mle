@@ -40,7 +40,7 @@ pub fn find(config: &Config, result: &mut Vec<MarkupFile>) {
                     path
                 );
             } else {
-                let path_str = path.to_str().unwrap(); //ok_or_else(|| Err("")).unwrap();
+                let path_str = path.to_str().unwrap();
                 let file = MarkupFile {
                     markup_type,
                     locator: Rc::new(FileLoc::System(

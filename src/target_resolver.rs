@@ -1,8 +1,3 @@
-// mod file_system;
-// mod http;
-// mod mail;
-
-// pub mod link_type;
 
 /// Different categories of paths:
 ///
@@ -14,7 +9,7 @@
 /// | Canonical           | [x]                 | [x]                       | [x]                         |
 ///
 /// (path-)operators: '.' and '..'
-/// file-systme root: e.g. '/' on Linux and 'C:\' or 'F:/' on Windows
+/// file-system root: e.g. '/' on Linux and 'C:\' or 'F:/' on Windows
 
 use std::borrow::Borrow;
 use std::borrow::Cow;
@@ -38,9 +33,6 @@ use colored::Colorize;
 use relative_path::RelativePath;
 use reqwest::Url;
 use tokio::sync::Mutex;
-// use async_std::fs::canonicalize;
-// use async_std::path::Path;
-// use async_std::path::PathBuf;
 use std::path::MAIN_SEPARATOR;
 use walkdir::WalkDir;
 

@@ -4,9 +4,11 @@ use crate::link::{FileLoc, Position};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Content<'a> {
-    LocalFile(String), // stores the file-name
-    InMemory(&'a str), // stores the whole content of the file as a string
-                       // URL(Url, &'a str)
+    /// stores the file-name
+    LocalFile(String),
+    /// stores the whole content of the file as a string
+    InMemory(&'a str),
+    // Url(Url, &'a str)
 }
 
 impl<'a> Content<'a> {
@@ -67,21 +69,21 @@ impl FromStr for MarkupType {
 
 impl MarkupType {
     #[must_use]
-    pub fn file_extensions(&self) -> Vec<String> {
+    pub fn file_extensions(&self) -> Vec<&'static str> {
         match self {
             MarkupType::Markdown => vec![
-                "md".to_string(),
-                "markdown".to_string(),
-                "mkdown".to_string(),
-                "mkdn".to_string(),
-                "mkd".to_string(),
-                "mdwn".to_string(),
-                "mdtxt".to_string(),
-                "mdtext".to_string(),
-                "text".to_string(),
-                "rmd".to_string(),
+                "md",
+                "markdown",
+                "mkdown",
+                "mkdn",
+                "mkd",
+                "mdwn",
+                "mdtxt",
+                "mdtext",
+                "text",
+                "rmd",
             ],
-            MarkupType::Html => vec!["htm".to_string(), "html".to_string(), "xhtml".to_string()],
+            MarkupType::Html => vec!["htm", "html", "xhtml"],
         }
     }
 }

@@ -70,9 +70,6 @@ impl TryFrom<&str> for IgnorePath {
 pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
     // TODO Should be moved to an other file, probably.
     Ok(WildMatch::new(link_glob))
-    // IgnorePath::try_from(path_str)
-    // .map(|_| ())
-    // .map_err(|err| format!("{:?}", err))
 }
 
 /// Parses the argument into an [`IgnorePath`].
@@ -92,7 +89,3 @@ pub fn parse_ignore_path(path_str: &str) -> Result<IgnorePath, String> {
 pub fn is_valid<S: AsRef<str>>(path_str: S) -> Result<(), String> {
     parse_ignore_path(path_str.as_ref()).map(|_| ())
 }
-
-// struct IgnorePathValueParser : ValueParser {
-
-// }

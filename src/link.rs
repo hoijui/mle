@@ -309,15 +309,11 @@ impl FromStr for FileSystemLoc {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let path = PathBuf::from_str(s).unwrap();
         Ok(
-            // if let Ok(url) = reqwest::Url::parse(s) {
-            //     Self::Url(url)
-            // } else {
             if path.is_absolute() {
                 Self::Absolute(path)
             } else {
-                // Self::Relative(RelativePathBuf::from_path(path))
                 Self::Relative(RelativePathBuf::from(s))
-            }, // }
+            },
         )
     }
 }
@@ -378,17 +374,6 @@ impl fmt::Display for Position {
     }
 }
 
-// impl fmt::Debug for Position {
-//     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-//         write!(
-//             f,
-//             "{}:{}",
-//             self.line,
-//             self.column,
-//         )
-//     }
-// }
-
 impl Position {
     #[must_use]
     pub fn new() -> Self {
@@ -401,15 +386,6 @@ impl fmt::Debug for Locator {
         write!(f, "{:#?}:{}", self.file, self.pos,)
     }
 }
-
-// /// Where a link points to
-// #[derive(Hash, PartialEq, Eq, Clone, Debug)]
-// pub struct Target {
-//     /// The target the link points to
-//     pub file: FileLoc,
-//     /// The kind of link this is (HTML, Email, ...)
-//     pub r#type: Type,
-// }
 
 impl std::fmt::Display for FileSystemTarget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -434,19 +410,6 @@ impl FileSystemTarget {
             None => (link, None),
         }
     }
-
-    // pub fn new_typed(link: &str, r#type: Type) -> Self {
-    //     let (file, anchor) = Self::split(link);
-    //     Self {
-    //         file: FileLoc::from_str(file).unwrap(),
-    //         r#type,
-    //         anchor,
-    //     }
-    // }
-
-    // pub fn new(link: &str) -> Self {
-    //     Self::new_typed(link, get_link_type(link))
-    // }
 }
 
 impl FromStr for FileSystemTarget {
@@ -456,7 +419,6 @@ impl FromStr for FileSystemTarget {
         let (file, anchor) = Self::split(s);
         Ok(Self {
             file: FileSystemLoc::from_str(file)?,
-            // r#type: get_link_type(s),
             anchor,
         })
     }
@@ -472,31 +434,6 @@ impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} - {}", self.source, self.target,)
     }
-}
-
-impl Link {
-    // fn anchor_sep(&self) -> &str {
-    //     match &self.anchor {
-    //         Some(_) => "#",
-    //         None => "",
-    //     }
-    // }
-
-    // pub fn new_src(source: String, target: &str, line: usize, column: usize) -> Self {
-    //     let (target, anchor) = Target::split(target);
-
-    //     Self {
-    //         source,
-    //         target: target.to_string(),
-    //         anchor,
-    //         line,
-    //         column,
-    //     }
-    // }
-
-    // pub fn new(target: &str, line: usize, column: usize) -> Self {
-    //     Self::new_src(String::new(), target, line, column)
-    // }
 }
 
 #[derive(PartialEq, Clone, Copy, Debug)]

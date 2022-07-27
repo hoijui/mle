@@ -1,34 +1,14 @@
 #[macro_use]
 extern crate log;
+extern crate clap;
 
 use mle::cli;
 use mle::logger;
 use mle::state::State;
 use std::process;
 
-extern crate clap;
-
-// fn print_header() {
-//     let width = 60;
-//     let header = format!("markup link extractor - mle v{:}", crate_version!());
-//     println!();
-//     println!("{:+<1$}", "", width);
-//     print!("+");
-//     print!("{: <1$}", "", width - 2);
-//     println!("+");
-//     print!("+");
-//     print!("{}", format!("{: ^1$}", header, width - 2));
-//     println!("+");
-//     print!("+");
-//     print!("{: <1$}", "", width - 2);
-//     println!("+");
-//     println!("{:+<1$}", "", width);
-//     println!();
-// }
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // print_header();
     let config = cli::parse_args()?;
     let mut state = State::new(config);
     logger::init(&state.config.log_level);

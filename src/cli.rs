@@ -53,14 +53,11 @@ fn arg_scan_root() -> Arg<'static> {
             See also --{A_L_NON_RECURSIVE}."
         ))
         .takes_value(true)
-        // .forbid_empty_values(true)
-        // .value_parser(NonEmptyStringValueParser::new())
         .value_parser(value_parser!(std::path::PathBuf))
         .value_name("DIR")
         .value_hint(ValueHint::DirPath)
         .short(A_S_SCAN_ROOT)
         .long(A_L_SCAN_ROOT)
-        // .multiple_occurrences(false)
         .action(ArgAction::Set)
         .required(false)
         .default_value(".")
@@ -72,8 +69,6 @@ fn arg_non_recursive() -> Arg<'static> {
         .takes_value(false)
         .short(A_S_NON_RECURSIVE)
         .long(A_L_NON_RECURSIVE)
-        // .multiple_occurrences(false)
-        // .value_parser(value_parser!(bool))
         .action(ArgAction::SetTrue)
         .required(false)
 }
@@ -106,7 +101,6 @@ fn arg_no_links() -> Arg<'static> {
 fn arg_anchors() -> Arg<'static> {
     Arg::new(A_L_ANCHORS)
         .help("Extract anchors")
-        //.long_help("XXX")
         .takes_value(false)
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
@@ -133,17 +127,13 @@ fn arg_ignore_paths() -> Arg<'static> {
             separated by white-space.",
         )
         .takes_value(true)
-        // .forbid_empty_values(true)
-        // .value_parser(NonEmptyStringValueParser::new())
         .value_name("PATH/GLOB")
         .value_hint(ValueHint::FilePath)
         .min_values(1)
         .required(false)
         .short(A_S_IGNORE_PATHS)
         .long(A_L_IGNORE_PATHS)
-        // .multiple_occurrences(true)
         .action(ArgAction::Append)
-        // .validator(ignore_path::is_valid_string)
         .value_parser(ValueParser::new(ignore_path::parse_ignore_path))
 }
 
@@ -156,13 +146,10 @@ fn arg_ignore_links() -> Arg<'static> {
         )
         .takes_value(true)
         .min_values(1)
-        // .forbid_empty_values(true)
-        // .value_parser(NonEmptyStringValueParser::new())
         .value_parser(ValueParser::new(ignore_path::parse_ignore_link))
         .value_name("GLOB")
         .short(A_S_IGNORE_LINKS)
         .long(A_L_IGNORE_LINKS)
-        // .multiple_occurrences(true)
         .action(ArgAction::Append)
         .required(false)
 }
@@ -176,11 +163,9 @@ fn arg_markup_types() -> Arg<'static> {
         )
         .takes_value(true)
         .min_values(1)
-        // .possible_values(&["md", "html"])
         .value_parser(PossibleValuesParser::new(&["md", "html"]))
         .short(A_S_MARKUP_TYPES)
         .long(A_L_MARKUP_TYPES)
-        // .multiple_occurrences(true)
         .action(ArgAction::Append)
         .required(false)
 }
@@ -189,12 +174,10 @@ fn arg_resolve_root() -> Arg<'static> {
     Arg::new(A_L_RESOLVE_ROOT)
         .help("Path or URL used to resolve all relative paths to")
         .takes_value(true)
-        // .forbid_empty_values(false)
         .value_name("PATH/URL")
         .value_hint(ValueHint::FilePath)
         .short(A_S_RESOLVE_ROOT)
         .long(A_L_RESOLVE_ROOT)
-        // .multiple_occurrences(false)
         .required(false)
         .conflicts_with(A_L_NO_LINKS)
 }
@@ -220,7 +203,6 @@ fn arg_log_file() -> Arg<'static> {
         .help("Write log output to a file")
         .long_help("Writes a detailed log to the specifed file.")
         .takes_value(true)
-        // .forbid_empty_values(true)
         .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
         .value_hint(ValueHint::FilePath)
         .short(A_S_LOG_FILE)
@@ -242,11 +224,9 @@ fn arg_result_file() -> Arg<'static> {
         .takes_value(true)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        // .forbid_empty_values(true)
         .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
         .short(A_S_RESULT_FILE)
         .long(A_L_RESULT_FILE)
-        // .multiple_occurrences(false)
         .required(false)
 }
 
@@ -260,13 +240,10 @@ fn arg_result_format() -> Arg<'static> {
             Writes to log(Info), if no target file is given as argument.",
         )*/
         .takes_value(true)
-        // .possible_values(&["md", "json", "csv", "grep"])
         .value_parser(PossibleValuesParser::new(&["md", "json", "csv", "grep"]))
         .value_name("FORMAT")
-        // .forbid_empty_values(true)
         .short(A_S_RESULT_FORMAT)
         .long(A_L_RESULT_FORMAT)
-        // .multiple_occurrences(false)
         .required(false)
 }
 
@@ -328,36 +305,21 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
         Some(dir) => dir.clone(), //PathBuf::from(dir),
         None => env::current_dir()?,
     };
-    /*let directory = matches
-    .value_of("directory")
-    .unwrap_or("./")
-    .parse()
-    .unwrap();*/
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);
     let debug = args.contains_id(A_L_DEBUG);
     let links = !args.contains_id(A_L_NO_LINKS);
     let anchors = args.contains_id(A_L_ANCHORS);
     //let match_file_extension = args.value_of(A_L_MATCH_FILE_EXTENSION);
-    //let ignore_paths = args.value_of(A_L_IGNORE_PATHS);
     let ignore_paths: Vec<IgnorePath> = args
-        // .get_many::<IgnorePath>(A_L_IGNORE_PATHS)
         .get_many::<Result<IgnorePath, String>>(A_L_IGNORE_PATHS)
         .unwrap_or_default()
         .map(ToOwned::to_owned)
-        // .map(ToOwned::to_owned)
-        // .unwrap_or_default()
-        // .map(IgnorePath::try_from)
         .collect::<Result<Vec<IgnorePath>, _>>()?;
-    // .map(ToOwned::to_owned)
-    // .collect();
-    //let ignore_links = args.value_of(A_L_IGNORE_LINKS);
     let ignore_links: Vec<WildMatch> = args
         .get_many::<WildMatch>(A_L_IGNORE_LINKS)
         .unwrap_or_default()
-        // .map(|x| WildMatch::new(x))
         .map(ToOwned::to_owned)
         .collect();
-    //let markup_types = args.value_of(A_L_MARKUP_TYPES);
     let mut markup_types = vec![MarkupType::Markdown, MarkupType::Html];
     if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
         markup_types = types
@@ -365,10 +327,6 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
             .map(MarkupType::from_str)
             .collect::<Result<Vec<MarkupType>, _>>()?;
     }
-    // let resolve_root = match args.get_one(A_L_RESOLVE_ROOT) {
-    //     Some(dir) => PathBuf::from(dir),
-    //     None => env::current_dir()?,
-    // };
     let resolve_root = args.get_one::<PathBuf>(A_L_RESOLVE_ROOT).map(PathBuf::from);
     /*let resolve_root = if let Some(resolve_root) = matches.value_of(A_L_RESOLVE_ROOT) {
         let resolve_root = Path::new(
