@@ -1,5 +1,5 @@
-name: 'Markup Link Checker (mlc)'
-description: 'Check links in markup files'
+name: 'Markup Link Extractor (mle)'
+description: 'Extract links from markup files'
 inputs:
   args:
     description: 'arguments'

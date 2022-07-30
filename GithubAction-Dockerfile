@@ -1,6 +1,6 @@
-FROM becheran/mlc:0.14.3
+FROM hoijui/mle:0.14.3
 
-LABEL repository="https://github.com/becheran/mlc"
+LABEL repository="https://github.com/hoijui/mle"
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
