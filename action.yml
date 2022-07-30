@@ -8,5 +8,5 @@ runs:
   using: 'docker'
   image: 'GithubAction-Dockerfile'
 branding:
-  icon: 'link'  
+  icon: 'link'
   color: 'green'
