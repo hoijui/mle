@@ -140,8 +140,7 @@ mod tests {
     fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let conf = Config::default();
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf)
-            .map(|(links, _anchors)| links)
+        super::super::find_links(&markup_file, &conf).map(|(links, _anchors)| links)
     }
 
     #[test]

@@ -2,11 +2,11 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::ignore_path;
 use crate::ignore_path::IgnorePath;
 use crate::logger;
 use crate::markup::Type;
 use crate::Config;
+use crate::{ignore_link, ignore_path};
 use clap::builder::{NonEmptyStringValueParser, PossibleValuesParser, ValueParser};
 use clap::Arg;
 use clap::{ArgAction, Command, ValueHint};
@@ -146,7 +146,7 @@ fn arg_ignore_links() -> Arg<'static> {
         )
         .takes_value(true)
         .min_values(1)
-        .value_parser(ValueParser::new(ignore_path::parse_ignore_link))
+        .value_parser(ValueParser::new(ignore_link::parse))
         .value_name("GLOB")
         .short(A_S_IGNORE_LINKS)
         .long(A_L_IGNORE_LINKS)

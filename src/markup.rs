@@ -1,11 +1,11 @@
-use std::{borrow::Cow, fs, rc::Rc, str::FromStr};
+use std::{borrow::Cow, fs, path::PathBuf, rc::Rc, str::FromStr};
 
 use crate::link::{FileLoc, Position};
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Content<'a> {
     /// stores the file-name
-    LocalFile(String),
+    LocalFile(PathBuf),
     /// stores the whole content of the file as a string
     InMemory(&'a str),
     // Url(Url, &'a str)
@@ -72,16 +72,7 @@ impl Type {
     pub fn file_extensions(&self) -> Vec<&'static str> {
         match self {
             Type::Markdown => vec![
-                "md",
-                "markdown",
-                "mkdown",
-                "mkdn",
-                "mkd",
-                "mdwn",
-                "mdtxt",
-                "mdtext",
-                "text",
-                "rmd",
+                "md", "markdown", "mkdown", "mkdn", "mkd", "mdwn", "mdtxt", "mdtext", "text", "rmd",
             ],
             Type::Html => vec!["htm", "html", "xhtml"],
         }

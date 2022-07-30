@@ -308,13 +308,11 @@ impl FromStr for FileSystemLoc {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let path = PathBuf::from_str(s).unwrap();
-        Ok(
-            if path.is_absolute() {
-                Self::Absolute(path)
-            } else {
-                Self::Relative(RelativePathBuf::from(s))
-            },
-        )
+        Ok(if path.is_absolute() {
+            Self::Absolute(path)
+        } else {
+            Self::Relative(RelativePathBuf::from(s))
+        })
     }
 }
 

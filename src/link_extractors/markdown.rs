@@ -1,6 +1,6 @@
 use crate::config::Config;
-use crate::link::Locator;
 use crate::link::Link;
+use crate::link::Locator;
 use crate::link::MarkupAnchorTarget;
 use crate::link::MarkupAnchorType;
 use crate::link::Position;

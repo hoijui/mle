@@ -5,7 +5,6 @@ use crate::markup::{Content, File, Type};
 use crate::Config;
 use std::fs;
 use std::rc::Rc;
-use std::str::FromStr;
 use walkdir::WalkDir;
 
 /// Searches for markup source files acording to the configuration,
@@ -40,14 +39,10 @@ pub fn find(config: &Config, result: &mut Vec<File>) {
                     path
                 );
             } else {
-                let path_str = path.to_str().unwrap();
                 let file = File {
                     markup_type,
-                    locator: Rc::new(FileLoc::System(
-                        FileSystemLoc::from_str(path_str)
-                            .expect("FileSystemLoc creation from str should never fail"),
-                    )),
-                    content: Content::LocalFile(path_str.to_string()),
+                    locator: Rc::new(FileLoc::System(FileSystemLoc::from(path))),
+                    content: Content::LocalFile(path.to_owned()),
                     start: Position::new(),
                 };
                 debug!("Found file: '{:?}'", file);

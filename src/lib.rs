@@ -16,6 +16,7 @@ use crate::link::MarkupAnchorTarget;
 use crate::markup::File;
 pub mod cli;
 pub mod file_traversal;
+pub mod ignore_link;
 pub mod ignore_path;
 pub mod link;
 pub mod link_extractors;

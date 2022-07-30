@@ -3,8 +3,6 @@ use std::fs;
 use std::path::Path;
 use std::path::PathBuf;
 
-use wildmatch::WildMatch;
-
 #[derive(Debug)]
 pub enum Error {
     /// Ignore path '{:?}' not found: {:?}.
@@ -60,16 +58,6 @@ impl TryFrom<&str> for IgnorePath {
     fn try_from(path_str: &str) -> Result<Self, Self::Error> {
         Self::try_from(Path::new(path_str))
     }
-}
-
-/// Parses the argument into a [`WildMatch`].
-///
-/// # Errors
-///
-/// If the argument is not a valid link glob.
-pub fn parse_ignore_link(link_glob: &str) -> Result<WildMatch, String> {
-    // TODO Should be moved to an other file, probably.
-    Ok(WildMatch::new(link_glob))
 }
 
 /// Parses the argument into an [`IgnorePath`].

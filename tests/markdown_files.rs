@@ -1,43 +1,37 @@
-use std::{rc::Rc, str::FromStr};
+use std::{path::PathBuf, rc::Rc, str::FromStr};
 
 #[cfg(test)]
 use mle::link_extractors::find_links;
 use mle::{
     config::Config,
-    link::{FileLoc, FileSystemLoc},
+    link::{FileLoc, FileSystemLoc, Link, MarkupAnchorTarget},
     markup::{Content, File, Type},
 };
 
-#[test]
-fn no_links() {
-    let locator = Rc::new(FileLoc::System(
-        FileSystemLoc::from_str("./benches/benchmark/markdown/no_links/no_links.md")
-            .expect("To never fail"),
-    ));
+fn extract(md_file: PathBuf) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+    let locator = Rc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
     let file = File {
         markup_type: Type::Markdown,
-        content: Content::LocalFile(locator.to_string()),
+        content: Content::LocalFile(md_file),
         locator,
         ..Default::default()
     };
     let conf = Config::default();
-    let (links, _anchors) = find_links(&file, &conf).expect("No errors");
+    find_links(&file, &conf)
+}
+
+#[test]
+fn no_links() {
+    let md_file = PathBuf::from_str("./benches/benchmark/markdown/no_links/no_links.md")
+        .expect("To never fail");
+    let (links, _anchors) = extract(md_file).expect("No errors");
     assert!(links.is_empty());
 }
 
 #[test]
 fn some_links() {
-    let locator = Rc::new(FileLoc::System(
-        FileSystemLoc::from_str("./benches/benchmark/markdown/many_links/many_links.md")
-            .expect("To never fail"),
-    ));
-    let file = File {
-        markup_type: Type::Markdown,
-        content: Content::LocalFile(locator.to_string()),
-        locator,
-        ..Default::default()
-    };
-    let conf = Config::default();
-    let (links, _anchors) = find_links(&file, &conf).expect("No errors");
+    let md_file = PathBuf::from_str("./benches/benchmark/markdown/many_links/many_links.md")
+        .expect("To never fail");
+    let (links, _anchors) = extract(md_file).expect("No errors");
     assert_eq!(links.len(), 11);
 }
