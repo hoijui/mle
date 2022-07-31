@@ -1,11 +1,20 @@
+
 # Markup Link Extractor
 
-[![crates.io](https://img.shields.io/crates/v/mle.svg?color=orange)](https://crates.io/crates/mle)
-[![downloads](https://badgen.net/crates/d/mle?color=blue)](https://crates.io/crates/mle)
-[![build status](https://gitlab.com/hoijui/mle_ci/badges/master/pipeline.svg)](https://gitlab.com/hoijui/mle_ci/pipelines)
+[![crates.io](
+    https://img.shields.io/crates/v/mle.svg?color=orange)](
+    https://crates.io/crates/mle)
+[![downloads](
+    https://badgen.net/crates/d/mle?color=blue)](
+    https://crates.io/crates/mle)
+[![build status](
+    https://gitlab.com/hoijui/mle_ci/badges/master/pipeline.svg)](
+    https://gitlab.com/hoijui/mle_ci/pipelines)
 
 <!--
-[![asciicast](https://asciinema.org/a/299100.svg)](https://asciinema.org/a/299100)
+[![asciicast](
+    https://asciinema.org/a/299100.svg)](
+    https://asciinema.org/a/299100)
 -->
 
 Extracts links in markup files.
