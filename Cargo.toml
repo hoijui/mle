@@ -11,7 +11,7 @@ edition = "2018"
 description = "The markup link extractor (mle) extracts links from markup files (Markdown and HTML)."
 keywords = ["link-extractor", "markup", "html", "markdown"]
 readme = "README.md"
-license = "MIT"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/hoijui/mle"
 
 [badges]
