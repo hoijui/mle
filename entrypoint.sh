@@ -4,4 +4,4 @@
 #
 # SPDX-License-Identifier: Unlicense
 
-mlc $*
+mle $*
