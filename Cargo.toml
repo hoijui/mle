@@ -7,7 +7,7 @@
 name = "mle"
 version = "0.14.4-alpha.0"
 authors = ["Robin Vobruba <hoijui.quaero@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "The markup link extractor (mle) extracts links from markup files (Markdown and HTML)."
 homepage = "https://github.com/hoijui/mle"
 documentation = "https://docs.rs/mle"
