@@ -7,7 +7,7 @@ use crate::logger;
 use crate::markup::Type;
 use crate::Config;
 use crate::{ignore_link, ignore_path};
-use clap::builder::{NonEmptyStringValueParser, PossibleValuesParser, ValueParser};
+use clap::builder::{PossibleValuesParser, ValueParser};
 use clap::Arg;
 use clap::{ArgAction, Command, ValueHint};
 use std::collections::HashSet;
@@ -203,7 +203,7 @@ fn arg_log_file() -> Arg<'static> {
         .help("Write log output to a file")
         .long_help("Writes a detailed log to the specifed file.")
         .takes_value(true)
-        .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
+        .value_parser(value_parser!(std::path::PathBuf))
         .value_hint(ValueHint::FilePath)
         .short(A_S_LOG_FILE)
         .long(A_L_LOG_FILE)
@@ -224,7 +224,7 @@ fn arg_result_file() -> Arg<'static> {
         .takes_value(true)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        .value_parser(NonEmptyStringValueParser::new()) // TODO Rather PathBuf, no?
+        .value_parser(value_parser!(std::path::PathBuf))
         .short(A_S_RESULT_FILE)
         .long(A_L_RESULT_FILE)
         .required(false)
