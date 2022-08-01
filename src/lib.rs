@@ -29,6 +29,7 @@ pub mod logger;
 pub mod markup;
 pub use colored::*;
 pub mod config;
+pub mod result;
 pub mod state;
 use config::Config;
 use state::State;

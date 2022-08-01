@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use wildmatch::WildMatch;
 
-use crate::{ignore_path::IgnorePath, logger::LogLevel, markup::Type};
+use crate::{ignore_path::IgnorePath, logger::LogLevel, markup::Type, result};
 
 #[derive(Default, Debug, Clone)]
 pub struct Config {
@@ -24,5 +24,5 @@ pub struct Config {
     pub resolve_root: Option<PathBuf>,
     // pub dry: bool,
     pub result_file: Option<PathBuf>,
-    pub result_format: String, // TODO Make this an enum
+    pub result_format: result::Type,
 }

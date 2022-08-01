@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
-use crate::logger;
 use crate::markup::Type;
 use crate::Config;
 use crate::{ignore_link, ignore_path};
+use crate::{logger, result};
 use clap::builder::{PossibleValuesParser, ValueParser};
 use clap::Arg;
 use clap::{ArgAction, Command, ValueHint};
@@ -347,10 +347,9 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
     let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
     let result_file = args.get_one::<PathBuf>(A_L_RESULT_FILE).map(PathBuf::from);
     let result_format = args
-        .get_one::<&str>(A_L_RESULT_FORMAT)
-        .unwrap_or(&"csv")
-        .to_owned()
-        .to_owned();
+        .get_one::<result::Type>(A_L_RESULT_FORMAT)
+        .map(ToOwned::to_owned)
+        .unwrap_or_default();
 
     let log_level = if debug {
         logger::LogLevel::Debug

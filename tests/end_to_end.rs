@@ -10,6 +10,7 @@ use helper::benches_dir;
 use mle::config::Config;
 use mle::logger;
 use mle::markup::Type;
+use mle::result;
 use mle::state::State;
 use std::convert::TryInto;
 
@@ -18,16 +19,11 @@ async fn end_to_end() {
     let config = Config {
         scan_root: benches_dir().join("benchmark"),
         log_level: logger::LogLevel::Debug,
-        log_file: None,
         recursive: true,
         links: true,
         anchors: true,
-        result_file: None,
-        result_format: "json".to_owned(),
-        resolve_root: None,
+        result_format: result::Type::Json,
         markup_types: vec![Type::Markdown],
-        // match_file_extension: false,
-        // throttle: 0,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
         ignore_paths: vec![
             "benches/benchmark/markdown/ignore_me.md"
@@ -37,7 +33,7 @@ async fn end_to_end() {
                 .try_into()
                 .unwrap(),
         ],
-        // root_dir: None,
+        ..Default::default()
     };
     let mut state = State::new(config);
     if let Err(e) = mle::run(&mut state) {
@@ -51,19 +47,12 @@ async fn end_to_end_different_root() {
     let config = Config {
         scan_root: test_files.clone(),
         log_level: logger::LogLevel::Debug,
-        log_file: None,
-        recursive: true,
         links: true,
         anchors: true,
-        result_file: None,
-        result_format: "json".to_owned(),
+        result_format: result::Type::Json,
         resolve_root: Some(test_files),
         markup_types: vec![Type::Markdown],
-        // match_file_extension: false,
-        // throttle: 0,
-        ignore_links: vec![],
-        ignore_paths: vec![],
-        // root_dir: None,
+        ..Default::default()
     };
     let mut state = State::new(config);
     if let Err(e) = mle::run(&mut state) {
