@@ -41,11 +41,11 @@ use std::path::MAIN_SEPARATOR;
 use walkdir::WalkDir;
 
 pub async fn get_canonical(
-    orig_link: &Link,
+    orig: &Link,
     config: &Config,
 ) -> Option<Target> {
-    let canonicalized = to_canonical(orig_link, config);
-    if canonicalized == orig_link.target {
+    let canonicalized = to_canonical(orig, config);
+    if canonicalized == orig.target {
         None
     } else {
         Some(canonicalized)
@@ -54,11 +54,11 @@ pub async fn get_canonical(
 
 /// Converts any valid file path, pointing to an existing,
 /// local file-system entry, into its canonical, absolute form.
-pub fn to_canonical(orig_link: &Link, config: &Config) -> std::io::Result<Target> {
+pub fn to_canonical(orig: &Link, config: &Config) -> std::io::Result<Target> {
 
     // We canonicalize Absolute and Relative file paths, and "file://" URLs
     // the rest we assume, is already canonicalized, or has no way of (un-)canonicalization 
-    match orig_link.target {
+    match orig.target {
         Target::FileUrl(url) => {},
         Target::FileSystem(file_target) => {
             Ok(Target::FileSystem(FileTarget {
@@ -70,7 +70,7 @@ pub fn to_canonical(orig_link: &Link, config: &Config) -> std::io::Result<Target
                 anchor: None,
             }))
         },
-        _ => { Ok(orig_link.target) },
+        _ => { Ok(orig.target) },
     }
 }
 
