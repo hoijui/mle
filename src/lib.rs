@@ -12,13 +12,8 @@ extern crate clap_derive;
 #[macro_use]
 extern crate lazy_static;
 #[macro_use]
-extern crate relative_path;
-#[macro_use]
 extern crate const_format;
 
-use crate::link::Link;
-use crate::link::MarkupAnchorTarget;
-use crate::markup::File;
 pub mod cli;
 pub mod file_traversal;
 pub mod ignore_link;
@@ -31,6 +26,10 @@ pub use colored::*;
 pub mod config;
 pub mod result;
 pub mod state;
+
+use crate::link::Link;
+use crate::link::MarkupAnchorTarget;
+use crate::markup::File;
 use config::Config;
 use state::State;
 pub use wildmatch::WildMatch;
