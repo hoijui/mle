@@ -3,14 +3,14 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-/// Different categories of paths:
+/// ## Different categories of paths
 ///
-/// | Path cathegory name | starts with FS root | may not include operators | has symbolic links resolved |
-/// | ---                 | ---                 | ---                       | ---                         |
-/// | Relative            | [ ]                 | [ ]                       | [ ]                         |
-/// | Absolute            | [x]                 | [ ]                       | [ ]                         |
-/// | Logical             | [x]                 | [x]                       | [ ]                         |
-/// | Canonical           | [x]                 | [x]                       | [x]                         |
+/// | Path category name | starts with FS root | no operators | symbolic links resolved |
+/// | ---                | ---                 | ---          | ---                     |
+/// | Relative           | [ ]                 | [ ]          | [ ]                     |
+/// | Absolute           | [x]                 | [ ]          | [ ]                     |
+/// | Logical            | [x]                 | [x]          | [ ]                     |
+/// | Canonical          | [x]                 | [x]          | [x]                     |
 ///
 /// (path-)operators: '.' and '..'
 /// file-system root: e.g. '/' on Linux and 'C:\' or 'F:/' on Windows
