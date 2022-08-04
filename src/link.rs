@@ -76,6 +76,7 @@ pub struct FileSystemTarget {
 #[derive(PartialEq, Clone)]
 pub struct Locator {
     pub file: Rc<FileLoc>,
+    /// Where in the `file` this locator points to
     pub pos: Position,
 }
 
