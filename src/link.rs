@@ -385,7 +385,7 @@ impl fmt::Debug for Locator {
 
 impl std::fmt::Display for FileSystemTarget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.file.fmt(f)?;
+        f.write_fmt(format_args!("{}", self.file))?;
         if let Some(anchor) = &self.anchor {
             f.write_fmt(format_args!("#{}", anchor))?;
         }
