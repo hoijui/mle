@@ -305,7 +305,7 @@ impl FromStr for FileSystemLoc {
     type Err = Infallible;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let path = PathBuf::from_str(s).unwrap();
+        let path = PathBuf::from_str(s)?;
         Ok(if path.is_absolute() {
             Self::Absolute(path)
         } else {
