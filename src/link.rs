@@ -271,8 +271,8 @@ impl FileSystemLoc {
 impl std::fmt::Display for FileSystemLoc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Relative(rel_path) => rel_path.fmt(f)?,
-            Self::Absolute(abs_path) => write!(f, "{:#?}", abs_path)?,
+            Self::Relative(rel_path) => write!(f, "{}", rel_path)?,
+            Self::Absolute(abs_path) => write!(f, "{}", abs_path.display())?,
             // Self::Url(url) => url.fmt(f)?,
         }
         Ok(())
