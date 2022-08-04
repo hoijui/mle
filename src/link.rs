@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::borrow::Cow;
 use std::ops::{Add, Sub};
 use std::rc::Rc;
 use std::{convert::Infallible, fmt, str::FromStr};
@@ -255,6 +256,29 @@ impl Target {
             }
             Self::FileSystem(target) => target.file.is_markup(),
             Self::EMail(_) | Self::Invalid(_) => false,
+        }
+    }
+
+    /// Removes the fragment from a link, if one is present.
+    /// Otherwise it returns `self`.
+    #[must_use]
+    pub fn remove_anchor(&self) -> Cow<'_, Target> {
+        match self {
+            Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url)
+                if url.fragment().is_some() =>
+            {
+                let mut no_frag = url.clone();
+                no_frag.set_fragment(None);
+                Cow::Owned(Self::from(no_frag))
+            }
+            Self::FileSystem(target) if (&target.anchor).is_some() => {
+                let fs_target = FileSystemTarget {
+                    file: target.file.clone(),
+                    anchor: None,
+                };
+                Cow::Owned(Self::FileSystem(fs_target))
+            }
+            _ => Cow::Borrowed(self),
         }
     }
 }
