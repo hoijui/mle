@@ -142,21 +142,27 @@ impl From<&str> for Target {
 
     fn from(value: &str) -> Self {
         if let Ok(url) = Url::parse(value) {
-            if url.scheme() == "http" || url.scheme() == "https" {
-                Self::Http(url)
-            } else if url.scheme() == "ftp" || url.scheme() == "sftp" || url.scheme() == "scp" {
-                Self::Ftp(url)
-            } else if url.scheme() == "mailto" {
-                Self::EMail(url)
-            } else if url.scheme() == "file" {
-                Self::FileUrl(url)
-            } else {
-                Self::UnknownUrlSchema(url)
-            }
+            Self::from(url)
         } else if let Ok(fs_target) = FileSystemTarget::from_str(value) {
             Self::FileSystem(fs_target)
         } else {
             Self::Invalid(value.to_owned())
+        }
+    }
+}
+
+impl From<Url> for Target {
+    fn from(url: Url) -> Self {
+        if url.scheme() == "http" || url.scheme() == "https" {
+            Self::Http(url)
+        } else if url.scheme() == "ftp" || url.scheme() == "sftp" || url.scheme() == "scp" {
+            Self::Ftp(url)
+        } else if url.scheme() == "mailto" {
+            Self::EMail(url)
+        } else if url.scheme() == "file" {
+            Self::FileUrl(url)
+        } else {
+            Self::UnknownUrlSchema(url)
         }
     }
 }
