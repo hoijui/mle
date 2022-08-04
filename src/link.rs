@@ -153,15 +153,8 @@ impl From<&str> for Target {
             } else {
                 Self::UnknownUrlSchema(url)
             }
-        } else if let Ok(url) = Url::parse(&format!("file://{}", value)) {
-            let path = PathBuf::from(url.path());
-            let file = if path.is_absolute() {
-                FileSystemLoc::Absolute(path)
-            } else {
-                FileSystemLoc::Relative(url.path().into())
-            };
-            let anchor = url.fragment().map(ToOwned::to_owned);
-            Self::FileSystem(FileSystemTarget { file, anchor })
+        } else if let Ok(fs_target) = FileSystemTarget::from_str(value) {
+            Self::FileSystem(fs_target)
         } else {
             Self::Invalid(value.to_owned())
         }
