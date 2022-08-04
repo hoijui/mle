@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 // use email_address::EmailAddress;
 
 /// The source file a link was found in
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub enum FileSystemLoc {
     /// A relative file-system path
     Relative(RelativePathBuf),
@@ -39,7 +39,7 @@ pub enum FileLoc {
 // }
 
 /// Where a link points to
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
 pub enum Target {
     Http(Url),
     Ftp(Url),
@@ -63,7 +63,7 @@ pub struct Position {
 }
 
 /// Where a link points to
-#[derive(Hash, PartialEq, Eq, Clone, Debug)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
 pub struct FileSystemTarget {
     /// The target the link points to
     pub file: FileSystemLoc,
