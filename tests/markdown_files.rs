@@ -8,8 +8,9 @@ use std::{path::PathBuf, rc::Rc, str::FromStr};
 #[cfg(test)]
 use mle::extractors::find_links;
 use mle::{
+    anchor::MarkupAnchorTarget,
     config::Config,
-    link::{FileLoc, FileSystemLoc, Link, MarkupAnchorTarget},
+    link::{FileLoc, FileSystemLoc, Link},
     markup::{Content, File, Type},
 };
 

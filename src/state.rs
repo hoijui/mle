@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use crate::{config::Config, link::MarkupAnchorTarget};
+use crate::{anchor::MarkupAnchorTarget, config::Config};
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.

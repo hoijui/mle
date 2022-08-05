@@ -14,6 +14,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate const_format;
 
+pub mod anchor;
 pub mod cli;
 pub mod config;
 pub mod extractors;
@@ -26,8 +27,8 @@ pub mod markup;
 pub mod result;
 pub mod state;
 
+use crate::anchor::MarkupAnchorTarget;
 use crate::link::Link;
-use crate::link::MarkupAnchorTarget;
 use crate::markup::File;
 pub use colored::*;
 use config::Config;

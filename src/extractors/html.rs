@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::anchor::MarkupAnchorTarget;
 use crate::config::Config;
-use crate::link::MarkupAnchorTarget;
 use crate::link::{Link, Position};
 use crate::markup::File;
 
