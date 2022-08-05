@@ -16,11 +16,11 @@ extern crate const_format;
 
 pub mod cli;
 pub mod config;
+pub mod extractors;
 pub mod file_traversal;
 pub mod ignore_link;
 pub mod ignore_path;
 pub mod link;
-pub mod link_extractors;
 pub mod logger;
 pub mod markup;
 pub mod result;
@@ -41,7 +41,7 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std
     let mut anchor_targets = vec![];
     let mut errors = vec![];
     for file in files {
-        match link_extractors::find_links(&file, conf) {
+        match extractors::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {
                 links.append(&mut file_links);
                 anchor_targets.append(&mut file_anchor_targets);

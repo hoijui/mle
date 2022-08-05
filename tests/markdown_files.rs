@@ -6,7 +6,7 @@
 use std::{path::PathBuf, rc::Rc, str::FromStr};
 
 #[cfg(test)]
-use mle::link_extractors::find_links;
+use mle::extractors::find_links;
 use mle::{
     config::Config,
     link::{FileLoc, FileSystemLoc, Link, MarkupAnchorTarget},
