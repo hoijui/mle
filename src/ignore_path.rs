@@ -44,16 +44,19 @@ impl TryFrom<&Path> for IgnorePath {
     type Error = Error;
 
     fn try_from(path: &Path) -> Result<Self, Self::Error> {
-        let path =
+        let can_path =
             fs::canonicalize(path).map_err(|err| Error::FailedToCanonicalize(path.into(), err))?;
-        let r#type = if path.is_file() {
+        let r#type = if can_path.is_file() {
             Type::Whole
-        } else if path.is_dir() {
+        } else if can_path.is_dir() {
             Type::Prefix
         } else {
-            return Err(Error::UnknownPathType(path));
+            return Err(Error::UnknownPathType(can_path));
         };
-        Ok(Self { r#type, path })
+        Ok(Self {
+            r#type,
+            path: can_path,
+        })
     }
 }
 
