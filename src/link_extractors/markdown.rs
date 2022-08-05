@@ -206,10 +206,11 @@ impl super::LinkExtractor for LinkExtractor {
 
 #[cfg(test)]
 mod tests {
-    use crate::link::FileLoc;
+    use crate::link::{FileLoc, Target};
 
     use super::*;
     use ntest::test_case;
+    use url::Url;
 
     fn find_links(content: &str) -> Vec<Link> {
         let markup_file = File::dummy(content, Type::Markdown);
@@ -219,8 +220,14 @@ mod tests {
             .expect("No error")
     }
 
-    fn link_new(target_raw: &str, line: usize, column: usize) -> Link {
-        Link::new(FileLoc::dummy(), Position { line, column }, target_raw)
+    fn link_new_http_no_anchor(url: &str, line: usize, column: usize) -> Link {
+        Link {
+            source: Locator {
+                file: FileLoc::dummy(),
+                pos: Position { line, column },
+            },
+            target: Target::Http(Url::parse(url).expect("Test specified non-valid HTTP(S) URL")),
+        }
     }
 
     #[test]
@@ -242,8 +249,8 @@ mod tests {
         let input =
             "\n\r\t\n[![](http://meritbadge.herokuapp.com/mle)](https://crates.io/crates/mle)";
         let result = find_links(input);
-        let img = link_new("http://meritbadge.herokuapp.com/mle", 3, 2);
-        let link = link_new("https://crates.io/crates/mle", 3, 1);
+        let img = link_new_http_no_anchor("http://meritbadge.herokuapp.com/mle", 3, 2);
+        let link = link_new_http_no_anchor("https://crates.io/crates/mle", 3, 1);
         assert_eq!(vec![img, link], result);
     }
 
@@ -279,7 +286,7 @@ mod tests {
     fn link_near_inline_code() {
         let input = " `bug` [code](http://example.net/), link!.";
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, 8);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 8);
         assert_eq!(vec![expected], result);
     }
 
@@ -287,7 +294,7 @@ mod tests {
     fn link_very_near_inline_code() {
         let input = "`bug`[code](http://example.net/)";
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, 6);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 6);
         assert_eq!(vec![expected], result);
     }
 
@@ -309,7 +316,7 @@ mod tests {
     fn escaped_code_block() {
         let input = "   klsdjf \\`[escape](http://example.net/)\\`, no link!.";
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, 13);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 13);
         assert_eq!(vec![expected], result);
     }
 
@@ -325,7 +332,7 @@ mod tests {
         let link_str = "http://example.net/";
         let input = &format!("\n\nBla ![This is an image link]({})", link_str);
         let result = find_links(input);
-        let expected = link_new(link_str, 3, 5);
+        let expected = link_new_http_no_anchor(link_str, 3, 5);
         assert_eq!(vec![expected], result);
     }
 
@@ -334,7 +341,7 @@ mod tests {
         let link_str = "http://example.net/";
         let input = &format!("[This link]({}) has no title attribute.", link_str);
         let result = find_links(input);
-        let expected = link_new(link_str, 1, 1);
+        let expected = link_new_http_no_anchor(link_str, 1, 1);
         assert_eq!(vec![expected], result);
     }
 
@@ -343,7 +350,7 @@ mod tests {
         let link_str = "http://example.net/";
         let input = &format!("\n123[This is a link]({} \"with title\") oh yea.", link_str);
         let result = find_links(input);
-        let expected = link_new(link_str, 2, 4);
+        let expected = link_new_http_no_anchor(link_str, 2, 4);
         assert_eq!(vec![expected], result);
     }
 
@@ -354,7 +361,7 @@ mod tests {
     #[test_case("This is a short link <http://example.net/>", 22)]
     fn inline_link(input: &str, column: usize) {
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, column);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, column);
         assert_eq!(vec![expected], result);
     }
 
@@ -368,7 +375,7 @@ mod tests {
     )]
     fn html_link(input: &str) {
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, 10);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 10);
         assert_eq!(vec![expected], result);
     }
 
@@ -376,23 +383,23 @@ mod tests {
     fn html_link_ident() {
         let input = "123<a href=\"http://example.net/\"> link text</a>";
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 1, 13);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 13);
         assert_eq!(vec![expected], result);
     }
 
     #[test]
-    fn html_link_new_line() {
+    fn html_link_new_http_no_anchor_line() {
         let input = "\n123<a href=\"http://example.net/\"> link text</a>";
         let result = find_links(input);
-        let expected = link_new("http://example.net/", 2, 13);
+        let expected = link_new_http_no_anchor("http://example.net/", 2, 13);
         assert_eq!(vec![expected], result);
     }
 
     #[test]
     fn raw_html_issue_31() {
-        let input = "Some text <a href=\"some_url\">link text</a> more text.";
+        let input = "Some text <a href=\"http://example.net/\">link text</a> more text.";
         let result = find_links(input);
-        let expected = link_new("some_url", 1, 20);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 20);
         assert_eq!(vec![expected], result);
     }
 
@@ -404,7 +411,7 @@ mod tests {
             link_str
         );
         let result = find_links(input);
-        let expected = link_new(link_str, 1, 9);
+        let expected = link_new_http_no_anchor(link_str, 1, 9);
         assert_eq!(vec![expected], result);
     }
 
