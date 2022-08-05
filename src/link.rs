@@ -186,7 +186,7 @@ impl Target {
     /// Whether this target definitely points to a local resource.
     /// Note: This is **not** the same as the inversion of `::is_remote()`!
     #[must_use]
-    pub fn is_local(&self) -> bool {
+    pub const fn is_local(&self) -> bool {
         match self {
             Self::Http(_)
             | Self::Ftp(_)
@@ -200,7 +200,7 @@ impl Target {
     /// Whether this target most likely points to a remote resource.
     /// Note: This is **not** the same as the inversion of `::is_local()`!
     #[must_use]
-    pub fn is_remote(&self) -> bool {
+    pub const fn is_remote(&self) -> bool {
         match self {
             Self::Http(_) | Self::Ftp(_) | Self::UnknownUrlSchema(_) => true,
             Self::EMail(_) | Self::FileUrl(_) | Self::FileSystem(_) | Self::Invalid(_) => false,
@@ -209,13 +209,13 @@ impl Target {
 
     /// Whether this target is encoded as a file-system path.
     #[must_use]
-    pub fn is_file_system(&self) -> bool {
+    pub const fn is_file_system(&self) -> bool {
         matches!(self, Self::FileSystem(_))
     }
 
     /// Whether this target is encoded as a URL.
     #[must_use]
-    pub fn is_url(&self) -> bool {
+    pub const fn is_url(&self) -> bool {
         match self {
             Self::Http(_)
             | Self::Ftp(_)
@@ -262,7 +262,7 @@ impl Target {
     /// Removes the fragment from a link, if one is present.
     /// Otherwise it returns `self`.
     #[must_use]
-    pub fn remove_anchor(&self) -> Cow<'_, Target> {
+    pub fn remove_anchor(&self) -> Cow<'_, Self> {
         match self {
             Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url)
                 if url.fragment().is_some() =>
@@ -345,21 +345,21 @@ impl FromStr for FileSystemLoc {
 }
 
 impl Add for Position {
-    type Output = Position;
+    type Output = Self;
 
     fn add(self, rrhs: Self) -> Self::Output {
-        Position {
+        Self {
             line: self.line + rrhs.line,
             column: self.column + rrhs.column,
         }
     }
 }
 
-impl Add<&Position> for Position {
-    type Output = Position;
+impl Add<&Self> for Position {
+    type Output = Self;
 
     fn add(self, rrhs: &Self) -> Self::Output {
-        Position {
+        Self {
             line: self.line + rrhs.line,
             column: self.column + rrhs.column,
         }
@@ -367,21 +367,21 @@ impl Add<&Position> for Position {
 }
 
 impl Sub for Position {
-    type Output = Position;
+    type Output = Self;
 
     fn sub(self, rrhs: Self) -> Self::Output {
-        Position {
+        Self {
             line: self.line - rrhs.line,
             column: self.column - rrhs.column,
         }
     }
 }
 
-impl Sub<&Position> for Position {
-    type Output = Position;
+impl Sub<&Self> for Position {
+    type Output = Self;
 
     fn sub(self, rrhs: &Self) -> Self::Output {
-        Position {
+        Self {
             line: self.line - rrhs.line,
             column: self.column - rrhs.column,
         }
@@ -402,7 +402,7 @@ impl fmt::Display for Position {
 
 impl Position {
     #[must_use]
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self { line: 0, column: 0 }
     }
 }

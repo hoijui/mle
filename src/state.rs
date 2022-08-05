@@ -33,8 +33,8 @@ pub struct State {
 
 impl State {
     #[must_use]
-    pub fn new(config: Config) -> State {
-        State {
+    pub fn new(config: Config) -> Self {
+        Self {
             remote_cache: RemoteCache::new(),
             config,
         }

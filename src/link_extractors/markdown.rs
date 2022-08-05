@@ -62,8 +62,8 @@ pub struct BrokenLinkBuf {
 }
 
 impl BrokenLinkBuf {
-    pub fn from_ref(other: BrokenLink<'_>) -> BrokenLinkBuf {
-        BrokenLinkBuf {
+    pub fn from_ref(other: BrokenLink<'_>) -> Self {
+        Self {
             span: other.span,
             link_type: other.link_type,
             reference: other.reference.as_ref().to_owned(),

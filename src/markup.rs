@@ -63,10 +63,10 @@ impl Default for Type {
 impl FromStr for Type {
     type Err = &'static str;
 
-    fn from_str(s: &str) -> Result<Type, Self::Err> {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "md" => Ok(Type::Markdown),
-            "html" => Ok(Type::Html),
+            "md" => Ok(Self::Markdown),
+            "html" => Ok(Self::Html),
             _ => Err("Unknown markup file extension"),
         }
     }
@@ -76,10 +76,10 @@ impl Type {
     #[must_use]
     pub fn file_extensions(&self) -> Vec<&'static str> {
         match self {
-            Type::Markdown => vec![
+            Self::Markdown => vec![
                 "md", "markdown", "mkdown", "mkdn", "mkd", "mdwn", "mdtxt", "mdtext", "text", "rmd",
             ],
-            Type::Html => vec!["htm", "html", "xhtml"],
+            Self::Html => vec!["htm", "html", "xhtml"],
         }
     }
 }

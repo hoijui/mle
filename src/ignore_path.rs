@@ -53,7 +53,7 @@ impl TryFrom<&Path> for IgnorePath {
         } else {
             return Err(Error::UnknownPathType(path));
         };
-        Ok(IgnorePath { r#type, path })
+        Ok(Self { r#type, path })
     }
 }
 
