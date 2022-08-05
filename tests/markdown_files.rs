@@ -8,13 +8,13 @@ use std::{path::PathBuf, rc::Rc, str::FromStr};
 #[cfg(test)]
 use mle::extractors::find_links;
 use mle::{
-    anchor::MarkupAnchorTarget,
+    anchor::Anchor,
     config::Config,
     link::{FileLoc, FileSystemLoc, Link},
     markup::{Content, File, Type},
 };
 
-fn extract(md_file: PathBuf) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+fn extract(md_file: PathBuf) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
     let locator = Rc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
     let file = File {
         markup_type: Type::Markdown,

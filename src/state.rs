@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use crate::{anchor::MarkupAnchorTarget, config::Config};
+use crate::{anchor::Anchor, config::Config};
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.
@@ -14,7 +14,7 @@ use crate::{anchor::MarkupAnchorTarget, config::Config};
 /// If the Option is None, it means the URL was checked and evaluated as for available,
 /// but no parsing of anchors was tried.
 /// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-pub type AnchorTargets = Option<Vec<MarkupAnchorTarget>>;
+pub type AnchorTargets = Option<Vec<Anchor>>;
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.

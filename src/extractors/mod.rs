@@ -6,7 +6,7 @@
 mod html;
 mod markdown;
 
-use crate::anchor::MarkupAnchorTarget;
+use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
 use crate::markup::{File, Type};
@@ -29,10 +29,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// # Errors
 ///
 /// If fetching the markup file content failed.
-pub fn find_links(
-    file: &File,
-    conf: &Config,
-) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+pub fn find_links(file: &File, conf: &Config) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
     info!(
@@ -79,5 +76,5 @@ pub trait LinkExtractor {
         &self,
         file: &File,
         conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)>;
+    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)>;
 }

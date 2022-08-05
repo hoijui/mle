@@ -27,7 +27,7 @@ pub mod markup;
 pub mod result;
 pub mod state;
 
-use crate::anchor::MarkupAnchorTarget;
+use crate::anchor::Anchor;
 use crate::link::Link;
 use crate::markup::File;
 pub use colored::*;
@@ -35,7 +35,7 @@ use config::Config;
 use state::State;
 pub use wildmatch::WildMatch;
 
-fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<MarkupAnchorTarget>, Vec<std::io::Error>) {
+fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<std::io::Error>) {
     let mut files: Vec<File> = Vec::new();
     file_traversal::find(conf, &mut files);
     let mut links = vec![];

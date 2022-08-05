@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::anchor::MarkupAnchorTarget;
+use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::{Link, Position};
 use crate::markup::File;
@@ -31,9 +31,9 @@ impl super::LinkExtractor for LinkExtractor {
         &self,
         file: &File,
         _conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
         let mut links: Vec<Link> = Vec::new();
-        let anchors: Vec<MarkupAnchorTarget> = Vec::new(); // TODO FIXME This is never added to!
+        let anchors: Vec<Anchor> = Vec::new(); // TODO FIXME This is never added to!
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
         // let mut element_part: Option<Attribute>;

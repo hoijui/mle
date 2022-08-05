@@ -8,7 +8,7 @@ use std::fmt;
 use crate::link::Locator;
 
 #[derive(PartialEq, Clone, Copy, Debug)]
-pub enum MarkupAnchorType {
+pub enum Type {
     /// An anchor associated to a title, auto generated from the title
     TitleAuto,
     /// An anchor associated to a title, manually defined for the title
@@ -42,22 +42,22 @@ pub enum MarkupAnchorType {
 ///   `# My header {#manual-anchor}`
 ///
 #[derive(PartialEq, Clone)]
-pub struct MarkupAnchorTarget {
+pub struct Anchor {
     /// Where the anchor was found
     pub source: Locator,
     /// The anchor name (the thing one links to)
     pub name: String,
     /// The anchor type
-    pub r#type: MarkupAnchorType,
+    pub r#type: Type,
 }
 
-impl fmt::Debug for MarkupAnchorTarget {
+impl fmt::Debug for Anchor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}#{} (type {:#?})", self.source, self.name, self.r#type)
     }
 }
 
-impl fmt::Display for MarkupAnchorTarget {
+impl fmt::Display for Anchor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}#{}", self.source, self.name)
     }

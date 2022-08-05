@@ -3,8 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::anchor::MarkupAnchorTarget;
-use crate::anchor::MarkupAnchorType;
+use crate::anchor;
+use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
 use crate::link::Locator;
@@ -76,7 +76,7 @@ impl super::LinkExtractor for LinkExtractor {
         &self,
         file: &File,
         conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<MarkupAnchorTarget>)> {
+    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
         let html_le = super::html::LinkExtractor();
 
         // Setup callback that sets the URL and title when it encounters
@@ -100,7 +100,7 @@ impl super::LinkExtractor for LinkExtractor {
         );
 
         let mut links: Vec<Link> = Vec::new();
-        let mut anchors: Vec<MarkupAnchorTarget> = Vec::new();
+        let mut anchors: Vec<Anchor> = Vec::new();
         let gathering_anchors = true; // TODO Configuration setting needed for this
         let mut gathering_for_header = false;
         let mut header_content: Vec<String> = Vec::new();
@@ -138,15 +138,15 @@ impl super::LinkExtractor for LinkExtractor {
                                 file: file.locator.clone(),
                                 pos,
                             };
-                            let r#type : MarkupAnchorType;
+                            let r#type : anchor::Type;
                             let id_str : String = match id {
                                 Some(id_cont) => {
-                                    r#type = MarkupAnchorType::TitleManual;
+                                    r#type = anchor::Type::TitleManual;
                                     // eprint!("XXX Title with manual id!: '{}'\n", id_cont);
                                     id_cont.to_owned()
                                 },
                                 None => {
-                                    r#type = MarkupAnchorType::TitleAuto;
+                                    r#type = anchor::Type::TitleAuto;
                                     gathering_for_header = false;
                                     // let header_text = header_content.iter().filter(|txt| txt.is_empty()).collect::<Vec<&String>>().join(" ");
                                     // let header_text = header_content.iter()
@@ -165,7 +165,7 @@ impl super::LinkExtractor for LinkExtractor {
                                 },
                             };
                             header_content.clear();
-                            anchors.push(MarkupAnchorTarget {
+                            anchors.push(Anchor {
                                 source,
                                 name: id_str,
                                 r#type,
