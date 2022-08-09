@@ -54,12 +54,12 @@ use config::Config;
 use state::State;
 pub use wildmatch::WildMatch;
 
-fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<std::io::Error>) {
+fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<Box<dyn std::error::Error>>) {
     let mut files: Vec<File> = Vec::new();
     file_traversal::find(conf, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];
-    let mut errors = vec![];
+    let mut errors: Vec<Box<dyn std::error::Error>> = vec![];
     for file in files {
         match extractors::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {
@@ -67,7 +67,7 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<std::io::Error>
                 anchor_targets.append(&mut file_anchor_targets);
             }
             Err(err) => {
-                errors.push(err);
+                errors.push(err.into());
             }
         }
     }
