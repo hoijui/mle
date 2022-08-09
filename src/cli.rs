@@ -45,6 +45,7 @@ const A_S_RESULT_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
 
+#[allow(clippy::useless_transmute)]
 fn arg_scan_root() -> Arg<'static> {
     Arg::new(A_L_SCAN_ROOT)
         .help("The root dir to scann for markup files")
@@ -156,10 +157,10 @@ fn arg_ignore_links() -> Arg<'static> {
 
 fn arg_markup_types() -> Arg<'static> {
     Arg::new(A_L_MARKUP_TYPES)
-        .help("List of markup types from which links shall be extracted; space separated")
-        .long_help(
-            "One or more markup file types from which links shall be extracted, \
-            separated by white-space.",
+        .help(
+            "List of markup types from which links shall be extracted; \
+            space separated. Possible values are found in auto-complete, \
+            or when you use a wrong one",
         )
         .takes_value(true)
         .min_values(1)
