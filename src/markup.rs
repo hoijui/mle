@@ -82,6 +82,14 @@ impl Type {
             Self::Html => vec!["htm", "html", "xhtml"],
         }
     }
+
+    #[must_use]
+    pub const fn as_str(&self) -> &'static str {
+        match self {
+            Self::Markdown => "md",
+            Self::Html => "html",
+        }
+    }
 }
 
 impl<'a> File<'a> {
