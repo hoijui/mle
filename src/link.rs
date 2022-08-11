@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::ops::{Add, Sub};
 use std::rc::Rc;
@@ -15,7 +16,7 @@ use std::path::{Path, PathBuf};
 // use email_address::EmailAddress;
 
 /// The source file a link was found in
-#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum FileSystemLoc {
     /// A relative file-system path
     Relative(RelativePathBuf),
@@ -26,7 +27,7 @@ pub enum FileSystemLoc {
 }
 
 /// The location of a markup content (file)
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Serialize, Deserialize)]
 pub enum FileLoc {
     Url(Url),
     System(FileSystemLoc),
@@ -40,7 +41,7 @@ pub enum FileLoc {
 // }
 
 /// Where a link points to
-#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Target {
     Http(Url),
     Ftp(Url),
@@ -53,7 +54,7 @@ pub enum Target {
 
 /// Where in the markup content (file/stream/string)
 /// a piece of content (e.g. a link) was found.
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct Position {
     /// The line number in characters (not bytes)
     pub line: usize,
@@ -64,7 +65,7 @@ pub struct Position {
 }
 
 /// Where a link points to
-#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct FileSystemTarget {
     /// The target the link points to
     pub file: FileSystemLoc,
@@ -74,7 +75,7 @@ pub struct FileSystemTarget {
 
 /// Where a piece of content (e.g. a link) was found;
 /// including both the file and the position inside the file.
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct Locator {
     pub file: Rc<FileLoc>,
     /// Where in the `file` this locator points to
@@ -82,7 +83,7 @@ pub struct Locator {
 }
 
 /// Link found in markup files
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Serialize, Deserialize)]
 pub struct Link {
     /// Where the link was found
     pub source: Locator,
