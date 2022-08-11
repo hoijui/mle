@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
-use crate::markup::Type;
+use crate::markup::{self, Type};
 use crate::Config;
 use crate::{ignore_link, ignore_path};
 use crate::{logger, result};
-use clap::builder::{PossibleValuesParser, ValueParser};
+use clap::builder::ValueParser;
 use clap::Arg;
 use clap::{ArgAction, Command, ValueHint};
 use std::collections::HashSet;
@@ -164,7 +164,7 @@ fn arg_markup_types() -> Arg<'static> {
         )
         .takes_value(true)
         .min_values(1)
-        .value_parser(PossibleValuesParser::new(&["md", "html"]))
+        .value_parser(ValueParser::new(markup::Type::from_str))
         .short(A_S_MARKUP_TYPES)
         .long(A_L_MARKUP_TYPES)
         .action(ArgAction::Append)
@@ -241,7 +241,7 @@ fn arg_result_format() -> Arg<'static> {
             Writes to log(Info), if no target file is given as argument.",
         )*/
         .takes_value(true)
-        .value_parser(PossibleValuesParser::new(&["md", "json", "csv", "grep"]))
+        .value_parser(ValueParser::new(result::Type::from_str))
         .value_name("FORMAT")
         .short(A_S_RESULT_FORMAT)
         .long(A_L_RESULT_FORMAT)
