@@ -12,7 +12,7 @@
 // #![warn(clippy::wildcard_enum_match_arm)]
 // #![warn(clippy::string_slice)]
 // #![warn(clippy::indexing_slicing)]
-#![warn(clippy::clone_on_ref_ptr)]
+// #![warn(clippy::clone_on_ref_ptr)]
 // #![warn(clippy::try_err)]
 #![warn(clippy::shadow_reuse)]
 // #![warn(clippy::single_char_lifetime_names)]
