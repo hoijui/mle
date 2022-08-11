@@ -2,7 +2,22 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{io::ErrorKind, str::FromStr};
+mod json;
+mod txt;
+
+use std::{
+    borrow::Cow,
+    fs::File,
+    io::{ErrorKind, Write},
+    path::Path,
+    str::FromStr,
+};
+
+use crate::{
+    anchor::Anchor,
+    config::Config,
+    link::{Link, Target},
+};
 
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
@@ -55,4 +70,53 @@ impl FromStr for Type {
             ))?,
         })
     }
+}
+
+fn construct_out_stream(specifier: Option<&str>) -> Box<dyn Write + 'static> {
+    match specifier {
+        None | Some("-") => Box::new(std::io::stdout()) as Box<dyn Write>,
+        Some(file_path) => {
+            let path = Path::new(file_path);
+            Box::new(File::create(&path).unwrap()) as Box<dyn Write>
+        }
+    }
+}
+
+/// Write results to stdout or file.
+///
+/// # Errors
+/// (I/)O-error when writing to a file.
+pub fn sink(
+    config: &Config,
+    links: &[Link],
+    groups: &[(Cow<'_, Target>, Vec<&Link>)],
+    anchors: &[Anchor],
+    errors: &[Box<dyn std::error::Error>],
+) -> std::io::Result<()> {
+    let sink: Box<dyn Sink> = match config.result_format {
+        Type::Text => Box::new(txt::Sink()),
+        Type::Json => Box::new(json::Sink()),
+        _ => Err(std::io::Error::new(
+            ErrorKind::InvalidInput,
+            "Result format not yet supported",
+        ))?,
+    };
+    let mut out_writer = construct_out_stream(config.result_file);
+    sink.write_results(config, &mut out_writer, links, groups, anchors, errors)
+}
+
+pub trait Sink {
+    /// Writes-out the extraction results.
+    ///
+    /// # Errors
+    /// If writing to a file or other (I)/O-device failed.
+    fn write_results(
+        &self,
+        config: &Config,
+        out_stream: &mut Box<dyn Write>,
+        links: &[Link],
+        groups: &[(Cow<'_, Target>, Vec<&Link>)],
+        anchors: &[Anchor],
+        errors: &[Box<dyn std::error::Error>],
+    ) -> std::io::Result<()>;
 }

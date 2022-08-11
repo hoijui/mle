@@ -4,7 +4,7 @@
 
 use crate::ignore_path::IgnorePath;
 use crate::markup::{self, Type};
-use crate::Config;
+use crate::{group, Config};
 use crate::{ignore_link, ignore_path};
 use crate::{logger, result};
 use clap::builder::ValueParser;
@@ -44,6 +44,8 @@ const A_L_RESULT_FILE: &str = "result-file";
 const A_S_RESULT_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
+const A_L_GROUP_BY: &str = "group-by";
+const A_S_GROUP_BY: char = 'G';
 
 #[allow(clippy::useless_transmute)]
 fn arg_scan_root() -> Arg<'static> {
@@ -248,8 +250,19 @@ fn arg_result_format() -> Arg<'static> {
         .required(false)
 }
 
+fn arg_group_by() -> Arg<'static> {
+    Arg::new(A_L_GROUP_BY)
+        .help("What to group links by in the output (default: No grouping -> Use oder of appearance in the input)")
+        .takes_value(true)
+        .value_parser(ValueParser::new(group::Type::from_str))
+        .value_name("GROUPER")
+        .short(A_S_GROUP_BY)
+        .long(A_L_GROUP_BY)
+        .required(false)
+}
+
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 12] = [
+    static ref ARGS: [Arg<'static>; 13] = [
         arg_scan_root(),
         arg_non_recursive(),
         arg_debug(),
@@ -264,6 +277,7 @@ lazy_static! {
         arg_log_file(),
         arg_result_file(),
         arg_result_format(),
+        arg_group_by(),
     ];
 }
 
@@ -346,10 +360,10 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
     };*/
     //let dry = args.value_of(A_L_DRY);
     let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
-    let result_file = args.get_one::<PathBuf>(A_L_RESULT_FILE).map(PathBuf::from);
+    let result_file = args.get_one(A_L_RESULT_FILE).copied();
     let result_format = args
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
-        .map(ToOwned::to_owned)
+        .copied()
         .unwrap_or_default();
 
     let log_level = if debug {
@@ -357,6 +371,8 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
     } else {
         logger::LogLevel::Warn
     };
+
+    let group_by = args.get_one::<group::Type>(A_L_GROUP_BY).copied();
 
     Ok(Config {
         log_level,
@@ -373,5 +389,6 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
         //dry,
         result_file,
         result_format,
+        group_by,
     })
 }

@@ -38,6 +38,7 @@ pub mod cli;
 pub mod config;
 pub mod extractors;
 pub mod file_traversal;
+pub mod group;
 pub mod ignore_link;
 pub mod ignore_path;
 pub mod link;
@@ -85,6 +86,10 @@ pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
     // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
     // primary_anchors.append(&mut secondary_anchors);
 
+    // group the links if requested
+    let grouper = group::Type::get(&state.config).get_grouper();
+    let groups = group::group(&links, &anchors, &errors, grouper)?;
+
     // // <target, (links, requires_anchors)>
     // let mut link_target_groups: HashMap<Target, (Vec<Link>, bool)> = HashMap::new();
 
@@ -126,20 +131,5 @@ pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
     //     }
     // }
 
-    println!("Links ...");
-    for link in links {
-        println!("{}", link);
-    }
-
-    println!("\nAnchors ...");
-    for anchor in anchors {
-        println!("{}", anchor);
-    }
-
-    println!("\nErrors ...");
-    for error in errors {
-        println!("{:#?}", error);
-    }
-
-    Ok(())
+    result::sink(&state.config, &links, &groups, &anchors, &errors).map_err(Into::into)
 }

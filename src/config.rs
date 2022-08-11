@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use wildmatch::WildMatch;
 
-use crate::{ignore_path::IgnorePath, logger::LogLevel, markup::Type, result};
+use crate::{group, ignore_path::IgnorePath, logger::LogLevel, markup::Type, result};
 
 #[derive(Default, Debug, Clone)]
 pub struct Config {
@@ -23,6 +23,11 @@ pub struct Config {
     pub markup_types: Vec<Type>,
     pub resolve_root: Option<PathBuf>,
     // pub dry: bool,
-    pub result_file: Option<PathBuf>,
+    /// Both 'None` and `Some("-")` mean: StdOut;
+    /// everything else will be interpreted as a file path.
+    pub result_file: Option<&'static str>,
     pub result_format: result::Type,
+    /// How to group links together. Default: no grouping -
+    /// links appear in the output in the order they were found.
+    pub group_by: Option<group::Type>,
 }
