@@ -74,22 +74,6 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<Box<dyn std::er
     (links, anchor_targets, errors)
 }
 
-fn print_helper(link: &Link, status_code: &colored::ColoredString, msg: &str, error_channel: bool) {
-    let link_str = format!("[{:^4}] {:#?} - {}", status_code, link, msg);
-    if error_channel {
-        eprintln!("{}", link_str);
-    } else {
-        println!("{}", link_str);
-    }
-}
-
-// fn print_result(result: &FinalResult, map: &HashMap<Target, Vec<MarkupLink>>) {
-//     for link in &map[&result.target] {
-//         let code = &result.result_code;
-//         print_helper(link, code.status_code(), code.msg(), code.is_err());
-//     }
-// }
-
 /// Runs the markup link extractor.
 /// This is the main entry point of this library.
 ///
