@@ -324,7 +324,7 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
     let mut markup_types = vec![Type::Markdown, Type::Html];
     if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
         markup_types = types
-            .map(AsRef::as_ref)
+            .copied()
             .map(Type::from_str)
             .collect::<Result<Vec<Type>, _>>()?;
     }
