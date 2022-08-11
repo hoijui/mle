@@ -15,7 +15,7 @@ use std::process;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = cli::parse_args()?;
     let mut state = State::new(config);
-    logger::init(&state.config.log_level);
+    logger::init(&state.config.log_level, &state.config.log_file);
     info!("Config: {:?}", &state.config);
     if mle::run(&mut state).is_err() {
         process::exit(1);

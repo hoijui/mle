@@ -5,7 +5,12 @@
 
 extern crate simplelog;
 
-use simplelog::{ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode};
+use std::{fs::File, path::PathBuf};
+
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode,
+    WriteLogger,
+};
 
 #[derive(Debug, Clone, Copy, ArgEnum)]
 pub enum LogLevel {
@@ -20,24 +25,30 @@ impl Default for LogLevel {
     }
 }
 
-/// Inits the logger with the given log-level
+/// Inits the logger with the given log-level.
 ///
 /// # Panics
 /// If logger initilaization failed due to it already having been in progress
-/// (from a previous call to initilaize the logger).
-pub fn init(log_level: &LogLevel) {
+/// (from a previous call to initialize the logger).
+pub fn init(log_level: &LogLevel, log_file: &Option<PathBuf>) {
     let level_filter = match log_level {
         LogLevel::Info => LevelFilter::Info,
         LogLevel::Warn => LevelFilter::Warn,
         LogLevel::Debug => LevelFilter::Debug,
     };
-
-    let err = CombinedLogger::init(vec![TermLogger::new(
-        level_filter,
-        Config::default(),
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    )]);
-    assert!(err.is_ok(), "Failed to init logger! Error: {:?}", err);
+    let logger: Box<dyn SharedLogger> = match log_file {
+        None => TermLogger::new(
+            level_filter,
+            Config::default(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
+        Some(log_file_path) => WriteLogger::new(
+            level_filter,
+            Config::default(),
+            File::create(log_file_path).expect("Failed to open log file for writing"),
+        ),
+    };
+    CombinedLogger::init(vec![logger]).expect("Failed to init logger!");
     debug!("Initialized logging");
 }
