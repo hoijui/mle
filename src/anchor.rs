@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::link::Locator;
 
-#[derive(PartialEq, Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Type {
     /// An anchor associated to a title, auto generated from the title
     TitleAuto,
@@ -43,7 +43,7 @@ pub enum Type {
 ///   using the following syntax:
 ///   `# My header {#manual-anchor}`
 ///
-#[derive(PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Anchor {
     /// Where the anchor was found
     pub source: Locator,

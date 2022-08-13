@@ -54,7 +54,7 @@ pub enum Target {
 
 /// Where in the markup content (file/stream/string)
 /// a piece of content (e.g. a link) was found.
-#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Debug, Serialize, Deserialize)]
 pub struct Position {
     /// The line number in characters (not bytes)
     pub line: usize,
@@ -75,7 +75,7 @@ pub struct FileSystemTarget {
 
 /// Where a piece of content (e.g. a link) was found;
 /// including both the file and the position inside the file.
-#[derive(PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Locator {
     pub file: Rc<FileLoc>,
     /// Where in the `file` this locator points to
@@ -83,7 +83,7 @@ pub struct Locator {
 }
 
 /// Link found in markup files
-#[derive(PartialEq, Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Link {
     /// Where the link was found
     pub source: Locator,

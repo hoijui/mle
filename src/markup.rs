@@ -7,7 +7,7 @@ use std::{borrow::Cow, fs, path::PathBuf, rc::Rc, str::FromStr};
 
 use crate::link::{FileLoc, Position};
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Content<'a> {
     /// stores the file-name
     LocalFile(PathBuf),
