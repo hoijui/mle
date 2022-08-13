@@ -101,16 +101,14 @@ impl super::LinkExtractor for LinkExtractor {
 
         let mut links: Vec<Link> = Vec::new();
         let mut anchors: Vec<Anchor> = Vec::new();
-        let gathering_anchors = true; // TODO Configuration setting needed for this
         let mut gathering_for_header = false;
         let mut header_content: Vec<String> = Vec::new();
         for (evt, range) in parser.into_offset_iter() {
             match evt {
-                Event::Start(Tag::Heading(_level, id, _classes)) => {
+                Event::Start(Tag::Heading(_level, id, _classes))
+                if conf.anchors && id.is_none() => {
                     // if let Tag::Heading(_level, id, _classes) = tag {
-                                              if gathering_anchors && id.is_none() {
                                                    gathering_for_header = true;
-                                           }
                                         //   }
                     // match tag {
                     //     Tag::Heading(_level, id, _classes) => {
@@ -124,7 +122,8 @@ impl super::LinkExtractor for LinkExtractor {
                 Event::End(tag) => {
                     match tag {
                         Tag::Link(_link_type, destination, _title)
-                        | Tag::Image(_link_type, destination, _title) => {
+                        | Tag::Image(_link_type, destination, _title)
+                        if conf.links => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             links.push(Link::new(
                                 file.locator.clone(),
@@ -132,7 +131,8 @@ impl super::LinkExtractor for LinkExtractor {
                                 &destination,
                             ));
                         }
-                        Tag::Heading(_level, id, _classes) => {
+                        Tag::Heading(_level, id, _classes)
+                        if conf.anchors => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             let source = Locator {
                                 file: file.locator.clone(),
@@ -183,8 +183,12 @@ impl super::LinkExtractor for LinkExtractor {
                         start: cur_pos,
                     };
                     let (mut sub_links, mut sub_anchors) = html_le.find_links_and_anchors(&sub_markup, conf)?;
-                    links.append(&mut sub_links);
-                    anchors.append(&mut sub_anchors);
+                    if conf.links {
+                        links.append(&mut sub_links);
+                    }
+                    if conf.anchors {
+                        anchors.append(&mut sub_anchors);
+                    }
 
                     if gathering_for_header { // TODO ... OR_THIS (see TODO above)
                         header_content.push(content.into_string());
