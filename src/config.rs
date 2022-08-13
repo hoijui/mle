@@ -9,7 +9,7 @@ use wildmatch::WildMatch;
 
 use crate::{group, ignore_path::IgnorePath, logger::LogLevel, markup::Type, result};
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Config {
     pub log_level: LogLevel,
     pub log_file: Option<PathBuf>,
@@ -30,4 +30,24 @@ pub struct Config {
     /// How to group links together. Default: no grouping -
     /// links appear in the output in the order they were found.
     pub group_by: Option<group::Type>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            log_level: Default::default(),
+            log_file: Default::default(),
+            scan_root: Default::default(),
+            recursive: Default::default(),
+            links: true,
+            anchors: false,
+            ignore_paths: Default::default(),
+            ignore_links: Default::default(),
+            markup_types: Default::default(),
+            resolve_root: Default::default(),
+            result_file: Default::default(),
+            result_format: Default::default(),
+            group_by: Default::default(),
+        }
+    }
 }
