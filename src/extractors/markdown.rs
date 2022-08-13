@@ -9,9 +9,9 @@ use crate::config::Config;
 use crate::link::Link;
 use crate::link::Locator;
 use crate::link::Position;
+use crate::markup;
 use crate::markup::Content;
 use crate::markup::File;
-use crate::markup::Type;
 use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;
@@ -174,7 +174,7 @@ impl super::LinkExtractor for LinkExtractor {
                 Event::Html(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 1 };
                     let sub_markup = File {
-                        markup_type: Type::Html,
+                        markup_type: markup::Type::Html,
                         locator: file.locator.clone(),
                         content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
@@ -214,7 +214,7 @@ mod tests {
     use url::Url;
 
     fn find_links(content: &str) -> Vec<Link> {
-        let markup_file = File::dummy(content, Type::Markdown);
+        let markup_file = File::dummy(content, markup::Type::Markdown);
         let conf = Config::default();
         super::super::find_links(&markup_file, &conf)
             .map(|(links, _anchors)| links)

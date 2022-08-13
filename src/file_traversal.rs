@@ -6,7 +6,7 @@
 extern crate walkdir;
 
 use crate::link::{FileLoc, FileSystemLoc, Position};
-use crate::markup::{Content, File, Type};
+use crate::markup::{self, Content, File};
 use crate::Config;
 use std::fs;
 use std::rc::Rc;
@@ -60,7 +60,7 @@ pub fn find(config: &Config, result: &mut Vec<File>) {
 /// Identifies the markup type a file path belongs to,
 /// if any, out of a given set of markup types.
 #[must_use]
-pub fn markup_type(file: &str, markup_types: &[Type]) -> Option<Type> {
+pub fn markup_type(file: &str, markup_types: &[markup::Type]) -> Option<markup::Type> {
     let file_low = file.to_lowercase();
     for markup_type in markup_types {
         let extensions = markup_type.file_extensions();

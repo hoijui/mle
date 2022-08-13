@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
-use crate::markup::{self, Type};
+use crate::markup;
 use crate::{group, Config};
 use crate::{ignore_link, ignore_path};
 use crate::{logger, result};
@@ -335,12 +335,12 @@ pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
         .unwrap_or_default()
         .map(ToOwned::to_owned)
         .collect();
-    let mut markup_types = vec![Type::Markdown, Type::Html];
+    let mut markup_types = vec![markup::Type::Markdown, markup::Type::Html];
     if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
         markup_types = types
             .copied()
-            .map(Type::from_str)
-            .collect::<Result<Vec<Type>, _>>()?;
+            .map(markup::Type::from_str)
+            .collect::<Result<Vec<markup::Type>, _>>()?;
     }
     let resolve_root = args.get_one::<PathBuf>(A_L_RESOLVE_ROOT).map(PathBuf::from);
     /*let resolve_root = if let Some(resolve_root) = matches.value_of(A_L_RESOLVE_ROOT) {

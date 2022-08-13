@@ -9,7 +9,7 @@ mod markdown;
 use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
-use crate::markup::{File, Type};
+use crate::markup::{self, File};
 
 pub fn remove_anchor(link: &mut String) -> Option<String> {
     match link.find('#') {
@@ -59,10 +59,10 @@ pub fn find_links(file: &File, conf: &Config) -> std::io::Result<(Vec<Link>, Vec
     // }
 }
 
-fn link_extractor_factory(markup_type: Type) -> Box<dyn LinkExtractor> {
+fn link_extractor_factory(markup_type: markup::Type) -> Box<dyn LinkExtractor> {
     match markup_type {
-        Type::Markdown => Box::new(markdown::LinkExtractor()),
-        Type::Html => Box::new(html::LinkExtractor()),
+        markup::Type::Markdown => Box::new(markdown::LinkExtractor()),
+        markup::Type::Html => Box::new(html::LinkExtractor()),
     }
 }
 

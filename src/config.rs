@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use wildmatch::WildMatch;
 
-use crate::{group, ignore_path::IgnorePath, logger::LogLevel, markup::Type, result};
+use crate::{group, ignore_path::IgnorePath, logger::LogLevel, markup, result};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -20,7 +20,7 @@ pub struct Config {
     // pub match_file_extension: bool,
     pub ignore_paths: Vec<IgnorePath>,
     pub ignore_links: Vec<WildMatch>,
-    pub markup_types: Vec<Type>,
+    pub markup_types: Vec<markup::Type>,
     pub resolve_root: Option<PathBuf>,
     // pub dry: bool,
     /// Both 'None` and `Some("-")` mean: StdOut;
