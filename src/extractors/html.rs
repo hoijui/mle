@@ -118,8 +118,8 @@ impl super::LinkExtractor for LinkExtractor {
                             None => {}
                         };
                     }
-                    ParserState::Attribute => match attribute {
-                        Some(attrib_cont) => {
+                    ParserState::Attribute => {
+                        if let Some(attrib_cont) = attribute {
                             match line_chars.get(column) {
                                 Some(x) if !x.is_whitespace() && x != &'"' => {
                                     let attrib_column = column;
@@ -135,7 +135,7 @@ impl super::LinkExtractor for LinkExtractor {
                                         }
                                         column += 1;
                                     }
-                                    let attrib_target = &(&line_chars[attrib_column..column])
+                                    let attrib_target = &line_chars[attrib_column..column]
                                         .iter()
                                         .collect::<String>();
                                     let pos = Position {
@@ -170,8 +170,7 @@ impl super::LinkExtractor for LinkExtractor {
                                 Some(_) | None => {}
                             };
                         }
-                        None => {}
-                    },
+                    }
                 }
                 column += 1;
             }

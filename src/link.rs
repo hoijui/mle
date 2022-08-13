@@ -272,7 +272,7 @@ impl Target {
                 no_frag.set_fragment(None);
                 Cow::Owned(Self::from(no_frag))
             }
-            Self::FileSystem(target) if (&target.anchor).is_some() => {
+            Self::FileSystem(target) if target.anchor.is_some() => {
                 let fs_target = FileSystemTarget {
                     file: target.file.clone(),
                     anchor: None,

@@ -139,13 +139,11 @@ impl super::LinkExtractor for LinkExtractor {
                                 pos,
                             };
                             let r#type : anchor::Type;
-                            let id_str : String = match id {
-                                Some(id_cont) => {
+                            let id_str : String = if let Some(id_cont) = id {
                                     r#type = anchor::Type::TitleManual;
                                     // eprint!("XXX Title with manual id!: '{}'\n", id_cont);
                                     id_cont.to_owned()
-                                },
-                                None => {
+                                } else {
                                     r#type = anchor::Type::TitleAuto;
                                     gathering_for_header = false;
                                     // let header_text = header_content.iter().filter(|txt| txt.is_empty()).collect::<Vec<&String>>().join(" ");
@@ -162,7 +160,6 @@ impl super::LinkExtractor for LinkExtractor {
                                     // eprint!(fmt"XXX Title with auto id!: '{header_text}'\n");
                                     // eprint!("XXX Title with auto id!: '{}'\n", id);
                                     // id
-                                },
                             };
                             header_content.clear();
                             anchors.push(Anchor {

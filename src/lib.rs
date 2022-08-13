@@ -7,6 +7,7 @@
 #![warn(clippy::pedantic)]
 #![warn(clippy::nursery)]
 #![warn(clippy::cargo)]
+#![allow(clippy::default_trait_access)]
 // #![warn(clippy::restriction)]
 
 // #![warn(clippy::wildcard_enum_match_arm)]
