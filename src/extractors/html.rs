@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::anchor::Anchor;
+use crate::anchor::{self, Anchor};
 use crate::config::Config;
-use crate::link::{Link, Position};
+use crate::link::{self, Link, Position};
 use crate::markup::File;
 
 pub struct LinkExtractor();
@@ -16,24 +16,25 @@ enum ParserState {
     Comment,
     Element,
     EqualSign,
-    Link,
+    Attribute,
 }
 
-// #[derive(Clone, Copy, Debug)]
-// enum Attribute {
-//     Href,
-//     Name,
-//     Id,
-// }
+#[derive(Clone, Copy, Debug)]
+enum Attribute {
+    Href,
+    Name,
+    Id,
+}
 
 impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
         file: &File,
-        _conf: &Config,
+        conf: &Config,
     ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
         let mut links: Vec<Link> = Vec::new();
-        let anchors: Vec<Anchor> = Vec::new(); // TODO FIXME This is never added to!
+        let mut anchors: Vec<Anchor> = Vec::new();
+        let mut attribute: Option<Attribute> = None;
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
         // let mut element_part: Option<Attribute>;
@@ -79,54 +80,98 @@ impl super::LinkExtractor for LinkExtractor {
                         }
                     }
                     ParserState::Element => {
-                        if is_anchor
-                            && line_chars.get(column) == Some(&'h')
-                            && line_chars.get(column + 1) == Some(&'r')
-                            && line_chars.get(column + 2) == Some(&'e')
-                            && line_chars.get(column + 3) == Some(&'f')
+                        if is_anchor {
+                            if conf.links
+                                && line_chars.get(column) == Some(&'h')
+                                && line_chars.get(column + 1) == Some(&'r')
+                                && line_chars.get(column + 2) == Some(&'e')
+                                && line_chars.get(column + 3) == Some(&'f')
+                            {
+                                column += 3;
+                                state = ParserState::EqualSign;
+                                attribute = Some(Attribute::Href);
+                            } else if conf.anchors
+                                && line_chars.get(column) == Some(&'n')
+                                && line_chars.get(column + 1) == Some(&'a')
+                                && line_chars.get(column + 2) == Some(&'m')
+                                && line_chars.get(column + 3) == Some(&'e')
+                            {
+                                column += 3;
+                                state = ParserState::EqualSign;
+                                attribute = Some(Attribute::Name);
+                            }
+                        }
+                        if conf.anchors
+                            && line_chars.get(column) == Some(&'i')
+                            && line_chars.get(column + 1) == Some(&'d')
                         {
-                            column += 3;
+                            column += 1;
                             state = ParserState::EqualSign;
+                            attribute = Some(Attribute::Id);
                         }
                     }
                     ParserState::EqualSign => {
                         match line_chars.get(column) {
                             Some(x) if x.is_whitespace() => {}
-                            Some(x) if x == &'=' => state = ParserState::Link,
+                            Some(x) if x == &'=' => state = ParserState::Attribute,
                             Some(_) => state = ParserState::Element,
                             None => {}
                         };
                     }
-                    ParserState::Link => {
-                        match line_chars.get(column) {
-                            Some(x) if !x.is_whitespace() && x != &'"' => {
-                                let link_column = column;
-                                while line_chars.get(column).is_some()
-                                    && !line_chars[column].is_whitespace()
-                                    && line_chars[column] != '"'
-                                {
-                                    column += 1;
-                                }
-                                while let Some(c) = line_chars.get(column) {
-                                    if c.is_whitespace() || c == &'"' {
-                                        break;
+                    ParserState::Attribute => match attribute {
+                        Some(attrib_cont) => {
+                            match line_chars.get(column) {
+                                Some(x) if !x.is_whitespace() && x != &'"' => {
+                                    let attrib_column = column;
+                                    while line_chars.get(column).is_some()
+                                        && !line_chars[column].is_whitespace()
+                                        && line_chars[column] != '"'
+                                    {
+                                        column += 1;
                                     }
-                                    column += 1;
+                                    while let Some(c) = line_chars.get(column) {
+                                        if c.is_whitespace() || c == &'"' {
+                                            break;
+                                        }
+                                        column += 1;
+                                    }
+                                    let attrib_target = &(&line_chars[attrib_column..column])
+                                        .iter()
+                                        .collect::<String>();
+                                    let pos = Position {
+                                        line: line + 1,
+                                        column: attrib_column + 1,
+                                    } + &file.start;
+                                    match attrib_cont {
+                                        Attribute::Href => links.push(Link::new(
+                                            file.locator.clone(),
+                                            pos,
+                                            attrib_target,
+                                        )),
+                                        Attribute::Name => anchors.push(Anchor {
+                                            source: link::Locator {
+                                                file: file.locator.clone(),
+                                                pos,
+                                            },
+                                            name: attrib_target.clone(),
+                                            r#type: anchor::Type::Direct,
+                                        }),
+                                        Attribute::Id => anchors.push(Anchor {
+                                            source: link::Locator {
+                                                file: file.locator.clone(),
+                                                pos,
+                                            },
+                                            name: attrib_target.clone(),
+                                            r#type: anchor::Type::ElementId,
+                                        }),
+                                    }
+                                    state = ParserState::Text;
                                 }
-                                let link_target = &(&line_chars[link_column..column])
-                                    .iter()
-                                    .collect::<String>();
-                                // let link_target = line_chars[link_column..column]; // TODO FIXME Do it somehow like this (should be faster)
-                                let pos = Position {
-                                    line: line + 1,
-                                    column: link_column + 1,
-                                } + &file.start;
-                                links.push(Link::new(file.locator.clone(), pos, link_target));
-                                state = ParserState::Text;
-                            }
-                            Some(_) | None => {}
-                        };
-                    }
+                                Some(_) | None => {}
+                            };
+                        }
+                        None => {}
+                    },
                 }
                 column += 1;
             }
@@ -137,7 +182,11 @@ impl super::LinkExtractor for LinkExtractor {
 
 #[cfg(test)]
 mod tests {
-    use crate::{link::FileLoc, markup::Type};
+    use crate::{
+        anchor,
+        link::{self, FileLoc},
+        markup::Type,
+    };
 
     use super::*;
     use ntest::test_case;
@@ -146,6 +195,16 @@ mod tests {
         let conf = Config::default();
         let markup_file = File::dummy(content, Type::Html);
         super::super::find_links(&markup_file, &conf).map(|(links, _anchors)| links)
+    }
+
+    fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
+        let conf = Config {
+            links: false,
+            anchors: true,
+            ..Config::default()
+        };
+        let markup_file = File::dummy(content, Type::Html);
+        super::super::find_links(&markup_file, &conf).map(|(_links, anchors)| anchors)
     }
 
     #[test]
@@ -192,5 +251,53 @@ mod tests {
             "https://www.w3schools.com",
         );
         assert_eq!(vec![expected], result);
+    }
+
+    #[test_case(
+        r#"<!--comment--><a href="https://www.w3schools.com" name="the_anchor">Visit W3Schools.com!</a>"#,
+        true,
+        1,
+        57,
+    )]
+    #[test_case(
+        r#"<!--comment--><a href="https://www.w3schools.com" id="the_anchor">Visit W3Schools.com!</a>"#,
+        false,
+        1,
+        55,
+    )]
+    #[test_case(
+        r#"<!--comment--><a name="the_anchor">Visit W3Schools.com!</a>"#,
+        true,
+        1,
+        24
+    )]
+    #[test_case(
+        r#"<!--comment--><table id="the_anchor">Visit W3Schools.com!</a>"#,
+        false,
+        1,
+        26
+    )]
+    fn anchors(input: &str, direct: bool, line: usize, column: usize) {
+        let result = find_anchors(input).expect("No error");
+        let expected = Anchor {
+            source: link::Locator {
+                file: FileLoc::dummy(),
+                pos: Position { line, column },
+            },
+            name: "the_anchor".to_owned(),
+            r#type: if direct {
+                anchor::Type::Direct
+            } else {
+                anchor::Type::ElementId
+            },
+        };
+        assert_eq!(vec![expected], result);
+    }
+
+    #[test_case(r#"<!--comment--><table idid="the_anchor">Visit W3Schools.com!</a>"#)]
+    #[test_case(r#"<!--comment--><a namename="the_anchor">Visit W3Schools.com!</a>"#)]
+    fn no_anchors(input: &str) {
+        let result = find_anchors(input).expect("No error");
+        assert_eq!(Vec::<Anchor>::new(), result);
     }
 }
