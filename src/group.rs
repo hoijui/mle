@@ -7,6 +7,7 @@ use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
 use crate::link::Target;
+use clap::{PossibleValue, ValueEnum};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -21,6 +22,16 @@ type Grouping<'a> = Vec<(Cow<'a, Target>, Vec<&'a Link>)>;
 pub enum Type {
     AsIs,
     IgnoreAnchor,
+}
+
+impl ValueEnum for Type {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::AsIs, Self::IgnoreAnchor]
+    }
+
+    fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
+        Some(self.as_str().into())
+    }
 }
 
 const fn group_as_is(link: &Link) -> Cow<'_, Target> {

@@ -13,6 +13,8 @@ use std::{
     str::FromStr,
 };
 
+use clap::{PossibleValue, ValueEnum};
+
 use crate::{
     anchor::Anchor,
     config::Config,
@@ -35,6 +37,22 @@ pub enum Type {
     // Tsv,
     Json,
     RdfTurtle,
+}
+
+impl ValueEnum for Type {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[
+            Self::Text,
+            Self::Markdown,
+            Self::Csv,
+            Self::Json,
+            Self::RdfTurtle,
+        ]
+    }
+
+    fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
+        Some(self.as_str().into())
+    }
 }
 
 impl Type {

@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use clap::{PossibleValue, ValueEnum};
 use std::{borrow::Cow, fs, path::PathBuf, rc::Rc, str::FromStr};
 
 use crate::link::{FileLoc, Position};
@@ -52,6 +53,17 @@ pub struct File<'a> {
 pub enum Type {
     Markdown,
     Html,
+}
+
+// Can also be derived with feature flag `#[derive(ArgEnum)]`
+impl ValueEnum for Type {
+    fn value_variants<'a>() -> &'a [Self] {
+        &[Self::Markdown, Self::Html]
+    }
+
+    fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
+        Some(self.as_str().into())
+    }
 }
 
 impl Default for Type {

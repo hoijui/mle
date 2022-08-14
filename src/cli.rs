@@ -166,7 +166,7 @@ fn arg_markup_types() -> Arg<'static> {
         )
         .takes_value(true)
         .min_values(1)
-        .value_parser(ValueParser::new(markup::Type::from_str))
+        .value_parser(value_parser!(markup::Type))
         .short(A_S_MARKUP_TYPES)
         .long(A_L_MARKUP_TYPES)
         .action(ArgAction::Append)
@@ -243,7 +243,7 @@ fn arg_result_format() -> Arg<'static> {
             Writes to log(Info), if no target file is given as argument.",
         )*/
         .takes_value(true)
-        .value_parser(ValueParser::new(result::Type::from_str))
+        .value_parser(value_parser!(result::Type))
         .value_name("FORMAT")
         .short(A_S_RESULT_FORMAT)
         .long(A_L_RESULT_FORMAT)
@@ -254,7 +254,7 @@ fn arg_group_by() -> Arg<'static> {
     Arg::new(A_L_GROUP_BY)
         .help("What to group links by in the output (default: No grouping -> Use oder of appearance in the input)")
         .takes_value(true)
-        .value_parser(ValueParser::new(group::Type::from_str))
+        .value_parser(value_parser!(group::Type))
         .value_name("GROUPER")
         .short(A_S_GROUP_BY)
         .long(A_L_GROUP_BY)
