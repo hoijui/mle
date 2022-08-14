@@ -148,13 +148,13 @@ impl From<&str> for Target {
 
 impl From<Url> for Target {
     fn from(url: Url) -> Self {
-        if url.scheme() == "http" || url.scheme() == "https" {
+        if ["http", "https"].contains(&url.scheme()) {
             Self::Http(url)
-        } else if url.scheme() == "ftp" || url.scheme() == "sftp" || url.scheme() == "scp" {
+        } else if ["ftp", "sftp", "scp"].contains(&url.scheme()) {
             Self::Ftp(url)
-        } else if url.scheme() == "mailto" {
+        } else if ["mailto"].contains(&url.scheme()) {
             Self::EMail(url)
-        } else if url.scheme() == "file" {
+        } else if ["file"].contains(&url.scheme()) {
             Self::FileUrl(url)
         } else {
             Self::UnknownUrlSchema(url)
