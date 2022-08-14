@@ -33,13 +33,6 @@ pub enum FileLoc {
     System(FileSystemLoc),
 }
 
-// /// The location of a markup content (file)
-// #[derive(Debug, PartialEq, Eq, Hash, Clone)]
-// pub struct MarkupContent<'a> {
-//     text: &'a str,
-//     source_file: Rc<FileLoc>,
-// }
-
 /// Where a link points to
 #[derive(Debug, PartialEq, Eq, Hash, Clone, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum Target {
