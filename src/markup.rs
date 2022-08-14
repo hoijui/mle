@@ -4,7 +4,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use clap::{PossibleValue, ValueEnum};
-use std::{borrow::Cow, fs, path::PathBuf, rc::Rc, str::FromStr};
+use reqwest::Url;
+use std::{
+    borrow::Cow,
+    ffi::OsStr,
+    fs,
+    path::{Path, PathBuf},
+    rc::Rc,
+    str::FromStr,
+};
 
 use crate::link::{FileLoc, Position};
 
@@ -85,6 +93,40 @@ impl FromStr for Type {
 }
 
 impl Type {
+    fn get_extension_from_filename(file_name: &str) -> Option<&str> {
+        Path::new(file_name).extension().and_then(OsStr::to_str)
+    }
+
+    /// Analyzes whether a name of a file is likely to contain
+    /// content in one of our supported markup languages,
+    /// (usually) judging from the file-extension.
+    #[must_use]
+    pub fn is_markup_file(file_name: &str) -> bool {
+        let ext_opt = Self::get_extension_from_filename(file_name);
+        if let Some(ext) = ext_opt {
+            for t in Self::value_variants() {
+                for known_ext in t.file_extensions() {
+                    if ext == known_ext {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Analyzes whether a URL, if pointing to a file, is likely to contain
+    /// content in one of our supported markup languages,
+    /// (usually) judging from the file-extension.
+    #[must_use]
+    pub fn is_markup_url(url: &Url) -> bool {
+        url.path_segments().map_or(false, |path_segments| {
+            path_segments.last().map_or(false, |last_path_segment| {
+                Self::is_markup_file(last_path_segment)
+            })
+        })
+    }
+
     #[must_use]
     pub fn file_extensions(&self) -> Vec<&'static str> {
         match self {

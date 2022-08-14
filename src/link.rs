@@ -9,11 +9,11 @@ use std::ops::{Add, Sub};
 use std::rc::Rc;
 use std::{convert::Infallible, fmt, str::FromStr};
 
-// use async_std::path::PathBuf;
 use relative_path::RelativePathBuf;
 use reqwest::Url;
 use std::path::{Path, PathBuf};
-// use email_address::EmailAddress;
+
+use crate::markup;
 
 /// The source file a link was found in
 #[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
@@ -227,24 +227,6 @@ impl Target {
         }
     }
 
-    /// Analyzes whether a name of a file is likely to contain
-    /// content in one of our supported markup languages,
-    /// (usually) judging from the file-extension.
-    fn is_markup_file(_file_name: &str) -> bool {
-        true // TODO FIXME Check file-extension against set of known file-extensions
-    }
-
-    /// Analyzes whether a URL, if pointing to a file, is likely to contain
-    /// content in one of our supported markup languages,
-    /// (usually) judging from the file-extension.
-    fn is_markup_url(url: &Url) -> bool {
-        url.path_segments().map_or(false, |path_segments| {
-            path_segments.last().map_or(false, |last_path_segment| {
-                Self::is_markup_file(last_path_segment)
-            })
-        })
-    }
-
     /// Analyzes whether `self` is likely to contain
     /// content in one of our supported markup languages,
     /// (usually) judging from the file-extension,
@@ -253,7 +235,7 @@ impl Target {
     pub fn is_markup_content(&self) -> bool {
         match self {
             Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url) => {
-                Self::is_markup_url(url)
+                markup::Type::is_markup_url(url)
             }
             Self::FileSystem(target) => target.file.is_markup(),
             Self::EMail(_) | Self::Invalid(_) => false,
@@ -290,10 +272,10 @@ impl FileSystemLoc {
     /// (usually) judging from the file-extension.
     fn is_markup(&self) -> bool {
         match self {
-            Self::Absolute(path) => path
-                .file_name()
-                .map(|file_name| Target::is_markup_file(format!("{:#?}", file_name).as_str())),
-            Self::Relative(path) => path.file_name().map(Target::is_markup_file),
+            Self::Absolute(path) => path.file_name().map(|file_name| {
+                markup::Type::is_markup_file(format!("{:#?}", file_name).as_str())
+            }),
+            Self::Relative(path) => path.file_name().map(markup::Type::is_markup_file),
         }
         .unwrap_or(false)
     }
