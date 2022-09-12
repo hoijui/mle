@@ -3,7 +3,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
 use crate::link::Target;
