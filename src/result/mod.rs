@@ -14,7 +14,7 @@ use std::{
 
 use clap::{PossibleValue, ValueEnum};
 
-use crate::{anchor::Anchor, config::Config, group::Grouping};
+use crate::{anchor::Anchor, config::Config, group::Grouping, BoxError};
 
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
@@ -103,7 +103,7 @@ pub fn sink(
     config: &Config,
     links: &Grouping,
     anchors: &[Anchor],
-    errors: &[Box<dyn std::error::Error>],
+    errors: &[BoxError],
 ) -> std::io::Result<()> {
     let sink: Box<dyn Sink> = match config.result_format {
         Type::Text => Box::new(txt::Sink()),
@@ -128,6 +128,6 @@ pub trait Sink {
         out_stream: &mut Box<dyn Write>,
         links: &Grouping,
         anchors: &[Anchor],
-        errors: &[Box<dyn std::error::Error>],
+        errors: &[BoxError],
     ) -> std::io::Result<()>;
 }

@@ -7,6 +7,7 @@ use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
 use crate::link::Target;
+use crate::BoxResult;
 use clap::{PossibleValue, ValueEnum};
 use std::borrow::Cow;
 use std::collections::HashMap;
@@ -92,7 +93,7 @@ impl Type {
 pub fn group(
     links: &'_ [Link],
     grouper: Option<fn(&Link) -> Cow<'_, Target>>,
-) -> Result<Grouping<'_>, Box<dyn std::error::Error>> {
+) -> BoxResult<Grouping<'_>> {
     if let Some(grouping_fn) = grouper {
         let mut groups: HashMap<Id<'_>, Items<'_>> = HashMap::new();
         for link in links {

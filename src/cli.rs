@@ -3,10 +3,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
-use crate::markup;
 use crate::{group, Config};
 use crate::{ignore_link, ignore_path};
 use crate::{logger, result};
+use crate::{markup, BoxResult};
 use clap::builder::ValueParser;
 use clap::Arg;
 use clap::{ArgAction, Command, ValueHint};
@@ -313,7 +313,7 @@ fn arg_matcher() -> Command<'static> {
 /// # Errors
 ///
 /// If fetching the CWD failed.
-pub fn parse_args() -> Result<Config, Box<dyn std::error::Error>> {
+pub fn parse_args() -> BoxResult<Config> {
     let args = arg_matcher().get_matches();
 
     let scan_root = match args.get_one::<PathBuf>(A_L_SCAN_ROOT) {

@@ -10,6 +10,7 @@ use serde::ser::SerializeStruct;
 use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::group::{self, Grouping};
+use crate::BoxError;
 
 pub struct Sink();
 
@@ -60,7 +61,7 @@ impl super::Sink for Sink {
         out_stream: &mut Box<dyn Write + 'static>,
         links: &Grouping,
         anchors: &[Anchor],
-        errors: &[Box<dyn std::error::Error>],
+        errors: &[BoxError],
     ) -> std::io::Result<()> {
         let str_errors = errors.iter().map(ToString::to_string).collect::<String>();
         let content = RootSer { grouping: links };

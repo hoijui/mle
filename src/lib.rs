@@ -56,12 +56,15 @@ use config::Config;
 use state::State;
 pub use wildmatch::WildMatch;
 
-fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<Box<dyn std::error::Error>>) {
+pub type BoxError = Box<dyn std::error::Error /* + Send + Sync*/>;
+pub type BoxResult<T> = Result<T, BoxError>;
+
+fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
     let mut files: Vec<File> = Vec::new();
     file_traversal::find(conf, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];
-    let mut errors: Vec<Box<dyn std::error::Error>> = vec![];
+    let mut errors: Vec<_> = vec![];
     for file in files {
         match extractors::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {
@@ -82,7 +85,7 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<Box<dyn std::er
 /// # Errors
 ///
 /// If reading of any input or writing of the log or result-file failed.
-pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run(state: &mut State) -> BoxResult<()> {
     let (links, anchors, errors) = find_all_links(&state.config);
     // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
     // primary_anchors.append(&mut secondary_anchors);

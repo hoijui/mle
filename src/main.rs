@@ -9,10 +9,11 @@ extern crate log;
 use mle::cli;
 use mle::logger;
 use mle::state::State;
+use mle::BoxResult;
 use std::process;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> BoxResult<()> {
     let config = cli::parse_args()?;
     let mut state = State::new(config);
     logger::init(&state.config.log_level, &state.config.log_file);

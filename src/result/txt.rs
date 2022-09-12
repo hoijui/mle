@@ -7,6 +7,7 @@ use std::io::Write;
 use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::group::Grouping;
+use crate::BoxError;
 
 pub struct Sink();
 
@@ -17,7 +18,7 @@ impl super::Sink for Sink {
         out_stream: &mut Box<dyn Write + 'static>,
         links: &Grouping,
         anchors: &[Anchor],
-        errors: &[Box<dyn std::error::Error>],
+        errors: &[BoxError],
     ) -> std::io::Result<()> {
         writeln!(out_stream, "Links ...")?;
         for group in links {
