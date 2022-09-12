@@ -56,7 +56,7 @@ use config::Config;
 use state::State;
 pub use wildmatch::WildMatch;
 
-pub type BoxError = Box<dyn std::error::Error /* + Send + Sync*/>;
+pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type BoxResult<T> = Result<T, BoxError>;
 
 fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
