@@ -6,7 +6,6 @@ mod json;
 mod txt;
 
 use std::{
-    borrow::Cow,
     fs::File,
     io::{ErrorKind, Write},
     path::Path,
@@ -15,11 +14,7 @@ use std::{
 
 use clap::{PossibleValue, ValueEnum};
 
-use crate::{
-    anchor::Anchor,
-    config::Config,
-    link::{Link, Target},
-};
+use crate::{anchor::Anchor, config::Config, group::Grouping};
 
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
@@ -106,8 +101,7 @@ fn construct_out_stream(specifier: Option<&str>) -> Box<dyn Write + 'static> {
 /// (I/)O-error when writing to a file.
 pub fn sink(
     config: &Config,
-    links: &[Link],
-    groups: &[(Cow<'_, Target>, Vec<&Link>)],
+    links: &Grouping,
     anchors: &[Anchor],
     errors: &[Box<dyn std::error::Error>],
 ) -> std::io::Result<()> {
@@ -120,7 +114,7 @@ pub fn sink(
         ))?,
     };
     let mut out_writer = construct_out_stream(config.result_file);
-    sink.write_results(config, &mut out_writer, links, groups, anchors, errors)
+    sink.write_results(config, &mut out_writer, links, anchors, errors)
 }
 
 pub trait Sink {
@@ -132,8 +126,7 @@ pub trait Sink {
         &self,
         config: &Config,
         out_stream: &mut Box<dyn Write>,
-        links: &[Link],
-        groups: &[(Cow<'_, Target>, Vec<&Link>)],
+        links: &Grouping,
         anchors: &[Anchor],
         errors: &[Box<dyn std::error::Error>],
     ) -> std::io::Result<()>;

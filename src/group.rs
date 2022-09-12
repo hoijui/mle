@@ -16,7 +16,10 @@ pub use wildmatch::WildMatch;
 const T_TR_AS_IS: &str = "none";
 const T_TR_IGNORE_ANCHOR: &str = "ignore-anchor";
 
-type Grouping<'a> = Vec<(Cow<'a, Target>, Vec<&'a Link>)>;
+pub type Id<'a> = Cow<'a, Target>;
+pub type Items<'a> = Vec<&'a Link>;
+
+pub type Grouping<'a> = Vec<(Cow<'a, Target>, Vec<&'a Link>)>;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
@@ -32,10 +35,6 @@ impl ValueEnum for Type {
     fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
         Some(self.as_str().into())
     }
-}
-
-const fn group_as_is(link: &Link) -> Cow<'_, Target> {
-    Cow::Borrowed(&link.target)
 }
 
 fn group_without_anchor(link: &Link) -> Cow<'_, Target> {
@@ -68,10 +67,10 @@ impl Type {
     /// Returns a function that extracts the group from a [`Link`],
     /// as specified in the configuration.
     #[must_use]
-    pub const fn get_grouper(self) -> fn(&Link) -> Cow<'_, Target> {
+    pub const fn get_grouper(self) -> Option<fn(&Link) -> Cow<'_, Target>> {
         match self {
-            Self::AsIs => group_as_is,
-            Self::IgnoreAnchor => group_without_anchor,
+            Self::AsIs => None,
+            Self::IgnoreAnchor => Some(group_without_anchor),
         }
     }
 
@@ -90,20 +89,23 @@ impl Type {
 /// # Errors
 ///
 /// If reading of any input or writing of the log or result-file failed.
-pub fn group<'a>(
-    links: &'a [Link],
-    _anchors: &[Anchor],
-    _errors: &[Box<dyn std::error::Error>],
-    _grouper: fn(&Link) -> Cow<'_, Target>,
-) -> Result<Grouping<'a>, Box<dyn std::error::Error>> {
-    let mut groups: HashMap<Cow<'_, Target>, Vec<&Link>> = HashMap::new();
-    // let extract_group = group_as_is;
-    let extract_group = group_without_anchor;
-    for link in links {
-        let group = extract_group(link);
-        groups.entry(group).or_insert(vec![]).push(link);
+pub fn group(
+    links: &'_ [Link],
+    grouper: Option<fn(&Link) -> Cow<'_, Target>>,
+) -> Result<Grouping<'_>, Box<dyn std::error::Error>> {
+    if let Some(grouping_fn) = grouper {
+        let mut groups: HashMap<Id<'_>, Items<'_>> = HashMap::new();
+        for link in links {
+            let group = grouping_fn(link);
+            groups.entry(group).or_insert(vec![]).push(link);
+        }
+        let mut sorted_groups = groups.into_iter().collect::<Grouping>();
+        sorted_groups.sort_by(|x, y| x.0.cmp(&y.0));
+        Ok(sorted_groups)
+    } else {
+        Ok(vec![(
+            Cow::Owned(Target::Invalid(String::from(""))),
+            links.iter().collect(),
+        )])
     }
-    let mut sorted_groups: Vec<_> = groups.into_iter().collect();
-    sorted_groups.sort_by(|x, y| x.0.cmp(&y.0));
-    Ok(sorted_groups)
 }

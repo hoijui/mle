@@ -89,7 +89,7 @@ pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
 
     // group the links if requested
     let grouper = group::Type::get(&state.config).get_grouper();
-    let groups = group::group(&links, &anchors, &errors, grouper)?;
+    let grouped_links = group::group(&links, grouper)?;
 
     // // <target, (links, requires_anchors)>
     // let mut link_target_groups: HashMap<Target, (Vec<Link>, bool)> = HashMap::new();
@@ -132,5 +132,5 @@ pub fn run(state: &mut State) -> Result<(), Box<dyn std::error::Error>> {
     //     }
     // }
 
-    result::sink(&state.config, &links, &groups, &anchors, &errors).map_err(Into::into)
+    result::sink(&state.config, &grouped_links, &anchors, &errors).map_err(Into::into)
 }

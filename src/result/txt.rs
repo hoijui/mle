@@ -2,12 +2,11 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::borrow::Cow;
 use std::io::Write;
 
 use crate::anchor::Anchor;
 use crate::config::Config;
-use crate::link::{Link, Target};
+use crate::group::Grouping;
 
 pub struct Sink();
 
@@ -16,24 +15,15 @@ impl super::Sink for Sink {
         &self,
         _config: &Config,
         out_stream: &mut Box<dyn Write + 'static>,
-        links: &[Link],
-        groups: &[(Cow<'_, Target>, Vec<&Link>)],
+        links: &Grouping,
         anchors: &[Anchor],
         errors: &[Box<dyn std::error::Error>],
     ) -> std::io::Result<()> {
-        if !links.is_empty() {
-            writeln!(out_stream, "Links ...")?;
-            if groups.is_empty() {
-                for link in links {
-                    writeln!(out_stream, "{}", link)?;
-                }
-            } else {
-                for group in groups {
-                    writeln!(out_stream, "  Group ...")?;
-                    for link in &group.1 {
-                        writeln!(out_stream, "    {}", link)?;
-                    }
-                }
+        writeln!(out_stream, "Links ...")?;
+        for group in links {
+            writeln!(out_stream, "  Group ...")?;
+            for link in &group.1 {
+                writeln!(out_stream, "    {}", link)?;
             }
         }
 
