@@ -72,7 +72,6 @@ fn arg_non_recursive() -> Arg<'static> {
         .takes_value(false)
         .short(A_S_NON_RECURSIVE)
         .long(A_L_NON_RECURSIVE)
-        .action(ArgAction::SetTrue)
         .required(false)
 }
 
