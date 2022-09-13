@@ -217,12 +217,6 @@ fn arg_log_file() -> Arg<'static> {
 fn arg_result_file() -> Arg<'static> {
     Arg::new(A_L_RESULT_FILE)
         .help("Where to store the extracted data to")
-        /*.long_help(
-            "Shows a list (in Markdown syntax) of all properties \
-            and the primary values retrieved for each, \
-            accumulated over the sources. \
-            Writes to log(Info), if no target file is given as argument.",
-        )*/
         .takes_value(true)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
@@ -235,12 +229,6 @@ fn arg_result_file() -> Arg<'static> {
 fn arg_result_format() -> Arg<'static> {
     Arg::new(A_L_RESULT_FORMAT)
         .help("In what data format to output the extracted data")
-        /*.long_help(
-            "Shows a list (in Markdown syntax) of all properties \
-            and the primary values retrieved for each, \
-            accumulated over the sources. \
-            Writes to log(Info), if no target file is given as argument.",
-        )*/
         .takes_value(true)
         .value_parser(value_parser!(result::Type))
         .value_name("FORMAT")
