@@ -9,36 +9,44 @@ use crate::config::Config;
 use crate::group::Grouping;
 use crate::BoxError;
 
+use super::Writer;
+
 pub struct Sink();
 
 impl super::Sink for Sink {
     fn write_results(
         &self,
         _config: &Config,
-        out_stream: &mut Box<dyn Write + 'static>,
+        links_stream: Writer,
+        anchors_stream: Writer,
         links: &Grouping,
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()> {
-        writeln!(out_stream, "Links ...")?;
-        for group in links {
-            writeln!(out_stream, "  Group ...")?;
-            for link in &group.1 {
-                writeln!(out_stream, "    {}", link)?;
+        if let Some(mut links_writer) = links_stream {
+            writeln!(links_writer, "Links ...")?;
+            for group in links {
+                writeln!(links_writer, "  Group ...")?;
+                for link in &group.1 {
+                    writeln!(links_writer, "    {}", link)?;
+                }
             }
         }
 
-        if !anchors.is_empty() {
-            writeln!(out_stream, "\nAnchors ...")?;
-            for anchor in anchors {
-                writeln!(out_stream, "{}", anchor)?;
+        if let Some(mut anchors_writer) = anchors_stream {
+            if !anchors.is_empty() {
+                writeln!(anchors_writer, "\nAnchors ...")?;
+                for anchor in anchors {
+                    writeln!(anchors_writer, "{}", anchor)?;
+                }
             }
         }
 
+        let mut stderr = Box::new(std::io::stderr()) as Box<dyn Write>;
         if !errors.is_empty() {
-            writeln!(out_stream, "\nErrors ...")?;
+            writeln!(stderr, "\nErrors ...")?;
             for error in errors {
-                writeln!(out_stream, "{:#?}", error)?;
+                writeln!(stderr, "{:#?}", error)?;
             }
         }
 

@@ -40,12 +40,16 @@ const A_S_RESOLVE_ROOT: char = 'R';
 //const A_S_DRY: char = 'd';
 const A_L_LOG_FILE: &str = "log-file";
 const A_S_LOG_FILE: char = 'l';
-const A_L_RESULT_FILE: &str = "result-file";
-const A_S_RESULT_FILE: char = 'P';
+const A_L_LINKS_FILE: &str = "links-file";
+const A_S_LINKS_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
 const A_L_GROUP_BY: &str = "group-by";
 const A_S_GROUP_BY: char = 'G';
+
+lazy_static! {
+    static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
+}
 
 #[allow(clippy::useless_transmute)]
 fn arg_scan_root() -> Arg<'static> {
@@ -103,9 +107,13 @@ fn arg_no_links() -> Arg<'static> {
 fn arg_anchors() -> Arg<'static> {
     Arg::new(A_L_ANCHORS)
         .help("Extract anchors")
-        .takes_value(false)
+        .takes_value(true)
+        .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
+        .default_missing_value("-")
+        .value_parser(value_parser!(std::path::PathBuf))
+        .action(ArgAction::Set)
         // .multiple_occurrences(false)
         .required(false)
 }
@@ -214,15 +222,15 @@ fn arg_log_file() -> Arg<'static> {
         .default_missing_value(&LOG_FILE_NAME)
 }
 
-fn arg_result_file() -> Arg<'static> {
-    Arg::new(A_L_RESULT_FILE)
-        .help("Where to store the extracted data to")
+fn arg_links_file() -> Arg<'static> {
+    Arg::new(A_L_LINKS_FILE)
+        .help("Where to store the extracted links to")
         .takes_value(true)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
         .value_parser(value_parser!(std::path::PathBuf))
-        .short(A_S_RESULT_FILE)
-        .long(A_L_RESULT_FILE)
+        .short(A_S_LINKS_FILE)
+        .long(A_L_LINKS_FILE)
         .required(false)
 }
 
@@ -262,7 +270,7 @@ lazy_static! {
         arg_resolve_root(),
         //arg_dry(),
         arg_log_file(),
-        arg_result_file(),
+        arg_links_file(),
         arg_result_format(),
         arg_group_by(),
     ];
@@ -309,8 +317,28 @@ pub fn parse_args() -> BoxResult<Config> {
     };
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);
     let debug = args.contains_id(A_L_DEBUG);
-    let links = !args.contains_id(A_L_NO_LINKS);
-    let anchors = args.contains_id(A_L_ANCHORS);
+    let links = if !args.contains_id(A_L_NO_LINKS) {
+        None
+    } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
+        if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
+            Some(None)
+        } else {
+            Some(Some(path.clone()))
+        }
+    } else {
+        Some(None)
+    };
+    let anchors = if args.contains_id(A_L_ANCHORS) {
+        None
+    } else if let Some(path) = args.get_one::<PathBuf>(A_L_ANCHORS) {
+        if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
+            Some(None)
+        } else {
+            Some(Some(path.clone()))
+        }
+    } else {
+        Some(None)
+    };
     //let match_file_extension = args.value_of(A_L_MATCH_FILE_EXTENSION);
     let ignore_paths: Vec<IgnorePath> = args
         .get_many::<Result<IgnorePath, String>>(A_L_IGNORE_PATHS)
@@ -347,7 +375,6 @@ pub fn parse_args() -> BoxResult<Config> {
     };*/
     //let dry = args.value_of(A_L_DRY);
     let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
-    let result_file = args.get_one(A_L_RESULT_FILE).copied();
     let result_format = args
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
@@ -374,7 +401,6 @@ pub fn parse_args() -> BoxResult<Config> {
         markup_types,
         resolve_root,
         //dry,
-        result_file,
         result_format,
         group_by,
     })

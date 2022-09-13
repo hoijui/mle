@@ -106,7 +106,7 @@ impl super::LinkExtractor for LinkExtractor {
         for (evt, range) in parser.into_offset_iter() {
             match evt {
                 Event::Start(Tag::Heading(_level, id, _classes))
-                if conf.anchors && id.is_none() => {
+                if conf.extract_anchors() && id.is_none() => {
                     // if let Tag::Heading(_level, id, _classes) = tag {
                                                    gathering_for_header = true;
                                         //   }
@@ -123,7 +123,7 @@ impl super::LinkExtractor for LinkExtractor {
                     match tag {
                         Tag::Link(_link_type, destination, _title)
                         | Tag::Image(_link_type, destination, _title)
-                        if conf.links => {
+                        if conf.extract_links() => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             links.push(Link::new(
                                 file.locator.clone(),
@@ -132,7 +132,7 @@ impl super::LinkExtractor for LinkExtractor {
                             ));
                         }
                         Tag::Heading(_level, id, _classes)
-                        if conf.anchors => {
+                        if conf.extract_anchors() => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             let source = Locator {
                                 file: file.locator.clone(),
@@ -180,10 +180,10 @@ impl super::LinkExtractor for LinkExtractor {
                         start: cur_pos,
                     };
                     let (mut sub_links, mut sub_anchors) = html_le.find_links_and_anchors(&sub_markup, conf)?;
-                    if conf.links {
+                    if conf.extract_links() {
                         links.append(&mut sub_links);
                     }
-                    if conf.anchors {
+                    if conf.extract_anchors() {
                         anchors.append(&mut sub_anchors);
                     }
 

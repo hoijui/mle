@@ -15,21 +15,38 @@ pub struct Config {
     pub log_file: Option<PathBuf>,
     pub scan_root: PathBuf,
     pub recursive: bool,
-    pub links: bool,
-    pub anchors: bool,
+    /// Where to store links to.
+    /// None => do not extract links,
+    /// Some(None) => extract links and write them to stdout,
+    /// Some(Some(path)) => extract links and write them to file `path`.
+    pub links: Option<Option<PathBuf>>,
+    /// Where to store anchors to.
+    /// None => do not extract anchors,
+    /// Some(None) => extract anchors and write them to stdout,
+    /// Some(Some(path)) => extract anchors and write them to file `path`.
+    pub anchors: Option<Option<PathBuf>>,
     // pub match_file_extension: bool,
     pub ignore_paths: Vec<IgnorePath>,
     pub ignore_links: Vec<WildMatch>,
     pub markup_types: Vec<markup::Type>,
     pub resolve_root: Option<PathBuf>,
     // pub dry: bool,
-    /// Both 'None` and `Some("-")` mean: StdOut;
-    /// everything else will be interpreted as a file path.
-    pub result_file: Option<&'static str>,
     pub result_format: result::Type,
     /// How to group links together. Default: no grouping -
     /// links appear in the output in the order they were found.
     pub group_by: Option<group::Type>,
+}
+
+impl Config {
+    #[must_use]
+    pub const fn extract_links(&self) -> bool {
+        self.links.is_some()
+    }
+
+    #[must_use]
+    pub const fn extract_anchors(&self) -> bool {
+        self.anchors.is_some()
+    }
 }
 
 impl Default for Config {
@@ -39,13 +56,12 @@ impl Default for Config {
             log_file: Default::default(),
             scan_root: Default::default(),
             recursive: Default::default(),
-            links: true,
-            anchors: false,
+            links: Some(None),
+            anchors: None,
             ignore_paths: Default::default(),
             ignore_links: Default::default(),
             markup_types: Default::default(),
             resolve_root: Default::default(),
-            result_file: Default::default(),
             result_format: Default::default(),
             group_by: Default::default(),
         }

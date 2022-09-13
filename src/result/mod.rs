@@ -8,13 +8,15 @@ mod txt;
 use std::{
     fs::File,
     io::{ErrorKind, Write},
-    path::Path,
+    path::PathBuf,
     str::FromStr,
 };
 
 use clap::{PossibleValue, ValueEnum};
 
 use crate::{anchor::Anchor, config::Config, group::Grouping, BoxError};
+
+type Writer = Option<Box<dyn Write + 'static>>;
 
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
@@ -85,13 +87,11 @@ impl FromStr for Type {
     }
 }
 
-fn construct_out_stream(specifier: Option<&str>) -> Box<dyn Write + 'static> {
+fn construct_out_stream(specifier: &Option<Option<PathBuf>>) -> Option<Box<dyn Write + 'static>> {
     match specifier {
-        None | Some("-") => Box::new(std::io::stdout()) as Box<dyn Write>,
-        Some(file_path) => {
-            let path = Path::new(file_path);
-            Box::new(File::create(&path).unwrap()) as Box<dyn Write>
-        }
+        None => None,
+        Some(None) => Some(Box::new(std::io::stdout()) as Box<dyn Write>),
+        Some(Some(file_path)) => Some(Box::new(File::create(file_path).unwrap()) as Box<dyn Write>),
     }
 }
 
@@ -113,8 +113,9 @@ pub fn sink(
             "Result format not yet supported",
         ))?,
     };
-    let mut out_writer = construct_out_stream(config.result_file);
-    sink.write_results(config, &mut out_writer, links, anchors, errors)
+    let links_writer = construct_out_stream(&config.links);
+    let anchors_writer = construct_out_stream(&config.anchors);
+    sink.write_results(config, links_writer, anchors_writer, links, anchors, errors)
 }
 
 pub trait Sink {
@@ -125,7 +126,8 @@ pub trait Sink {
     fn write_results(
         &self,
         config: &Config,
-        out_stream: &mut Box<dyn Write>,
+        links_stream: Writer,
+        anchors_stream: Writer,
         links: &Grouping,
         anchors: &[Anchor],
         errors: &[BoxError],

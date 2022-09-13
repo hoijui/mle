@@ -12,6 +12,8 @@ use crate::config::Config;
 use crate::group::{self, Grouping};
 use crate::BoxError;
 
+use super::Writer;
+
 pub struct Sink();
 
 #[derive(Debug, Clone)]
@@ -58,15 +60,19 @@ impl super::Sink for Sink {
     fn write_results(
         &self,
         _config: &Config,
-        out_stream: &mut Box<dyn Write + 'static>,
+        links_stream: Writer,
+        anchors_stream: Writer,
         links: &Grouping,
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()> {
+        if let Some(mut links_writer) = links_stream {
+            let content = RootSer { grouping: links };
+            let json = serde_json::to_string_pretty(&content)?;
+            write!(links_writer, "{}", json)?;
+        }
+
         let str_errors = errors.iter().map(ToString::to_string).collect::<String>();
-        let content = RootSer { grouping: links };
-        let json = serde_json::to_string_pretty(&content)?;
-        write!(out_stream, "{}", json)?;
 
         Ok(())
     }

@@ -81,7 +81,7 @@ impl super::LinkExtractor for LinkExtractor {
                     }
                     ParserState::Element => {
                         if is_anchor {
-                            if conf.links
+                            if conf.extract_links()
                                 && line_chars.get(column) == Some(&'h')
                                 && line_chars.get(column + 1) == Some(&'r')
                                 && line_chars.get(column + 2) == Some(&'e')
@@ -90,7 +90,7 @@ impl super::LinkExtractor for LinkExtractor {
                                 column += 3;
                                 state = ParserState::EqualSign;
                                 attribute = Some(Attribute::Href);
-                            } else if conf.anchors
+                            } else if conf.extract_anchors()
                                 && line_chars.get(column) == Some(&'n')
                                 && line_chars.get(column + 1) == Some(&'a')
                                 && line_chars.get(column + 2) == Some(&'m')
@@ -101,7 +101,7 @@ impl super::LinkExtractor for LinkExtractor {
                                 attribute = Some(Attribute::Name);
                             }
                         }
-                        if conf.anchors
+                        if conf.extract_anchors()
                             && line_chars.get(column) == Some(&'i')
                             && line_chars.get(column + 1) == Some(&'d')
                         {
@@ -198,8 +198,8 @@ mod tests {
 
     fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
         let conf = Config {
-            links: false,
-            anchors: true,
+            links: None,
+            anchors: Some(None),
             ..Config::default()
         };
         let markup_file = File::dummy(content, Type::Html);
