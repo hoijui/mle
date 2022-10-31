@@ -317,7 +317,7 @@ pub fn parse_args() -> BoxResult<Config> {
     };
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);
     let debug = args.contains_id(A_L_DEBUG);
-    let links = if !args.contains_id(A_L_NO_LINKS) {
+    let links = if args.contains_id(A_L_NO_LINKS) {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
@@ -328,7 +328,7 @@ pub fn parse_args() -> BoxResult<Config> {
     } else {
         Some(None)
     };
-    let anchors = if args.contains_id(A_L_ANCHORS) {
+    let anchors = if !args.contains_id(A_L_ANCHORS) {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_ANCHORS) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
