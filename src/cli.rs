@@ -293,7 +293,7 @@ fn find_duplicate_short_options() -> Vec<char> {
 }
 
 fn arg_matcher() -> Command<'static> {
-    let app = command!().bin_name("osh").args(ARGS.iter());
+    let app = command!().bin_name("mle").args(ARGS.iter());
     let duplicate_short_options = find_duplicate_short_options();
     assert!(
         duplicate_short_options.is_empty(),
