@@ -356,15 +356,22 @@ mod tests {
     }
 
     #[test_case("<http://example.net/>", 1)]
-    // TODO GitHub Link style support
-    //#[test_case("This is a short link http://example.net/", 22)]
-    //#[test_case("http://example.net/", 1)]
     #[test_case("This is a short link <http://example.net/>", 22)]
     fn inline_link(input: &str, column: usize) {
         let result = find_links(input);
         let expected = link_new_http_no_anchor("http://example.net/", 1, column);
         assert_eq!(vec![expected], result);
     }
+
+    // /// TODO GitHub link style support
+    // #[test_case("http://example.net/", 1)]
+    // #[test_case("This is a short link http://example.net/", 22)]
+    // #[test_case("This is a short link https://example.net/", 22)]
+    // fn inline_link_github(input: &str, column: usize) {
+    //     let result = find_links(input);
+    //     let expected = link_new_http_no_anchor("http://example.net/", 1, column);
+    //     assert_eq!(vec![expected], result);
+    // }
 
     #[test_case(
         "<a href=\"http://example.net/\"> target=\"_blank\">Visit W3Schools!</a>",
