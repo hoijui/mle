@@ -428,12 +428,12 @@ impl FromStr for FileSystemTarget {
 
 impl fmt::Debug for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?} => {:#?}", self.source, self.target,)
+        write!(f, "{:#?}:{:#?}", self.source, self.target,)
     }
 }
 
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} - {}", self.source, self.target,)
+        write!(f, "{}:{}", self.source, self.target,)
     }
 }
