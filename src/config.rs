@@ -29,7 +29,6 @@ pub struct Config {
     pub ignore_paths: Vec<IgnorePath>,
     pub ignore_links: Vec<WildMatch>,
     pub markup_types: Vec<markup::Type>,
-    pub resolve_root: Option<PathBuf>,
     // pub dry: bool,
     pub result_format: result::Type,
     /// How to group links together. Default: no grouping -
@@ -61,7 +60,6 @@ impl Default for Config {
             ignore_paths: Default::default(),
             ignore_links: Default::default(),
             markup_types: Default::default(),
-            resolve_root: Default::default(),
             result_format: Default::default(),
             group_by: Default::default(),
         }

@@ -34,8 +34,6 @@ const A_L_IGNORE_LINKS: &str = "ignore-links";
 const A_S_IGNORE_LINKS: char = 'i';
 const A_L_MARKUP_TYPES: &str = "markup-types";
 const A_S_MARKUP_TYPES: char = 'm';
-const A_L_RESOLVE_ROOT: &str = "resolve-root";
-const A_S_RESOLVE_ROOT: char = 'R';
 //const A_L_DRY: &str = "dry";
 //const A_S_DRY: char = 'd';
 const A_L_LOG_FILE: &str = "log-file";
@@ -180,18 +178,6 @@ fn arg_markup_types() -> Arg<'static> {
         .required(false)
 }
 
-fn arg_resolve_root() -> Arg<'static> {
-    Arg::new(A_L_RESOLVE_ROOT)
-        .help("Path or URL used to resolve all relative paths to")
-        .takes_value(true)
-        .value_name("PATH/URL")
-        .value_hint(ValueHint::FilePath)
-        .short(A_S_RESOLVE_ROOT)
-        .long(A_L_RESOLVE_ROOT)
-        .required(false)
-        .conflicts_with(A_L_NO_LINKS)
-}
-
 /*
 fn arg_dry() -> Arg<'static> {
     Arg::new(A_L_DRY)
@@ -257,7 +243,7 @@ fn arg_group_by() -> Arg<'static> {
 }
 
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 13] = [
+    static ref ARGS: [Arg<'static>; 12] = [
         arg_scan_root(),
         arg_non_recursive(),
         arg_debug(),
@@ -267,7 +253,6 @@ lazy_static! {
         arg_ignore_paths(),
         arg_ignore_links(),
         arg_markup_types(),
-        arg_resolve_root(),
         //arg_dry(),
         arg_log_file(),
         arg_links_file(),
@@ -357,22 +342,6 @@ pub fn parse_args() -> BoxResult<Config> {
             .map(markup::Type::from_str)
             .collect::<Result<Vec<markup::Type>, _>>()?;
     }
-    let resolve_root = args.get_one::<PathBuf>(A_L_RESOLVE_ROOT).map(PathBuf::from);
-    /*let resolve_root = if let Some(resolve_root) = matches.value_of(A_L_RESOLVE_ROOT) {
-        let resolve_root = Path::new(
-            &resolve_root
-                .replace('/', &MAIN_SEPARATOR.to_string())
-                .replace('\\', &MAIN_SEPARATOR.to_string()),
-        )
-        .to_path_buf();
-        if !resolve_root.is_dir() {
-            eprintln!("Resolve root '{:?}' must be a directory!", resolve_root);
-            std::process::exit(1);
-        }
-        Some(resolve_root)
-    } else {
-        None
-    };*/
     //let dry = args.value_of(A_L_DRY);
     let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
     let result_format = args
@@ -399,7 +368,6 @@ pub fn parse_args() -> BoxResult<Config> {
         ignore_paths,
         ignore_links,
         markup_types,
-        resolve_root,
         //dry,
         result_format,
         group_by,

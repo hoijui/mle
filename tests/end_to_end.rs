@@ -50,7 +50,6 @@ async fn end_to_end_different_root() {
         links: Some(None),
         anchors: Some(None),
         result_format: result::Type::Json,
-        resolve_root: Some(test_files),
         markup_types: vec![Type::Markdown],
         ..Default::default()
     };
