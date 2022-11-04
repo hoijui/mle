@@ -61,10 +61,13 @@ pub type BoxResult<T> = Result<T, BoxError>;
 
 fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
     let mut files: Vec<File> = Vec::new();
-    file_traversal::find(conf, &mut files);
     let mut links = vec![];
     let mut anchor_targets = vec![];
     let mut errors: Vec<_> = vec![];
+    if let Err(err) = file_traversal::find(conf, &mut files) {
+        errors.push(err.into());
+        return (links, anchor_targets, errors);
+    }
     for file in files {
         match extractors::find_links(&file, conf) {
             Ok((mut file_links, mut file_anchor_targets)) => {

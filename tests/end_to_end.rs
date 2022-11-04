@@ -17,7 +17,7 @@ use std::convert::TryInto;
 #[tokio::test]
 async fn end_to_end() {
     let config = Config {
-        scan_root: benches_dir().join("benchmark"),
+        files_and_dirs: vec![benches_dir().join("benchmark")],
         log_level: logger::LogLevel::Debug,
         recursive: true,
         links: Some(None),
@@ -45,7 +45,7 @@ async fn end_to_end() {
 async fn end_to_end_different_root() {
     let test_files = benches_dir().join("different_root");
     let config = Config {
-        scan_root: test_files.clone(),
+        files_and_dirs: vec![test_files.clone()],
         log_level: logger::LogLevel::Debug,
         links: Some(None),
         anchors: Some(None),

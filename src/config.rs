@@ -13,7 +13,10 @@ use crate::{group, ignore_path::IgnorePath, logger::LogLevel, markup, result};
 pub struct Config {
     pub log_level: LogLevel,
     pub log_file: Option<PathBuf>,
-    pub scan_root: PathBuf,
+    /// Markup files and dirs to scan for markup files.
+    /// Out of all the resulting markup files,
+    /// links and/or anchors will be extracted.
+    pub files_and_dirs: Vec<PathBuf>,
     pub recursive: bool,
     /// Where to store links to.
     /// None => do not extract links,
@@ -53,7 +56,7 @@ impl Default for Config {
         Self {
             log_level: Default::default(),
             log_file: Default::default(),
-            scan_root: Default::default(),
+            files_and_dirs: Default::default(),
             recursive: Default::default(),
             links: Some(None),
             anchors: None,

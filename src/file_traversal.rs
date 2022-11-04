@@ -8,16 +8,26 @@ extern crate walkdir;
 use crate::link::{FileLoc, FileSystemLoc, Position};
 use crate::markup::{self, Content, File};
 use crate::Config;
+use std::ffi::OsStr;
 use std::fs;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use walkdir::WalkDir;
 
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("Supplied Input file is missing file name: '{0}'")]
+    MissingFileName(PathBuf),
+    #[error("Input path does not exist: '{0}'")]
+    NonexistentPath(PathBuf),
+    #[error("Input path is not a file or directory: '{0}'")]
+    NoFileNorDir(PathBuf),
+}
+
 /// Searches for markup source files acording to the configuration,
 /// and stores them in `result`.
-pub fn find(config: &Config, result: &mut Vec<File>) {
-    let root = &config.scan_root;
+pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
-    let ignore_paths = &config.ignore_paths;
 
     info!(
         "Searching for files of markup types '{:?}' in directory '{:?}' ...",
@@ -30,31 +40,67 @@ pub fn find(config: &Config, result: &mut Vec<File>) {
         .filter_map(Result::ok)
         .filter(|e| !e.file_type().is_dir())
     {
-        let f_name = entry.file_name().to_string_lossy();
+        add(config, entry.path(), result)?;
+    }
 
-        if let Some(markup_type) = markup_type(&f_name, markup_types) {
-            let path = entry.path();
-            let abs_path = fs::canonicalize(path).expect("Expected path to exist.");
+    Ok(())
+}
+
+/// Stores a single file in `result`,
+/// if it is accessible
+/// and a markup source file acording to the configuration.
+pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), Error> {
+    let markup_types = &config.markup_types;
+    let ignore_paths = &config.ignore_paths;
+
+    if let Some(file_name) = file.file_name().map(OsStr::to_string_lossy) {
+        if let Some(markup_type) = markup_type(&file_name, markup_types) {
+            let abs_path = fs::canonicalize(file).expect("Expected path to exist.");
             if ignore_paths
                 .iter()
                 .any(|ignore_path| ignore_path.matches(&abs_path))
             {
                 debug!(
-                    "Ignoring file '{:?}', because it is in the ignore paths list.",
-                    path
+                    "Ignoring file '{}', because it is in the ignore paths list.",
+                    file.display()
                 );
             } else {
                 let file = File {
                     markup_type,
-                    locator: Rc::new(FileLoc::System(FileSystemLoc::from(path))),
-                    content: Content::LocalFile(path.to_owned()),
+                    locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
+                    content: Content::LocalFile(file.to_owned()),
                     start: Position::new(),
                 };
                 debug!("Found file: '{:?}'", file);
                 result.push(file);
             }
+        } else {
+            trace!(
+                "Not a file of a configured markup type: '{}'",
+                file.display()
+            );
+        }
+    } else {
+        return Err(Error::MissingFileName(file.to_path_buf()));
+    }
+    Ok(())
+}
+
+/// Searches for markup source files acording to the configuration,
+/// and stores them in `result`.
+pub fn find(config: &Config, result: &mut Vec<File>) -> Result<(), Error> {
+    for file_or_dir in &config.files_and_dirs {
+        if file_or_dir.is_file() {
+            add(config, file_or_dir, result)?;
+        } else if file_or_dir.is_dir() {
+            scan(config, file_or_dir, result)?;
+        } else if !file_or_dir.exists() {
+            return Err(Error::NonexistentPath(file_or_dir.clone()));
+        } else {
+            return Err(Error::MissingFileName(file_or_dir.clone()));
         }
     }
+    Ok(())
 }
 
 /// Identifies the markup type a file path belongs to,

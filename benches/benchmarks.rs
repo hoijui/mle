@@ -15,7 +15,9 @@ use std::fs;
 
 fn end_to_end_benchmark() {
     let config = Config {
-        scan_root: fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
+        files_and_dirs: vec![
+            fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
+        ],
         log_level: logger::LogLevel::Debug,
         markup_types: vec![Type::Markdown],
         ..Default::default()

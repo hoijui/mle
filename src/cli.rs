@@ -10,13 +10,12 @@ use crate::{markup, BoxResult};
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use std::collections::HashSet;
-use std::env;
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::{env, io};
 use wildmatch::WildMatch;
 
-const A_L_SCAN_ROOT: &str = "scann-root";
-const A_S_SCAN_ROOT: char = 'S';
+const A_N_FILES: &str = "files";
 const A_L_NON_RECURSIVE: &str = "non-recursive";
 const A_S_NON_RECURSIVE: char = 'N';
 const A_L_DEBUG: &str = "debug";
@@ -48,21 +47,19 @@ lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
 }
 
-#[allow(clippy::useless_transmute)]
-fn arg_scan_root() -> Arg<'static> {
-    Arg::new(A_L_SCAN_ROOT)
-        .help("The root dir to scann for markup files")
+fn arg_files() -> Arg<'static> {
+    Arg::new(A_N_FILES)
+        .help("The markup files and dirs to scann for markup files")
         .long_help(formatcp!(
-            "The root directory to scann for markup files. \
+            "The markup files and root directories to scann for markup files. \
             See also --{A_L_NON_RECURSIVE}."
         ))
         .takes_value(true)
+        .multiple_values(true)
         .value_parser(value_parser!(std::path::PathBuf))
-        .value_name("DIR")
+        .value_name("FILE")
         .value_hint(ValueHint::DirPath)
-        .short(A_S_SCAN_ROOT)
-        .long(A_L_SCAN_ROOT)
-        .action(ArgAction::Set)
+        .action(ArgAction::Append)
         .required(false)
         .default_value(".")
 }
@@ -243,7 +240,7 @@ fn arg_group_by() -> Arg<'static> {
 
 lazy_static! {
     static ref ARGS: [Arg<'static>; 12] = [
-        arg_scan_root(),
+        arg_files(),
         arg_non_recursive(),
         arg_debug(),
         arg_no_links(),
@@ -287,6 +284,20 @@ fn arg_matcher() -> Command<'static> {
     app
 }
 
+fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
+    let mut files_and_dirs = vec![];
+    if let Some(out_files) = args.get_many::<PathBuf>(A_N_FILES) {
+        for out_file in out_files {
+            files_and_dirs.push(out_file.into());
+        }
+    }
+    if files_and_dirs.is_empty() {
+        files_and_dirs.push(env::current_dir()?);
+    }
+
+    Ok(files_and_dirs)
+}
+
 /// Parses CLI arguments into our own config structure.
 ///
 /// # Errors
@@ -295,10 +306,7 @@ fn arg_matcher() -> Command<'static> {
 pub fn parse_args() -> BoxResult<Config> {
     let args = arg_matcher().get_matches();
 
-    let scan_root = match args.get_one::<PathBuf>(A_L_SCAN_ROOT) {
-        Some(dir) => dir.clone(), //PathBuf::from(dir),
-        None => env::current_dir()?,
-    };
+    let files_and_dirs = files_and_dirs(&args)?;
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);
     let debug = args.contains_id(A_L_DEBUG);
     let links = if args.contains_id(A_L_NO_LINKS) {
@@ -359,7 +367,7 @@ pub fn parse_args() -> BoxResult<Config> {
     Ok(Config {
         log_level,
         log_file,
-        scan_root,
+        files_and_dirs,
         recursive,
         links,
         anchors,
