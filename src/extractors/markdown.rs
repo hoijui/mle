@@ -172,7 +172,7 @@ impl super::LinkExtractor for LinkExtractor {
                     };
                 }
                 Event::Html(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
-                    let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 1 };
+                    let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 0 };
                     let sub_markup = File {
                         markup_type: markup::Type::Html,
                         locator: file.locator.clone(),
