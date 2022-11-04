@@ -6,6 +6,7 @@ use std::io::Write;
 
 use serde::ser::SerializeSeq;
 use serde::ser::SerializeStruct;
+use serde::Serialize;
 
 use crate::anchor::Anchor;
 use crate::config::Config;
@@ -19,6 +20,11 @@ pub struct Sink();
 #[derive(Debug, Clone)]
 pub struct RootSer<'a> {
     pub grouping: &'a Grouping<'a>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RootSerAnchors<'a> {
+    pub anchors: &'a Vec<Anchor>,
 }
 
 #[derive(Debug, Clone)]
@@ -70,6 +76,13 @@ impl super::Sink for Sink {
             let content = RootSer { grouping: links };
             let json = serde_json::to_string_pretty(&content)?;
             write!(links_writer, "{}", json)?;
+        }
+        if let Some(mut anchors_writer) = anchors_stream {
+            let content = RootSerAnchors {
+                anchors: &anchors.into(),
+            };
+            let json = serde_json::to_string_pretty(&content)?;
+            write!(anchors_writer, "{}", json)?;
         }
 
         let str_errors = errors.iter().map(ToString::to_string).collect::<String>();
