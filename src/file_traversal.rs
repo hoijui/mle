@@ -26,6 +26,12 @@ pub enum Error {
 
 /// Searches for markup source files acording to the configuration,
 /// and stores them in `result`.
+///
+/// # Errors
+///
+/// If any of the (markup) files supplied or found through scanning supplied dirs
+/// has no name (e.g. '.').
+/// The code-logic should prevent this from ever happening.
 pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
 
@@ -49,6 +55,11 @@ pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), 
 /// Stores a single file in `result`,
 /// if it is accessible
 /// and a markup source file acording to the configuration.
+///
+/// # Errors
+///
+/// If the supplied `file` has no name (e.g. '.').
+/// The code-logic should prevent this from ever happening.
 pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
@@ -65,14 +76,14 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
                     file.display()
                 );
             } else {
-                let file = File {
+                let markup_file = File {
                     markup_type,
                     locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
                     content: Content::LocalFile(file.to_owned()),
                     start: Position::new(),
                 };
-                debug!("Found file: '{:?}'", file);
-                result.push(file);
+                debug!("Found file: '{:?}'", markup_file);
+                result.push(markup_file);
             }
         } else {
             trace!(
@@ -88,6 +99,12 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
 
 /// Searches for markup source files acording to the configuration,
 /// and stores them in `result`.
+///
+/// # Errors
+///
+/// If a file or path supplied does not exist,
+/// or if any file supplied or found through scannig has no name (e.g. '.').
+/// The code-logic should prevent the second case from ever happening.
 pub fn find(config: &Config, result: &mut Vec<File>) -> Result<(), Error> {
     for file_or_dir in &config.files_and_dirs {
         if file_or_dir.is_file() {
