@@ -326,10 +326,10 @@ pub fn parse_args() -> BoxResult<Config> {
     };
     //let match_file_extension = args.value_of(A_L_MATCH_FILE_EXTENSION);
     let ignore_paths: Vec<IgnorePath> = args
-        .get_many::<Result<IgnorePath, String>>(A_L_IGNORE_PATHS)
+        .get_many::<IgnorePath>(A_L_IGNORE_PATHS)
         .unwrap_or_default()
         .map(ToOwned::to_owned)
-        .collect::<Result<Vec<IgnorePath>, _>>()?;
+        .collect();
     let ignore_links: Vec<WildMatch> = args
         .get_many::<WildMatch>(A_L_IGNORE_LINKS)
         .unwrap_or_default()
