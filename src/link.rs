@@ -238,7 +238,7 @@ impl Target {
     /// Removes the fragment from a link, if one is present.
     /// Otherwise it returns `self`.
     #[must_use]
-    pub fn remove_anchor(&self) -> Cow<'_, Self> {
+    pub fn without_fragment(&self) -> Cow<'_, Self> {
         match self {
             Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url)
                 if url.fragment().is_some() =>

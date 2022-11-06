@@ -38,7 +38,7 @@ impl ValueEnum for Type {
 }
 
 fn group_without_anchor(link: &Link) -> Cow<'_, Target> {
-    link.target.remove_anchor()
+    link.target.without_fragment()
 }
 
 impl FromStr for Type {
