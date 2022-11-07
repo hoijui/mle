@@ -257,6 +257,19 @@ impl Target {
             _ => Cow::Borrowed(self),
         }
     }
+
+    /// Removes the fragment from a link, if one is present.
+    /// Otherwise it returns `self`.
+    #[must_use]
+    pub fn fragment(&self) -> Option<&'_ str> {
+        match self {
+            Self::Http(url) | Self::Ftp(url) | Self::FileUrl(url) | Self::UnknownUrlSchema(url) => {
+                url.fragment()
+            }
+            Self::FileSystem(target) => target.anchor.as_deref(),
+            Self::EMail(_) | Self::Invalid(_) => None,
+        }
+    }
 }
 
 impl FileSystemLoc {
