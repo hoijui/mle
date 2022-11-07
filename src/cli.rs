@@ -42,6 +42,8 @@ const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
 const A_L_RESULT_EXTENDED: &str = "result-extended";
 const A_S_RESULT_EXTENDED: char = 'E';
+const A_L_RESULT_FLUSH: &str = "result-flush";
+const A_S_RESULT_FLUSH: char = 'f';
 
 lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
@@ -236,8 +238,17 @@ fn arg_result_extended() -> Arg<'static> {
         .required(false)
 }
 
+fn arg_result_flush() -> Arg<'static> {
+    Arg::new(A_L_RESULT_FLUSH)
+        .help("Constantly flush (after each item) all the output streams, for the output formats that support it")
+        .takes_value(false)
+        .short(A_S_RESULT_FLUSH)
+        .long(A_L_RESULT_FLUSH)
+        .required(false)
+}
+
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 12] = [
+    static ref ARGS: [Arg<'static>; 13] = [
         arg_files(),
         arg_non_recursive(),
         arg_debug(),
@@ -252,6 +263,7 @@ lazy_static! {
         arg_links_file(),
         arg_result_format(),
         arg_result_extended(),
+        arg_result_flush(),
     ];
 }
 
@@ -354,6 +366,7 @@ pub fn parse_args() -> BoxResult<Config> {
         .copied()
         .unwrap_or_default();
     let result_extended = args.contains_id(A_L_RESULT_EXTENDED);
+    let result_flush = args.contains_id(A_L_RESULT_FLUSH);
 
     let log_level = if debug {
         logger::LogLevel::Debug
@@ -375,5 +388,6 @@ pub fn parse_args() -> BoxResult<Config> {
         //dry,
         result_format,
         result_extended,
+        result_flush,
     })
 }

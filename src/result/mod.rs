@@ -123,10 +123,10 @@ pub fn sink(
     anchors: &[Anchor],
     errors: &[BoxError],
 ) -> std::io::Result<()> {
-    let sink: Box<dyn Sink> = match config.result_format {
-        Type::Text => Box::new(txt::Sink()),
-        Type::Json => Box::new(json::Sink()),
-        Type::Csv => Box::new(csv::Sink()),
+    let sink_init = match config.result_format {
+        Type::Text => txt::Sink::init,
+        Type::Json => json::Sink::init,
+        Type::Csv => csv::Sink::init,
         _ => Err(std::io::Error::new(
             ErrorKind::InvalidInput,
             "Result format not yet supported",
@@ -134,23 +134,60 @@ pub fn sink(
     };
     let links_writer = construct_out_stream(&config.links);
     let anchors_writer = construct_out_stream(&config.anchors);
-    sink.write_results(config, links_writer, anchors_writer, links, anchors, errors)
+    let mut sink = sink_init(config, links_writer, anchors_writer)?;
+    for link in links {
+        // thread::sleep::sleep(std::time::Duration::new(0, 200000000));
+        sink.sink_link(link)?;
+    }
+    for anchor in anchors {
+        sink.sink_anchor(anchor)?;
+    }
+    for error in errors {
+        sink.sink_error(error)?;
+    }
+    sink.finalize()
 }
 
 pub trait Sink {
-    /// Writes-out the extraction results.
+    /// Initilaizes this sink.
+    /// This will be called once only,
+    /// and before any `sink_*` function may be called.
     ///
     /// # Errors
     /// If writing to a file or other (I)/O-device failed.
-    fn write_results(
-        &self,
+    fn init(
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,
-        links: &[Link],
-        anchors: &[Anchor],
-        errors: &[BoxError],
-    ) -> std::io::Result<()>;
+    ) -> std::io::Result<Box<dyn Sink>>
+    where
+        Self: Sized;
+
+    /// Writes-out an extracted link.
+    ///
+    /// # Errors
+    /// If writing to the output stream for links failed.
+    fn sink_link(&mut self, link: &Link) -> std::io::Result<()>;
+
+    /// Writes-out an extracted anchor.
+    ///
+    /// # Errors
+    /// If writing to the output stream for anchors failed.
+    fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()>;
+
+    /// Writes-out an error generated while extracting links/anchors.
+    ///
+    /// # Errors
+    /// If writing to the output stream for errors failed.
+    fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()>;
+
+    /// Finalizes/Clsoes this sink.
+    /// This will be caleld exactly once,
+    /// and no `sink_*` functions may be called after this function has been called.
+    ///
+    /// # Errors
+    /// If writing to a file or other (I)/O-device failed.
+    fn finalize(&mut self) -> std::io::Result<()>;
 }
 
 #[derive(Debug, Serialize)]
@@ -228,6 +265,80 @@ impl<'a> Serialize for LinkRec<'a> {
 }
 
 #[derive(Debug, Serialize)]
+struct LinkExtendedOwnedRec {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    src_is_file_system: bool,
+    src_is_url: bool,
+    src_is_local: bool,
+    src_is_remote: bool,
+    trg_link: String,
+    trg_fragment: Option<String>,
+    trg_is_file_system: bool,
+    trg_is_url: bool,
+    trg_is_local: bool,
+    trg_is_remote: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct LinkSimpleOwnedRec {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    trg_link: String,
+    trg_fragment: Option<String>,
+}
+
+#[derive(Debug)]
+enum LinkOwnedRec {
+    Simple(LinkSimpleOwnedRec),
+    Extended(LinkExtendedOwnedRec),
+}
+
+impl LinkOwnedRec {
+    fn new(lnk: &Link, extended: bool) -> Self {
+        if extended {
+            Self::Extended(LinkExtendedOwnedRec {
+                src_file: lnk.source.file.to_string(),
+                src_line: lnk.source.pos.line,
+                src_column: lnk.source.pos.column,
+                src_is_file_system: lnk.source.file.is_file_system(),
+                src_is_url: lnk.source.file.is_url(),
+                src_is_local: lnk.source.file.is_local(),
+                src_is_remote: lnk.source.file.is_remote(),
+                trg_link: lnk.target.without_fragment().to_string(),
+                trg_fragment: lnk.target.fragment().map(ToOwned::to_owned),
+                trg_is_file_system: lnk.target.is_file_system(),
+                trg_is_url: lnk.target.is_url(),
+                trg_is_local: lnk.target.is_local(),
+                trg_is_remote: lnk.target.is_remote(),
+            })
+        } else {
+            Self::Simple(LinkSimpleOwnedRec {
+                src_file: lnk.source.file.to_string(),
+                src_line: lnk.source.pos.line,
+                src_column: lnk.source.pos.column,
+                trg_link: lnk.target.without_fragment().to_string(),
+                trg_fragment: lnk.target.fragment().map(ToOwned::to_owned),
+            })
+        }
+    }
+}
+
+impl Serialize for LinkOwnedRec {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Simple(rec) => rec.serialize(serializer),
+            Self::Extended(rec) => rec.serialize(serializer),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
 struct AnchorExtendedRec<'a> {
     src_file: String,
     src_line: usize,
@@ -287,6 +398,70 @@ impl<'a> AnchorRec<'a> {
                 src_line: anc.source.pos.line,
                 src_column: anc.source.pos.column,
                 name: &anc.name,
+            })
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct AnchorExtendedOwnedRec {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    src_is_file_system: bool,
+    src_is_url: bool,
+    src_is_local: bool,
+    src_is_remote: bool,
+    name: String,
+    r#type: anchor::Type,
+}
+
+#[derive(Debug, Serialize)]
+struct AnchorSimpleOwnedRec {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    name: String,
+}
+
+#[derive(Debug)]
+enum AnchorOwnedRec {
+    Simple(AnchorSimpleOwnedRec),
+    Extended(AnchorExtendedOwnedRec),
+}
+impl Serialize for AnchorOwnedRec {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Simple(rec) => rec.serialize(serializer),
+            Self::Extended(rec) => rec.serialize(serializer),
+        }
+    }
+}
+
+impl AnchorOwnedRec {
+    fn new(anc: &Anchor, extended: bool) -> Self {
+        if extended {
+            Self::Extended(AnchorExtendedOwnedRec {
+                src_file: anc.source.file.to_string(),
+                src_line: anc.source.pos.line,
+                src_column: anc.source.pos.column,
+                src_is_file_system: anc.source.file.is_file_system(),
+                src_is_url: anc.source.file.is_url(),
+                src_is_local: anc.source.file.is_local(),
+                src_is_remote: anc.source.file.is_remote(),
+                name: anc.name.to_string(),
+                // r#type: format!("{:?}", anc.r#type),
+                r#type: anc.r#type,
+            })
+        } else {
+            Self::Simple(AnchorSimpleOwnedRec {
+                src_file: anc.source.file.to_string(),
+                src_line: anc.source.pos.line,
+                src_column: anc.source.pos.column,
+                name: anc.name.to_string(),
             })
         }
     }

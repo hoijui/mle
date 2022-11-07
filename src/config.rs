@@ -40,6 +40,9 @@ pub struct Config {
     /// * is the link a URL or to the file-system
     /// * which type of anchor it is (e.g. from a title or anchor tag)
     pub result_extended: bool,
+    /// Whether to flush output streams after each item (link, anchor, error),
+    /// for the result formats that support it.
+    pub result_flush: bool,
 }
 
 impl Config {
@@ -68,6 +71,7 @@ impl Default for Config {
             markup_types: Default::default(),
             result_format: Default::default(),
             result_extended: false,
+            result_flush: false,
         }
     }
 }
