@@ -272,6 +272,33 @@ impl Target {
     }
 }
 
+impl FileLoc {
+    #[must_use]
+    pub fn is_local(&self) -> bool {
+        match self {
+            Self::Url(url) => url.scheme() == "file",
+            Self::System(_) => true,
+        }
+    }
+
+    #[must_use]
+    pub fn is_remote(&self) -> bool {
+        !self.is_local()
+    }
+
+    /// Whether this target is encoded as a file-system path.
+    #[must_use]
+    pub const fn is_file_system(&self) -> bool {
+        matches!(self, Self::System(_))
+    }
+
+    /// Whether this target is encoded as a URL.
+    #[must_use]
+    pub const fn is_url(&self) -> bool {
+        !self.is_file_system()
+    }
+}
+
 impl FileSystemLoc {
     /// Analyzes whether self is likely to contain
     /// content in one of our supported markup languages,
