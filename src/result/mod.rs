@@ -14,7 +14,7 @@ use std::{
 
 use clap::{PossibleValue, ValueEnum};
 
-use crate::{anchor::Anchor, config::Config, group::Grouping, BoxError};
+use crate::{anchor::Anchor, config::Config, link::Link, BoxError};
 
 type Writer = Option<Box<dyn Write + 'static>>;
 
@@ -101,7 +101,7 @@ fn construct_out_stream(specifier: &Option<Option<PathBuf>>) -> Option<Box<dyn W
 /// (I/)O-error when writing to a file.
 pub fn sink(
     config: &Config,
-    links: &Grouping,
+    links: &[Link],
     anchors: &[Anchor],
     errors: &[BoxError],
 ) -> std::io::Result<()> {
@@ -128,7 +128,7 @@ pub trait Sink {
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,
-        links: &Grouping,
+        links: &[Link],
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()>;

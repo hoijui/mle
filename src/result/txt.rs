@@ -6,7 +6,7 @@ use std::io::Write;
 
 use crate::anchor::Anchor;
 use crate::config::Config;
-use crate::group::Grouping;
+use crate::link::Link;
 use crate::BoxError;
 
 use super::Writer;
@@ -19,16 +19,13 @@ impl super::Sink for Sink {
         _config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,
-        links: &Grouping,
+        links: &[Link],
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()> {
         if let Some(mut links_writer) = links_stream {
-            for group in links {
-                writeln!(links_writer, "# Group '{}' ...", group.0)?;
-                for link in &group.1 {
-                    writeln!(links_writer, "{}", link)?;
-                }
+            for link in links {
+                writeln!(links_writer, "{}", link)?;
             }
         }
 

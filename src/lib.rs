@@ -39,7 +39,6 @@ pub mod cli;
 pub mod config;
 pub mod extractors;
 pub mod file_traversal;
-pub mod group;
 pub mod ignore_link;
 pub mod ignore_path;
 pub mod link;
@@ -90,53 +89,6 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
 /// If reading of any input or writing of the log or result-file failed.
 pub fn run(state: &mut State) -> BoxResult<()> {
     let (links, anchors, errors) = find_all_links(&state.config);
-    // let mut secondary_anchors = find_all_anchor_targets(&state.config, &links);
-    // primary_anchors.append(&mut secondary_anchors);
-
-    // group the links if requested
-    let grouper = group::Type::get(&state.config).get_grouper();
-    let grouped_links = group::group(&links, grouper)?;
-
-    // // <target, (links, requires_anchors)>
-    // let mut link_target_groups: HashMap<Target, (Vec<Link>, bool)> = HashMap::new();
-
-    // let mut skipped = 0;
-
-    // for link in &links {
-    //     if state
-    //         .config
-    //         .ignore_links
-    //         .iter()
-    //         .any(|m| m.matches(&link.target1))
-    //     {
-    //         print_helper(
-    //             link,
-    //             &"Skip".green(),
-    //             "Ignore link because of ignore-links option.",
-    //             false,
-    //         );
-    //         skipped += 1;
-    //         continue;
-    //     }
-    //     let target = resolve_target_link(link, &link.target.r#type, &state.config).await;
-    //     let t = Target::new(target, link_type);
-    //     match link_target_groups.get_mut(&t) {
-    //         Some(v) => {
-    //             v.0.push(link.clone());
-    //             v.1 = v.1 || link.target.anchor.is_some();
-    //         }
-    //         None => {
-    //             link_target_groups.insert(t, (vec![link.clone()], link.target.anchor.is_some()));
-    //         }
-    //     }
-    // }
-
-    // for (target, (links, _)) in link_target_groups {
-    //     for link in links {
-    //         // println!("{}#{}", target, link);
-    //         println!("{:?}", link);
-    //     }
-    // }
-
-    result::sink(&state.config, &grouped_links, &anchors, &errors).map_err(Into::into)
+    // TODO make this more stream-like, where each found link is directly sent to all output streams/files
+    result::sink(&state.config, &links, &anchors, &errors).map_err(Into::into)
 }

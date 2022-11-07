@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
-use crate::{group, Config};
+use crate::Config;
 use crate::{ignore_link, ignore_path};
 use crate::{logger, result};
 use crate::{markup, BoxResult};
@@ -40,8 +40,6 @@ const A_L_LINKS_FILE: &str = "links-file";
 const A_S_LINKS_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
-const A_L_GROUP_BY: &str = "group-by";
-const A_S_GROUP_BY: char = 'G';
 
 lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
@@ -227,19 +225,8 @@ fn arg_result_format() -> Arg<'static> {
         .required(false)
 }
 
-fn arg_group_by() -> Arg<'static> {
-    Arg::new(A_L_GROUP_BY)
-        .help("What to group links by in the output (default: No grouping -> Use oder of appearance in the input)")
-        .takes_value(true)
-        .value_parser(value_parser!(group::Type))
-        .value_name("GROUPER")
-        .short(A_S_GROUP_BY)
-        .long(A_L_GROUP_BY)
-        .required(false)
-}
-
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 12] = [
+    static ref ARGS: [Arg<'static>; 11] = [
         arg_files(),
         arg_non_recursive(),
         arg_debug(),
@@ -253,7 +240,6 @@ lazy_static! {
         arg_log_file(),
         arg_links_file(),
         arg_result_format(),
-        arg_group_by(),
     ];
 }
 
@@ -362,8 +348,6 @@ pub fn parse_args() -> BoxResult<Config> {
         logger::LogLevel::Warn
     };
 
-    let group_by = args.get_one::<group::Type>(A_L_GROUP_BY).copied();
-
     Ok(Config {
         log_level,
         log_file,
@@ -377,6 +361,5 @@ pub fn parse_args() -> BoxResult<Config> {
         markup_types,
         //dry,
         result_format,
-        group_by,
     })
 }
