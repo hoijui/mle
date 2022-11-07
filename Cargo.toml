@@ -28,6 +28,7 @@ clap = { version = "3.2", features = ["cargo", "wrap_help"] }
 clap_derive = "3.2"
 colored = "2"
 const_format = "0.2"
+csv = "1.1"
 # email_address = "0.2"
 futures = "0.3"
 lazy_static = "1.4.0"

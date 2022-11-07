@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod csv;
 mod json;
 mod txt;
 
@@ -114,6 +115,7 @@ pub fn sink(
     let sink: Box<dyn Sink> = match config.result_format {
         Type::Text => Box::new(txt::Sink()),
         Type::Json => Box::new(json::Sink()),
+        Type::Csv => Box::new(csv::Sink()),
         _ => Err(std::io::Error::new(
             ErrorKind::InvalidInput,
             "Result format not yet supported",

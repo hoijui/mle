@@ -916,6 +916,7 @@ dependencies = [
  "colored",
  "const_format",
  "criterion",
+ "csv",
  "futures",
  "lazy_static",
  "log",
