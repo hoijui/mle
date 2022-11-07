@@ -39,13 +39,6 @@ impl super::Sink for Sink {
             }
         }
 
-        if !errors.is_empty() {
-            let mut stderr = Box::new(std::io::stderr()) as Box<dyn Write>;
-            for error in errors {
-                writeln!(stderr, "{:#?}", error)?;
-            }
-        }
-
-        Ok(())
+        super::write_to_stderr(errors)
     }
 }

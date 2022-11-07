@@ -102,6 +102,17 @@ fn construct_out_stream(specifier: &Option<Option<PathBuf>>) -> Option<Box<dyn W
     }
 }
 
+pub fn write_to_stderr(errors: &[BoxError]) -> std::io::Result<()> {
+    if !errors.is_empty() {
+        let mut stderr = Box::new(std::io::stderr()) as Box<dyn Write>;
+        for error in errors {
+            writeln!(stderr, "{:#?}", error)?;
+        }
+    }
+
+    Ok(())
+}
+
 /// Write results to stdout or file.
 ///
 /// # Errors

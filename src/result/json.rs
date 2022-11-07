@@ -54,8 +54,13 @@ impl super::Sink for Sink {
             write!(anchors_writer, "{}", json)?;
         }
 
-        let str_errors = errors.iter().map(ToString::to_string).collect::<String>();
+        if !errors.is_empty() {
+            let mut stderr = Box::new(std::io::stderr()) as Box<dyn Write>;
+            for error in errors {
+                writeln!(stderr, "{:#?}", error)?;
+            }
+        }
 
-        Ok(())
+        super::write_to_stderr(errors)
     }
 }

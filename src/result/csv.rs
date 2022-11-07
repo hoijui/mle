@@ -42,8 +42,6 @@ impl super::Sink for Sink {
             wtr.flush()?;
         }
 
-        // let str_errors = errors.iter().map(ToString::to_string).collect::<String>();
-
-        Ok(())
+        super::write_to_stderr(errors)
     }
 }
