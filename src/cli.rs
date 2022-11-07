@@ -40,6 +40,8 @@ const A_L_LINKS_FILE: &str = "links-file";
 const A_S_LINKS_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
 const A_S_RESULT_FORMAT: char = 'F';
+const A_L_RESULT_EXTENDED: &str = "result-extended";
+const A_S_RESULT_EXTENDED: char = 'E';
 
 lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
@@ -225,8 +227,17 @@ fn arg_result_format() -> Arg<'static> {
         .required(false)
 }
 
+fn arg_result_extended() -> Arg<'static> {
+    Arg::new(A_L_RESULT_EXTENDED)
+        .help("Output more info in result file/stream")
+        .takes_value(false)
+        .short(A_S_RESULT_EXTENDED)
+        .long(A_L_RESULT_EXTENDED)
+        .required(false)
+}
+
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 11] = [
+    static ref ARGS: [Arg<'static>; 12] = [
         arg_files(),
         arg_non_recursive(),
         arg_debug(),
@@ -240,6 +251,7 @@ lazy_static! {
         arg_log_file(),
         arg_links_file(),
         arg_result_format(),
+        arg_result_extended(),
     ];
 }
 
@@ -341,7 +353,7 @@ pub fn parse_args() -> BoxResult<Config> {
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
         .unwrap_or_default();
-    let result_extended = false; // TODO
+    let result_extended = args.contains_id(A_L_RESULT_EXTENDED);
 
     let log_level = if debug {
         logger::LogLevel::Debug
