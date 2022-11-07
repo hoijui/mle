@@ -11,7 +11,7 @@ use crate::config::Config;
 use crate::link::Link;
 use crate::BoxError;
 
-use super::Writer;
+use super::{AnchorRec, LinkRec, Writer};
 
 pub struct Sink();
 
@@ -28,25 +28,29 @@ pub struct RootSerAnchors<'a> {
 impl super::Sink for Sink {
     fn write_results(
         &self,
-        _config: &Config,
+        config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,
         links: &[Link],
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()> {
+        let extended = config.result_extended;
+
         if let Some(mut links_writer) = links_stream {
-            let content = RootSerLinks {
-                links: &links.into(),
-            };
-            let json = serde_json::to_string_pretty(&content)?;
+            let mut recs = vec![];
+            for lnk in links {
+                recs.push(LinkRec::new(lnk, extended));
+            }
+            let json = serde_json::to_string_pretty(&recs)?;
             write!(links_writer, "{}", json)?;
         }
         if let Some(mut anchors_writer) = anchors_stream {
-            let content = RootSerAnchors {
-                anchors: &anchors.into(),
-            };
-            let json = serde_json::to_string_pretty(&content)?;
+            let mut recs = vec![];
+            for anc in anchors {
+                recs.push(AnchorRec::new(anc, extended));
+            }
+            let json = serde_json::to_string_pretty(&recs)?;
             write!(anchors_writer, "{}", json)?;
         }
 

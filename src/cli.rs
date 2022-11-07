@@ -341,6 +341,7 @@ pub fn parse_args() -> BoxResult<Config> {
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
         .unwrap_or_default();
+    let result_extended = false; // TODO
 
     let log_level = if debug {
         logger::LogLevel::Debug
@@ -361,5 +362,6 @@ pub fn parse_args() -> BoxResult<Config> {
         markup_types,
         //dry,
         result_format,
+        result_extended,
     })
 }

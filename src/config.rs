@@ -34,6 +34,12 @@ pub struct Config {
     pub markup_types: Vec<markup::Type>,
     // pub dry: bool,
     pub result_format: result::Type,
+    /// Whether to include non-essential information in the resulting report.
+    /// Non-essential are things like:
+    /// * is the link local
+    /// * is the link a URL or to the file-system
+    /// * which type of anchor it is (e.g. from a title or anchor tag)
+    pub result_extended: bool,
 }
 
 impl Config {
@@ -61,6 +67,7 @@ impl Default for Config {
             ignore_links: Default::default(),
             markup_types: Default::default(),
             result_format: Default::default(),
+            result_extended: false,
         }
     }
 }

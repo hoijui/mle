@@ -13,8 +13,14 @@ use std::{
 };
 
 use clap::{PossibleValue, ValueEnum};
+use serde::Serialize;
 
-use crate::{anchor::Anchor, config::Config, link::Link, BoxError};
+use crate::{
+    anchor::{self, Anchor},
+    config::Config,
+    link::Link,
+    BoxError,
+};
 
 type Writer = Option<Box<dyn Write + 'static>>;
 
@@ -132,4 +138,143 @@ pub trait Sink {
         anchors: &[Anchor],
         errors: &[BoxError],
     ) -> std::io::Result<()>;
+}
+
+#[derive(Debug, Serialize)]
+struct LinkExtendedRec<'a> {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    src_is_file_system: bool,
+    src_is_url: bool,
+    src_is_local: bool,
+    src_is_remote: bool,
+    trg_link: String,
+    trg_fragment: Option<&'a str>,
+    trg_is_file_system: bool,
+    trg_is_url: bool,
+    trg_is_local: bool,
+    trg_is_remote: bool,
+}
+
+#[derive(Debug, Serialize)]
+struct LinkSimpleRec<'a> {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    trg_link: String,
+    trg_fragment: Option<&'a str>,
+}
+
+#[derive(Debug)]
+enum LinkRec<'a> {
+    Simple(LinkSimpleRec<'a>),
+    Extended(LinkExtendedRec<'a>),
+}
+
+impl<'a> LinkRec<'a> {
+    fn new(lnk: &'a Link, extended: bool) -> Self {
+        if extended {
+            Self::Extended(LinkExtendedRec {
+                src_file: lnk.source.file.to_string(),
+                src_line: lnk.source.pos.line,
+                src_column: lnk.source.pos.column,
+                src_is_file_system: lnk.source.file.is_file_system(),
+                src_is_url: lnk.source.file.is_url(),
+                src_is_local: lnk.source.file.is_local(),
+                src_is_remote: lnk.source.file.is_remote(),
+                trg_link: lnk.target.without_fragment().to_string(),
+                trg_fragment: lnk.target.fragment(),
+                trg_is_file_system: lnk.target.is_file_system(),
+                trg_is_url: lnk.target.is_url(),
+                trg_is_local: lnk.target.is_local(),
+                trg_is_remote: lnk.target.is_remote(),
+            })
+        } else {
+            Self::Simple(LinkSimpleRec {
+                src_file: lnk.source.file.to_string(),
+                src_line: lnk.source.pos.line,
+                src_column: lnk.source.pos.column,
+                trg_link: lnk.target.without_fragment().to_string(),
+                trg_fragment: lnk.target.fragment(),
+            })
+        }
+    }
+}
+
+impl<'a> Serialize for LinkRec<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Simple(rec) => rec.serialize(serializer),
+            Self::Extended(rec) => rec.serialize(serializer),
+        }
+    }
+}
+
+#[derive(Debug, Serialize)]
+struct AnchorExtendedRec<'a> {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    src_is_file_system: bool,
+    src_is_url: bool,
+    src_is_local: bool,
+    src_is_remote: bool,
+    name: &'a str,
+    r#type: anchor::Type,
+}
+
+#[derive(Debug, Serialize)]
+struct AnchorSimpleRec<'a> {
+    src_file: String,
+    src_line: usize,
+    src_column: usize,
+    name: &'a str,
+}
+
+#[derive(Debug)]
+enum AnchorRec<'a> {
+    Simple(AnchorSimpleRec<'a>),
+    Extended(AnchorExtendedRec<'a>),
+}
+
+impl<'a> Serialize for AnchorRec<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            Self::Simple(rec) => rec.serialize(serializer),
+            Self::Extended(rec) => rec.serialize(serializer),
+        }
+    }
+}
+
+impl<'a> AnchorRec<'a> {
+    fn new(anc: &'a Anchor, extended: bool) -> Self {
+        if extended {
+            Self::Extended(AnchorExtendedRec {
+                src_file: anc.source.file.to_string(),
+                src_line: anc.source.pos.line,
+                src_column: anc.source.pos.column,
+                src_is_file_system: anc.source.file.is_file_system(),
+                src_is_url: anc.source.file.is_url(),
+                src_is_local: anc.source.file.is_local(),
+                src_is_remote: anc.source.file.is_remote(),
+                name: &anc.name,
+                // r#type: format!("{:?}", anc.r#type),
+                r#type: anc.r#type,
+            })
+        } else {
+            Self::Simple(AnchorSimpleRec {
+                src_file: anc.source.file.to_string(),
+                src_line: anc.source.pos.line,
+                src_column: anc.source.pos.column,
+                name: &anc.name,
+            })
+        }
+    }
 }
