@@ -383,7 +383,7 @@ mod tests {
     )]
     fn html_link(input: &str) {
         let result = find_links(input);
-        let expected = link_new_http_no_anchor("http://example.net/", 1, 10);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 11);
         assert_eq!(vec![expected], result);
     }
 
@@ -391,7 +391,7 @@ mod tests {
     fn html_link_ident() {
         let input = "123<a href=\"http://example.net/\"> link text</a>";
         let result = find_links(input);
-        let expected = link_new_http_no_anchor("http://example.net/", 1, 13);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 14);
         assert_eq!(vec![expected], result);
     }
 
@@ -399,7 +399,7 @@ mod tests {
     fn html_link_new_http_no_anchor_line() {
         let input = "\n123<a href=\"http://example.net/\"> link text</a>";
         let result = find_links(input);
-        let expected = link_new_http_no_anchor("http://example.net/", 2, 13);
+        let expected = link_new_http_no_anchor("http://example.net/", 2, 14);
         assert_eq!(vec![expected], result);
     }
 
@@ -407,7 +407,7 @@ mod tests {
     fn raw_html_issue_31() {
         let input = "Some text <a href=\"http://example.net/\">link text</a> more text.";
         let result = find_links(input);
-        let expected = link_new_http_no_anchor("http://example.net/", 1, 20);
+        let expected = link_new_http_no_anchor("http://example.net/", 1, 21);
         assert_eq!(vec![expected], result);
     }
 
