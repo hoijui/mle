@@ -4,7 +4,8 @@ Upstream-Contact: Robin Vobruba <hoijui.quaero@gmail.com>
 Source: https://gitlab.com/hoijui/mle
 
 Files: *.md *.html *.MD *.xhtml *notmd
-Copyright: Robin Vobruba <hoijui.quaero@gmail.com>
-Copyright: Armin Becher <becherarmin@gmail.com>
+Copyright:
+    Robin Vobruba <hoijui.quaero@gmail.com>
+    Armin Becher <becherarmin@gmail.com>
 License: CC0-1.0
 
