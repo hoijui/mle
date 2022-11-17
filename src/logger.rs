@@ -40,7 +40,7 @@ pub fn init(log_level: &LogLevel, log_file: &Option<PathBuf>) {
         None => TermLogger::new(
             level_filter,
             Config::default(),
-            TerminalMode::Mixed,
+            TerminalMode::Stderr,
             ColorChoice::Auto,
         ),
         Some(log_file_path) => WriteLogger::new(
