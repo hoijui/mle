@@ -5,7 +5,7 @@
 
 [package]
 name = "mle"
-version = "0.21.0"
+version = "0.21.1"
 authors = ["Robin Vobruba <hoijui.quaero@gmail.com>"]
 edition = "2021"
 description = "The markup link extractor (mle) extracts links from markup files (Markdown and HTML)."
