@@ -275,8 +275,11 @@ lazy_static! {
 
 fn find_duplicate_short_options() -> Vec<char> {
     let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
-    short_options.push('h'); // standard option --help
-    // short_options.push('V'); // standard option --version - NOTE Now implemented manually
+    // standard option --help
+    short_options.push('h');
+    // standard option --version
+    // NOTE This is now implemented manually
+    // short_options.push('V');
     short_options.sort_unstable();
     let mut duplicate_short_options = HashSet::new();
     let mut last_chr = '&';
