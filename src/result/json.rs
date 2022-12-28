@@ -62,7 +62,7 @@ impl super::Sink for Sink {
     fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
         if let Some(ref errors_writer_m) = self.errors_stream {
             let mut errors_writer = errors_writer_m.lock().expect("we do not use MT");
-            writeln!(errors_writer, "{:#?}", error)?;
+            writeln!(errors_writer, "{error:#?}")?;
         }
         Ok(())
     }
@@ -71,12 +71,12 @@ impl super::Sink for Sink {
         if let Some(ref links_writer_m) = &self.links_stream {
             let mut links_writer = links_writer_m.lock().expect("we do not use MT");
             let json = serde_json::to_string_pretty(&self.links)?;
-            write!(links_writer, "{}", json)?;
+            write!(links_writer, "{json}")?;
         }
         if let Some(ref anchors_writer_m) = &self.anchors_stream {
             let mut anchors_writer = anchors_writer_m.lock().expect("we do not use MT");
             let json = serde_json::to_string_pretty(&self.anchors)?;
-            write!(anchors_writer, "{}", json)?;
+            write!(anchors_writer, "{json}")?;
         }
 
         Ok(())

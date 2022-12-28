@@ -63,7 +63,7 @@ impl super::Sink for Sink {
     fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
         if let Some(ref errors_writer_m) = self.errors_stream {
             let mut errors_writer = errors_writer_m.lock().expect("we do not use MT");
-            writeln!(errors_writer, "{:#?}", error)?;
+            writeln!(errors_writer, "{error:#?}")?;
             if self.flush {
                 errors_writer.flush()?;
             }

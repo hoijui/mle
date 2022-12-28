@@ -74,7 +74,7 @@ impl TryFrom<&str> for IgnorePath {
 ///
 /// If the argument is not a valid path glob.
 pub fn parse(path_str: &str) -> Result<IgnorePath, String> {
-    IgnorePath::try_from(path_str).map_err(|err| format!("{:?}", err))
+    IgnorePath::try_from(path_str).map_err(|err| format!("{err:?}"))
 }
 
 /// Checks if the argument is a valid ignore path (=> path glob).

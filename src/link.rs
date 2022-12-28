@@ -169,9 +169,9 @@ impl std::fmt::Display for Target {
             | Self::Ftp(url)
             | Self::EMail(url)
             | Self::FileUrl(url)
-            | Self::UnknownUrlSchema(url) => write!(f, "{}", url),
-            Self::FileSystem(fs_target) => write!(f, "{}", fs_target),
-            Self::Invalid(msg) => write!(f, "{}", msg),
+            | Self::UnknownUrlSchema(url) => write!(f, "{url}"),
+            Self::FileSystem(fs_target) => write!(f, "{fs_target}"),
+            Self::Invalid(msg) => write!(f, "{msg}"),
         }
     }
 }
@@ -305,9 +305,9 @@ impl FileSystemLoc {
     /// (usually) judging from the file-extension.
     fn is_markup(&self) -> bool {
         match self {
-            Self::Absolute(path) => path.file_name().map(|file_name| {
-                markup::Type::is_markup_file(format!("{:#?}", file_name).as_str())
-            }),
+            Self::Absolute(path) => path
+                .file_name()
+                .map(|file_name| markup::Type::is_markup_file(format!("{file_name:#?}").as_str())),
             Self::Relative(path) => path.file_name().map(markup::Type::is_markup_file),
         }
         .unwrap_or(false)
@@ -317,7 +317,7 @@ impl FileSystemLoc {
 impl std::fmt::Display for FileSystemLoc {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Relative(rel_path) => write!(f, "{}", rel_path)?,
+            Self::Relative(rel_path) => write!(f, "{rel_path}")?,
             Self::Absolute(abs_path) => write!(f, "{}", abs_path.display())?,
             // Self::Url(url) => url.fmt(f)?,
         }
@@ -433,7 +433,7 @@ impl std::fmt::Display for FileSystemTarget {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}", self.file))?;
         if let Some(anchor) = &self.anchor {
-            f.write_fmt(format_args!("#{}", anchor))?;
+            f.write_fmt(format_args!("#{anchor}"))?;
         }
         Ok(())
     }
