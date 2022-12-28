@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use clap::{PossibleValue, ValueEnum};
+use clap::{builder::PossibleValue, ValueEnum};
 use reqwest::Url;
 use std::{
     borrow::Cow,
@@ -69,7 +69,7 @@ impl ValueEnum for Type {
         &[Self::Markdown, Self::Html]
     }
 
-    fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
+    fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(self.as_str().into())
     }
 }

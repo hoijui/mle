@@ -12,7 +12,7 @@ use simplelog::{
     WriteLogger,
 };
 
-#[derive(Debug, Clone, Copy, ArgEnum)]
+#[derive(Debug, Clone, Copy)]
 pub enum LogLevel {
     Info,
     Warn,

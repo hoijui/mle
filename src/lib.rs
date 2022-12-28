@@ -28,8 +28,6 @@ extern crate log;
 #[macro_use]
 extern crate clap;
 #[macro_use]
-extern crate clap_derive;
-#[macro_use]
 extern crate lazy_static;
 #[macro_use]
 extern crate const_format;

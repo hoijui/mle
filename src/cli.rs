@@ -49,206 +49,185 @@ lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
 }
 
-fn arg_files() -> Arg<'static> {
+fn arg_files() -> Arg {
     Arg::new(A_N_FILES)
         .help("The markup files and dirs to scann for markup files")
         .long_help(formatcp!(
             "The markup files and root directories to scann for markup files. \
             See also --{A_L_NON_RECURSIVE}."
         ))
-        .takes_value(true)
-        .multiple_values(true)
+        .num_args(1..)
         .value_parser(value_parser!(std::path::PathBuf))
         .value_name("FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
-        .required(false)
         .default_value(".")
 }
 
-fn arg_non_recursive() -> Arg<'static> {
+fn arg_non_recursive() -> Arg {
     Arg::new(A_L_NON_RECURSIVE)
         .help("Do not scan for files recursively")
-        .takes_value(false)
         .short(A_S_NON_RECURSIVE)
         .long(A_L_NON_RECURSIVE)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 
-fn arg_debug() -> Arg<'static> {
+fn arg_debug() -> Arg {
     Arg::new(A_L_DEBUG)
         .help("Print debug information to the console")
-        .takes_value(false)
         .short(A_S_DEBUG)
         .long(A_L_DEBUG)
-        // .multiple_occurrences(false)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 
-fn arg_no_links() -> Arg<'static> {
+fn arg_no_links() -> Arg {
     Arg::new(A_L_NO_LINKS)
         .help("Do not extract links")
         .long_help(
             "Do not extract links. \
             See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
         )
-        .takes_value(false)
         .short(A_S_NO_LINKS)
         .long(A_L_NO_LINKS)
         .requires(A_L_ANCHORS)
-        // .multiple_occurrences(false)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 
-fn arg_anchors() -> Arg<'static> {
+fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help("Extract anchors")
-        .takes_value(true)
+        .num_args(0..1)
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
         .default_missing_value("-")
         .value_parser(value_parser!(std::path::PathBuf))
         .action(ArgAction::Set)
-        // .multiple_occurrences(false)
-        .required(false)
 }
 
 /*
-fn arg_match_file_extension() -> Arg<'static> {
+fn arg_match_file_extension() -> Arg {
     Arg::new(A_L_MATCH_FILE_EXTENSION)
         .help("Do check for the exact file extension when searching for a file")
-        .takes_value(false)
         .short(A_S_MATCH_FILE_EXTENSION)
         .long(A_L_MATCH_FILE_EXTENSION)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 */
 
-fn arg_ignore_paths() -> Arg<'static> {
+fn arg_ignore_paths() -> Arg {
     Arg::new(A_L_IGNORE_PATHS)
         .help("List of files and directories which will not be scanned; space separated")
         .long_help(
             "One or more files or directories which will not be scanned, \
             separated by white-space.",
         )
-        .takes_value(true)
+        .num_args(1..)
         .value_name("PATH/GLOB")
         .value_hint(ValueHint::FilePath)
-        .min_values(1)
-        .required(false)
         .short(A_S_IGNORE_PATHS)
         .long(A_L_IGNORE_PATHS)
         .action(ArgAction::Append)
         .value_parser(ValueParser::new(ignore_path::parse))
 }
 
-fn arg_ignore_links() -> Arg<'static> {
+fn arg_ignore_links() -> Arg {
     Arg::new(A_L_IGNORE_LINKS)
         .help("List of links which will not be extracted; space separated")
         .long_help(
             "One or more wildcard-patterns/globs, matching links \
             which will not be extracted, separated by white-space.",
         )
-        .takes_value(true)
-        .min_values(1)
+        .num_args(1..)
         .value_parser(ValueParser::new(ignore_link::parse))
         .value_name("GLOB")
         .short(A_S_IGNORE_LINKS)
         .long(A_L_IGNORE_LINKS)
         .action(ArgAction::Append)
-        .required(false)
 }
 
-fn arg_markup_types() -> Arg<'static> {
+fn arg_markup_types() -> Arg {
     Arg::new(A_L_MARKUP_TYPES)
         .help(
             "List of markup types from which links shall be extracted; \
             space separated. Possible values are found in auto-complete, \
             or when you use a wrong one",
         )
-        .takes_value(true)
-        .min_values(1)
+        .num_args(1..)
         .value_parser(value_parser!(markup::Type))
         .short(A_S_MARKUP_TYPES)
         .long(A_L_MARKUP_TYPES)
         .action(ArgAction::Append)
-        .required(false)
 }
 
 /*
-fn arg_dry() -> Arg<'static> {
+fn arg_dry() -> Arg {
     Arg::new(A_L_DRY)
         .help("Do not write any files or set any environment variables")
         .long_help("Set Whether to skip the actual setting of environment variables.")
-        .takes_value(false)
         .short(A_S_DRY)
         .long(A_L_DRY)
-        .multiple_occurrences(false)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 */
 
-fn arg_log_file() -> Arg<'static> {
+fn arg_log_file() -> Arg {
     lazy_static! {
         static ref LOG_FILE_NAME: String = format!("{}.log.txt", crate_name!());
     }
     Arg::new(A_L_LOG_FILE)
         .help("Write log output to a file")
         .long_help("Writes a detailed log to the specifed file.")
-        .takes_value(true)
+        .num_args(1)
         .value_parser(value_parser!(std::path::PathBuf))
         .value_hint(ValueHint::FilePath)
         .short(A_S_LOG_FILE)
         .long(A_L_LOG_FILE)
-        // .multiple_occurrences(false)
-        .required(false)
-        .default_missing_value(&LOG_FILE_NAME)
+        .default_missing_value(LOG_FILE_NAME.as_str())
+        .action(ArgAction::Set)
 }
 
-fn arg_links_file() -> Arg<'static> {
+fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
         .help("Where to store the extracted links to")
-        .takes_value(true)
+        .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
         .value_parser(value_parser!(std::path::PathBuf))
         .short(A_S_LINKS_FILE)
         .long(A_L_LINKS_FILE)
-        .required(false)
+        .action(ArgAction::Set)
 }
 
-fn arg_result_format() -> Arg<'static> {
+fn arg_result_format() -> Arg {
     Arg::new(A_L_RESULT_FORMAT)
         .help("In what data format to output the extracted data")
-        .takes_value(true)
+        .num_args(1)
         .value_parser(value_parser!(result::Type))
         .value_name("FORMAT")
         .short(A_S_RESULT_FORMAT)
         .long(A_L_RESULT_FORMAT)
-        .required(false)
+        .action(ArgAction::Set)
 }
 
-fn arg_result_extended() -> Arg<'static> {
+fn arg_result_extended() -> Arg {
     Arg::new(A_L_RESULT_EXTENDED)
         .help("Output more info in result file/stream")
-        .takes_value(false)
         .short(A_S_RESULT_EXTENDED)
         .long(A_L_RESULT_EXTENDED)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 
-fn arg_result_flush() -> Arg<'static> {
+fn arg_result_flush() -> Arg {
     Arg::new(A_L_RESULT_FLUSH)
         .help("Constantly flush (after each item) all the output streams, for the output formats that support it")
-        .takes_value(false)
         .short(A_S_RESULT_FLUSH)
         .long(A_L_RESULT_FLUSH)
-        .required(false)
+        .action(ArgAction::SetTrue)
 }
 
 lazy_static! {
-    static ref ARGS: [Arg<'static>; 13] = [
+    static ref ARGS: [Arg; 13] = [
         arg_files(),
         arg_non_recursive(),
         arg_debug(),
@@ -283,7 +262,7 @@ fn find_duplicate_short_options() -> Vec<char> {
     duplicate_short_options.iter().copied().collect()
 }
 
-fn arg_matcher() -> Command<'static> {
+fn arg_matcher() -> Command {
     let app = command!().bin_name("mle").args(ARGS.iter());
     let duplicate_short_options = find_duplicate_short_options();
     assert!(

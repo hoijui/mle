@@ -13,7 +13,7 @@ use std::{
     str::FromStr,
 };
 
-use clap::{PossibleValue, ValueEnum};
+use clap::{builder::PossibleValue, ValueEnum};
 use serde::Serialize;
 
 use crate::{
@@ -54,7 +54,7 @@ impl ValueEnum for Type {
         ]
     }
 
-    fn to_possible_value<'a>(&self) -> Option<PossibleValue<'a>> {
+    fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(self.as_str().into())
     }
 }
