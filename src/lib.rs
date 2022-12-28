@@ -59,11 +59,14 @@ use crate::link::Link;
 use crate::markup::File;
 pub use colored::*;
 use config::Config;
+use git_version::git_version;
 use state::State;
 pub use wildmatch::WildMatch;
 
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type BoxResult<T> = Result<T, BoxError>;
+
+pub const VERSION: &str = git_version!();
 
 fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
     let mut files: Vec<File> = Vec::new();

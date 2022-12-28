@@ -16,6 +16,10 @@ use std::{env, io};
 use wildmatch::WildMatch;
 
 const A_N_FILES: &str = "files";
+const A_L_VERSION: &str = "version";
+const A_S_VERSION: char = 'V';
+const A_S_QUIET: char = 'q';
+const A_L_QUIET: &str = "quiet";
 const A_L_NON_RECURSIVE: &str = "non-recursive";
 const A_S_NON_RECURSIVE: char = 'N';
 const A_L_DEBUG: &str = "debug";
@@ -47,6 +51,27 @@ const A_S_RESULT_FLUSH: char = 'f';
 
 lazy_static! {
     static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
+}
+
+fn arg_version() -> Arg {
+    Arg::new(A_L_VERSION)
+        .help(formatcp!(
+            "Print version information and exit. \
+May be combined with -{A_S_QUIET},--{A_L_QUIET}, \
+to really only output the version string."
+        ))
+        .short(A_S_VERSION)
+        .long(A_L_VERSION)
+        .action(ArgAction::SetTrue)
+}
+
+fn arg_quiet() -> Arg {
+    Arg::new(A_L_QUIET)
+        .help("Minimize or suppress output to stdout")
+        .long_help("Minimize or suppress output to stdout, and only shows log output on stderr.")
+        .action(ArgAction::SetTrue)
+        .short(A_S_QUIET)
+        .long(A_L_QUIET)
 }
 
 fn arg_files() -> Arg {
@@ -227,7 +252,9 @@ fn arg_result_flush() -> Arg {
 }
 
 lazy_static! {
-    static ref ARGS: [Arg; 13] = [
+    static ref ARGS: [Arg; 15] = [
+        arg_version(),
+        arg_quiet(),
         arg_files(),
         arg_non_recursive(),
         arg_debug(),
@@ -268,7 +295,11 @@ fn arg_matcher() -> Command {
         duplicate_short_options.is_empty(),
         "Duplicate argument short options: {duplicate_short_options:?}",
     );
-    command!().bin_name(clap::crate_name!()).args(ARGS.iter())
+    command!()
+        .bin_name(clap::crate_name!())
+        .help_expected(true)
+        .disable_version_flag(true)
+        .args(ARGS.iter())
 }
 
 fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
@@ -285,6 +316,16 @@ fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
     Ok(files_and_dirs)
 }
 
+fn print_version_and_exit(quiet: bool) {
+    #![allow(clippy::print_stdout)]
+
+    if !quiet {
+        print!("{} ", clap::crate_name!());
+    }
+    println!("{}", crate::VERSION);
+    std::process::exit(0);
+}
+
 /// Parses CLI arguments into our own config structure.
 ///
 /// # Errors
@@ -292,6 +333,12 @@ fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
 /// If fetching the CWD failed.
 pub fn parse_args() -> BoxResult<Config> {
     let args = arg_matcher().get_matches();
+
+    let quiet = args.get_flag(A_L_QUIET);
+    let version = args.get_flag(A_L_VERSION);
+    if version {
+        print_version_and_exit(quiet);
+    }
 
     let files_and_dirs = files_and_dirs(&args)?;
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);

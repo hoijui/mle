@@ -30,6 +30,7 @@ const_format = "0.2"
 csv = "1.1"
 # email_address = "0.2"
 futures = "0.3"
+git-version = "0.3"
 lazy_static = "1.4.0"
 log = "0.4.11"
 #pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
