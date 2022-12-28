@@ -3,6 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![warn(rust_2021_compatibility)]
 #![deny(clippy::all)]
 #![warn(clippy::pedantic)]
 #![warn(clippy::nursery)]
@@ -22,6 +23,14 @@
 #![warn(clippy::use_debug)]
 #![warn(clippy::print_stdout)]
 #![warn(clippy::print_stderr)]
+// NOTE allowed because:
+//      If the same regex is going to be applied to multiple inputs,
+//      the precomputations done by Regex construction
+//      can give significantly better performance
+//      than any of the `str`-based methods.
+#![allow(clippy::trivial_regex)]
+// #![allow(clippy::struct_excessive_bools)]
+// #![allow(clippy::fn_params_excessive_bools)]
 
 #[macro_use]
 extern crate log;
