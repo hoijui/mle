@@ -29,7 +29,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 pub fn find_links(file: &File, conf: &Config) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
-    info!(
+    debug!(
         "Scannig file at location '{:#?}' for links ...",
         file.locator
     );

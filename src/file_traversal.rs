@@ -35,7 +35,7 @@ pub enum Error {
 pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
 
-    info!(
+    debug!(
         "Searching for files of markup types '{:?}' in directory '{:?}' ...",
         markup_types, root
     );

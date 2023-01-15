@@ -15,6 +15,6 @@ async fn main() -> BoxResult<()> {
     env_logger::init();
     let config = cli::parse_args()?;
     let mut state = State::new(config);
-    info!("Config: {:?}", &state.config);
+    debug!("Config: {:?}", &state.config);
     mle::run(&mut state)
 }
