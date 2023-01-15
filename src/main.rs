@@ -6,13 +6,15 @@
 #[macro_use]
 extern crate log;
 
+use env_logger::Env;
+
 use mle::cli;
 use mle::state::State;
 use mle::BoxResult;
 
 #[tokio::main]
 async fn main() -> BoxResult<()> {
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let config = cli::parse_args()?;
     let mut state = State::new(config);
     debug!("Config: {:?}", &state.config);
