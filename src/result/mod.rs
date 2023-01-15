@@ -102,6 +102,11 @@ fn construct_out_stream(specifier: &Option<Option<PathBuf>>) -> Option<Box<dyn W
     }
 }
 
+/// Pretty-prints a list of errors to stderr.
+///
+/// # Errors
+///
+/// If an writing to stderr fails -> impossible?
 pub fn write_to_stderr(errors: &[BoxError]) -> std::io::Result<()> {
     if !errors.is_empty() {
         let mut stderr = Box::new(std::io::stderr()) as Box<dyn Write>;
