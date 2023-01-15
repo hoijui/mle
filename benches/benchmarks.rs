@@ -13,12 +13,16 @@ use mle::markup::Type;
 use mle::state::State;
 use std::fs;
 
+fn init() {
+    let _ = env_logger::builder().is_test(true).try_init();
+}
+
 fn end_to_end_benchmark() {
+    init();
     let config = Config {
         files_and_dirs: vec![
             fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
         ],
-        log_level: log::Level::Debug,
         markup_types: vec![Type::Markdown],
         ..Default::default()
     };

@@ -11,10 +11,6 @@ use crate::{ignore_path::IgnorePath, markup, result};
 
 #[derive(Debug, Clone)]
 pub struct Config {
-    pub log_level: log::Level,
-    /// If true, logging and (most) other output is turned off.
-    pub quiet: bool,
-    pub log_file: Option<PathBuf>,
     /// Markup files and dirs to scan for markup files.
     /// Out of all the resulting markup files,
     /// links and/or anchors will be extracted.
@@ -57,23 +53,11 @@ impl Config {
     pub const fn extract_anchors(&self) -> bool {
         self.anchors.is_some()
     }
-
-    #[must_use]
-    pub const fn log_level_wrap(&self) -> Option<log::Level> {
-        if self.quiet {
-            None
-        } else {
-            Some(self.log_level)
-        }
-    }
 }
 
 impl Default for Config {
     fn default() -> Self {
         Self {
-            log_level: log::Level::Info,
-            quiet: true,
-            log_file: Default::default(),
             files_and_dirs: Default::default(),
             recursive: Default::default(),
             links: Some(None),

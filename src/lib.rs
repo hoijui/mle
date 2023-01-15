@@ -49,7 +49,6 @@ pub mod file_traversal;
 pub mod ignore_link;
 pub mod ignore_path;
 pub mod link;
-pub mod logger;
 pub mod markup;
 pub mod result;
 pub mod state;

@@ -22,8 +22,6 @@ const A_S_QUIET: char = 'q';
 const A_L_QUIET: &str = "quiet";
 const A_L_NON_RECURSIVE: &str = "non-recursive";
 const A_S_NON_RECURSIVE: char = 'N';
-const A_L_DEBUG: &str = "debug";
-const A_S_DEBUG: char = 'D';
 const A_L_NO_LINKS: &str = "no-links";
 const A_S_NO_LINKS: char = 'n';
 const A_L_ANCHORS: &str = "anchors";
@@ -36,10 +34,6 @@ const A_L_IGNORE_LINKS: &str = "ignore-links";
 const A_S_IGNORE_LINKS: char = 'i';
 const A_L_MARKUP_TYPES: &str = "markup-types";
 const A_S_MARKUP_TYPES: char = 'm';
-//const A_L_DRY: &str = "dry";
-//const A_S_DRY: char = 'd';
-const A_L_LOG_FILE: &str = "log-file";
-const A_S_LOG_FILE: char = 'l';
 const A_L_LINKS_FILE: &str = "links-file";
 const A_S_LINKS_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
@@ -94,14 +88,6 @@ fn arg_non_recursive() -> Arg {
         .help("Do not scan for files recursively")
         .short(A_S_NON_RECURSIVE)
         .long(A_L_NON_RECURSIVE)
-        .action(ArgAction::SetTrue)
-}
-
-fn arg_debug() -> Arg {
-    Arg::new(A_L_DEBUG)
-        .help("Print debug information to the console")
-        .short(A_S_DEBUG)
-        .long(A_L_DEBUG)
         .action(ArgAction::SetTrue)
 }
 
@@ -185,33 +171,6 @@ fn arg_markup_types() -> Arg {
         .action(ArgAction::Append)
 }
 
-/*
-fn arg_dry() -> Arg {
-    Arg::new(A_L_DRY)
-        .help("Do not write any files or set any environment variables")
-        .long_help("Set Whether to skip the actual setting of environment variables.")
-        .short(A_S_DRY)
-        .long(A_L_DRY)
-        .action(ArgAction::SetTrue)
-}
-*/
-
-fn arg_log_file() -> Arg {
-    lazy_static! {
-        static ref LOG_FILE_NAME: String = format!("{}.log.txt", crate_name!());
-    }
-    Arg::new(A_L_LOG_FILE)
-        .help("Write log output to a file")
-        .long_help("Writes a detailed log to the specifed file.")
-        .num_args(1)
-        .value_parser(value_parser!(std::path::PathBuf))
-        .value_hint(ValueHint::FilePath)
-        .short(A_S_LOG_FILE)
-        .long(A_L_LOG_FILE)
-        .default_missing_value(LOG_FILE_NAME.as_str())
-        .action(ArgAction::Set)
-}
-
 fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
         .help("Where to store the extracted links to")
@@ -252,20 +211,17 @@ fn arg_result_flush() -> Arg {
 }
 
 lazy_static! {
-    static ref ARGS: [Arg; 15] = [
+    static ref ARGS: [Arg; 13] = [
         arg_version(),
         arg_quiet(),
         arg_files(),
         arg_non_recursive(),
-        arg_debug(),
         arg_no_links(),
         arg_anchors(),
         //arg_match_file_extension(),
         arg_ignore_paths(),
         arg_ignore_links(),
         arg_markup_types(),
-        //arg_dry(),
-        arg_log_file(),
         arg_links_file(),
         arg_result_format(),
         arg_result_extended(),
@@ -345,7 +301,6 @@ pub fn parse_args() -> BoxResult<Config> {
 
     let files_and_dirs = files_and_dirs(&args)?;
     let recursive = !args.contains_id(A_L_NON_RECURSIVE);
-    let debug = args.contains_id(A_L_DEBUG);
     let links = if args.contains_id(A_L_NO_LINKS) {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
@@ -386,8 +341,6 @@ pub fn parse_args() -> BoxResult<Config> {
             .map(markup::Type::from_str)
             .collect::<Result<Vec<markup::Type>, _>>()?;
     }
-    //let dry = args.value_of(A_L_DRY);
-    let log_file = args.get_one::<PathBuf>(A_L_LOG_FILE).map(PathBuf::from);
     let result_format = args
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
@@ -395,16 +348,7 @@ pub fn parse_args() -> BoxResult<Config> {
     let result_extended = args.contains_id(A_L_RESULT_EXTENDED);
     let result_flush = args.contains_id(A_L_RESULT_FLUSH);
 
-    let log_level = if debug {
-        log::Level::Debug
-    } else {
-        log::Level::Warn
-    };
-
     Ok(Config {
-        log_level,
-        quiet,
-        log_file,
         files_and_dirs,
         recursive,
         links,

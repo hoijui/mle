@@ -17,7 +17,6 @@ use std::convert::TryInto;
 async fn end_to_end() {
     let config = Config {
         files_and_dirs: vec![benches_dir().join("benchmark")],
-        log_level: log::Level::Debug,
         recursive: true,
         links: Some(None),
         anchors: Some(None),
@@ -45,7 +44,6 @@ async fn end_to_end_different_root() {
     let test_files = benches_dir().join("different_root");
     let config = Config {
         files_and_dirs: vec![test_files.clone()],
-        log_level: log::Level::Debug,
         links: Some(None),
         anchors: Some(None),
         result_format: result::Type::Json,
