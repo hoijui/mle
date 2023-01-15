@@ -3,52 +3,108 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-extern crate simplelog;
+use std::io;
+use std::{fs::File, path::Path};
 
-use std::{fs::File, path::PathBuf};
-
-use simplelog::{
-    ColorChoice, CombinedLogger, Config, LevelFilter, SharedLogger, TermLogger, TerminalMode,
-    WriteLogger,
+use tracing::metadata::LevelFilter;
+use tracing_subscriber::{
+    fmt,
+    prelude::*,
+    reload::{self, Handle},
+    Registry,
 };
 
-#[derive(Debug, Clone, Copy)]
-pub enum LogLevel {
-    Info,
-    Warn,
-    Debug,
-}
+use crate::BoxResult;
 
-impl Default for LogLevel {
-    fn default() -> Self {
-        Self::Warn
+const fn level_to_filter(level: log::Level) -> LevelFilter {
+    match level {
+        log::Level::Error => LevelFilter::ERROR,
+        log::Level::Warn => LevelFilter::WARN,
+        log::Level::Info => LevelFilter::INFO,
+        log::Level::Debug => LevelFilter::DEBUG,
+        log::Level::Trace => LevelFilter::TRACE,
     }
 }
 
-/// Inits the logger with the given log-level.
+const fn level_opt_to_filter(level_opt: Option<log::Level>) -> LevelFilter {
+    if let Some(level) = level_opt {
+        level_to_filter(level)
+    } else {
+        LevelFilter::OFF
+    }
+}
+
+const fn default_level() -> log::Level {
+    if cfg!(debug_assertions) {
+        log::Level::Debug
+    } else {
+        log::Level::Info
+    }
+}
+
+/// Sets up logging, with a way to change the log level later on,
+/// and with all output going to stderr,
+/// as suggested by <https://clig.dev/>.
 ///
-/// # Panics
-/// If logger initilaization failed due to it already having been in progress
-/// (from a previous call to initialize the logger).
-pub fn init(log_level: &LogLevel, log_file: &Option<PathBuf>) {
-    let level_filter = match log_level {
-        LogLevel::Info => LevelFilter::Info,
-        LogLevel::Warn => LevelFilter::Warn,
-        LogLevel::Debug => LevelFilter::Debug,
-    };
-    let logger: Box<dyn SharedLogger> = match log_file {
-        None => TermLogger::new(
-            level_filter,
-            Config::default(),
-            TerminalMode::Stderr,
-            ColorChoice::Auto,
-        ),
-        Some(log_file_path) => WriteLogger::new(
-            level_filter,
-            Config::default(),
-            File::create(log_file_path).expect("Failed to open log file for writing"),
-        ),
-    };
-    CombinedLogger::init(vec![logger]).expect("Failed to init logger!");
-    debug!("Initialized logging");
+/// # Errors
+///
+/// If initializing the registry (logger) failed.
+pub fn setup<P: AsRef<Path>>(
+    level_opt: &Option<log::Level>,
+    file_opt: &Option<P>,
+// ) -> BoxResult<(Handle<LevelFilter, Registry>, Handle<reload::Layer<LevelFilter, Registry>, Registry>)> {
+) -> BoxResult<Handle<LevelFilter, Registry>> {
+    let level = level_opt.unwrap_or_else(default_level);
+    let level_filter = level_to_filter(level);
+    let (lr_filter, rh_filter) = reload::Layer::new(level_filter);
+
+    let stderr = io::stderr.with_max_level();
+    let l_stderr = fmt::layer().map_writer(move |w| io::stderr.or_else(w));
+
+    let l_file = fmt::layer().map_writer(move |_| io::sink);
+    let (lr_file, rh_file) = reload::Layer::new(l_file);
+    // let (lr_file, rh_file) = reload::Layer::new:<Sink>(io::sink);
+
+    let registry = tracing_subscriber::registry().with(lr_filter).with(l_file).with(l_stderr);
+    if let Some(file) = file_opt {
+        let file_strm = File::open(file.as_ref())?;
+        let l_file = fmt::layer().map_writer(move |_| file_strm);
+        registry.with(l_file).try_init()?;
+    } else {
+        registry.try_init()?;
+    }
+
+    Ok(rh_filter)
+    // Ok((rh_filter, rh_file))
+}
+
+/// Changes the minimum log level.
+///
+/// # Errors
+///
+/// If modifying the log level filter failes.
+pub fn set_level(
+    reload_handle: &Handle<LevelFilter, Registry>,
+    level: Option<log::Level>,
+) -> BoxResult<()> {
+    let level_filter = level_opt_to_filter(level);
+    reload_handle.modify(|filter| *filter = level_filter)?;
+    Ok(())
+}
+
+pub fn set_file(
+    reload_handle: &Handle<LevelFilter, Registry>,
+    file: &Path,
+) -> BoxResult<()> {
+    // let level_filter = verbosity_to_level(verbosity);
+    // reload_handle.modify(|filter| *filter = level_filter)?;
+    todo!();
+
+    // let level_filter = level_opt_to_filter(level);
+    // reload_handle.modify(|filter| *filter = level_filter)?;
+
+    // let subscriber = tracing_subscriber::FmtSubscriber::new();
+    // subscriber.wi
+    // tracing::subscriber::s
+    Ok(())
 }

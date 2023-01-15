@@ -3,9 +3,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ignore_path::IgnorePath;
+use crate::result;
 use crate::Config;
 use crate::{ignore_link, ignore_path};
-use crate::{logger, result};
 use crate::{markup, BoxResult};
 use clap::builder::ValueParser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
@@ -121,7 +121,7 @@ fn arg_no_links() -> Arg {
 fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help("Extract anchors")
-        .num_args(0..1)
+        .num_args(1)
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
@@ -396,13 +396,14 @@ pub fn parse_args() -> BoxResult<Config> {
     let result_flush = args.contains_id(A_L_RESULT_FLUSH);
 
     let log_level = if debug {
-        logger::LogLevel::Debug
+        log::Level::Debug
     } else {
-        logger::LogLevel::Warn
+        log::Level::Warn
     };
 
     Ok(Config {
         log_level,
+        quiet,
         log_file,
         files_and_dirs,
         recursive,

@@ -6,6 +6,8 @@
 #[macro_use]
 extern crate log;
 
+use std::path::PathBuf;
+
 use mle::cli;
 use mle::logger;
 use mle::state::State;
@@ -13,9 +15,11 @@ use mle::BoxResult;
 
 #[tokio::main]
 async fn main() -> BoxResult<()> {
+    let log_rh_filter = logger::setup::<PathBuf>(&None, &None)?;
     let config = cli::parse_args()?;
     let mut state = State::new(config);
-    logger::init(&state.config.log_level, &state.config.log_file);
+    logger::set_level(&log_rh_filter, state.config.log_level_wrap())?;
+    logger::setup(&state.config.log_level_wrap(), &state.config.log_file)?;
     info!("Config: {:?}", &state.config);
     mle::run(&mut state)
 }

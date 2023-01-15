@@ -10,7 +10,7 @@ extern crate criterion;
 use criterion::Criterion;
 use mle::config::Config;
 use mle::markup::Type;
-use mle::{logger, state::State};
+use mle::state::State;
 use std::fs;
 
 fn end_to_end_benchmark() {
@@ -18,7 +18,7 @@ fn end_to_end_benchmark() {
         files_and_dirs: vec![
             fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
         ],
-        log_level: logger::LogLevel::Debug,
+        log_level: log::Level::Debug,
         markup_types: vec![Type::Markdown],
         ..Default::default()
     };
