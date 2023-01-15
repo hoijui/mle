@@ -12,15 +12,12 @@ use crate::link::Link;
 use crate::markup::{self, File};
 
 pub fn remove_anchor(link: &mut String) -> Option<String> {
-    match link.find('#') {
-        Some(anchor_pos) => {
-            // let anchor = link.rsplit(pat: P)(suffix: P)(new_len: usize)
-            let anchor: String = link.drain(anchor_pos..).skip(1).collect();
-            // link.truncate(anchor_pos);
-            Some(anchor)
-        }
-        None => None,
-    }
+    link.find('#').map(|anchor_pos| {
+        // let anchor = link.rsplit(pat: P)(suffix: P)(new_len: usize)
+        let anchor: String = link.drain(anchor_pos..).skip(1).collect();
+        // link.truncate(anchor_pos);
+        anchor
+    })
 }
 
 /// Finds links (and optionally anchors),

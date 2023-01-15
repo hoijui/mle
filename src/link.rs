@@ -136,13 +136,13 @@ impl From<&str> for Target {
     // type Error = std::io::Error; // TODO FIXME Make a TargetParseError and use it here
 
     fn from(value: &str) -> Self {
-        if let Ok(url) = Url::parse(value) {
-            Self::from(url)
-        } else if let Ok(fs_target) = FileSystemTarget::from_str(value) {
-            Self::FileSystem(fs_target)
-        } else {
-            Self::Invalid(value.to_owned())
-        }
+        Url::parse(value).map_or_else(
+            |_| {
+                FileSystemTarget::from_str(value)
+                    .map_or_else(|_| Self::Invalid(value.to_owned()), Self::FileSystem)
+            },
+            Self::from,
+        )
     }
 }
 
@@ -444,13 +444,12 @@ impl FileSystemTarget {
     /// TODO tests/samples here
     #[must_use]
     pub fn split(link: &str) -> (&str, Option<String>) {
-        match link.find('#') {
-            Some(anchor_sep) => (
+        link.find('#').map_or((link, None), |anchor_sep| {
+            (
                 &link[..anchor_sep],
                 Some(link[(anchor_sep + 1)..].to_owned()),
-            ),
-            None => (link, None),
-        }
+            )
+        })
     }
 }
 
