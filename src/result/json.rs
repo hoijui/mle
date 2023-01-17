@@ -9,7 +9,6 @@ use serde::Serialize;
 use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
-use crate::BoxError;
 
 use super::{AnchorOwnedRec, LinkOwnedRec, Writer};
 
@@ -17,7 +16,6 @@ pub struct Sink {
     extended: bool,
     links_stream: Option<Mutex<Box<dyn Write + 'static>>>,
     anchors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
-    errors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
     links: Vec<LinkOwnedRec>,
     anchors: Vec<AnchorOwnedRec>,
 }
@@ -42,7 +40,6 @@ impl super::Sink for Sink {
             extended: config.result_extended,
             links_stream: links_stream.map(Mutex::new),
             anchors_stream: anchors_stream.map(Mutex::new),
-            errors_stream: Some(Mutex::new(Box::new(std::io::stderr()) as Box<dyn Write>)),
             links: vec![],
             anchors: vec![],
         }) as Box<dyn super::Sink>)
@@ -56,14 +53,6 @@ impl super::Sink for Sink {
     fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
         self.anchors
             .push(AnchorOwnedRec::new(anchor, self.extended));
-        Ok(())
-    }
-
-    fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
-        if let Some(ref errors_writer_m) = self.errors_stream {
-            let mut errors_writer = errors_writer_m.lock().expect("we do not use MT");
-            writeln!(errors_writer, "{error:#?}")?;
-        }
         Ok(())
     }
 

@@ -8,7 +8,6 @@ use std::sync::Mutex;
 use csv;
 
 use crate::config::Config;
-use crate::BoxError;
 use crate::{anchor::Anchor, link::Link};
 
 use super::{AnchorRec, LinkRec, Writer};
@@ -18,7 +17,6 @@ pub struct Sink {
     flush: bool,
     links_writer: Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>>,
     anchors_writer: Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>>,
-    errors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
 }
 
 impl super::Sink for Sink {
@@ -32,7 +30,6 @@ impl super::Sink for Sink {
             flush: config.result_flush,
             links_writer: links_stream.map(csv::Writer::from_writer).map(Mutex::new),
             anchors_writer: anchors_stream.map(csv::Writer::from_writer).map(Mutex::new),
-            errors_stream: Some(Mutex::new(Box::new(std::io::stderr()) as Box<dyn Write>)),
         }) as Box<dyn super::Sink>)
     }
 
@@ -55,17 +52,6 @@ impl super::Sink for Sink {
             anchors_writer.serialize(rec)?;
             if self.flush {
                 anchors_writer.flush()?;
-            }
-        }
-        Ok(())
-    }
-
-    fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
-        if let Some(ref errors_writer_m) = self.errors_stream {
-            let mut errors_writer = errors_writer_m.lock().expect("we do not use MT");
-            writeln!(errors_writer, "{error:#?}")?;
-            if self.flush {
-                errors_writer.flush()?;
             }
         }
         Ok(())
