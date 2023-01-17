@@ -29,7 +29,7 @@
 //      can give significantly better performance
 //      than any of the `str`-based methods.
 #![allow(clippy::trivial_regex)]
-// #![allow(clippy::struct_excessive_bools)]
+#![allow(clippy::struct_excessive_bools)]
 // #![allow(clippy::fn_params_excessive_bools)]
 
 #[macro_use]
