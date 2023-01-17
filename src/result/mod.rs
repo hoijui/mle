@@ -94,12 +94,11 @@ impl FromStr for Type {
     }
 }
 
-fn construct_out_stream(specifier: &Option<Option<PathBuf>>) -> Option<Box<dyn Write + 'static>> {
-    match specifier {
-        None => None,
-        Some(None) => Some(Box::new(std::io::stdout()) as Box<dyn Write>),
-        Some(Some(file_path)) => Some(Box::new(File::create(file_path).unwrap()) as Box<dyn Write>),
-    }
+fn construct_out_stream(specifier: &Option<PathBuf>) -> Box<dyn Write + 'static> {
+    specifier.as_ref().map_or_else(
+        || Box::new(std::io::stdout()) as Box<dyn Write>,
+        |file_path| Box::new(File::create(file_path).unwrap()) as Box<dyn Write>,
+    )
 }
 
 /// Pretty-prints a list of errors to stderr.
@@ -137,8 +136,8 @@ pub fn sink(
             "Result format not yet supported",
         ))?,
     };
-    let links_writer = construct_out_stream(&config.links);
-    let anchors_writer = construct_out_stream(&config.anchors);
+    let links_writer = config.links.as_ref().map(construct_out_stream);
+    let anchors_writer = config.anchors.as_ref().map(construct_out_stream);
     let mut sink = sink_init(config, links_writer, anchors_writer)?;
     for link in links {
         // thread::sleep::sleep(std::time::Duration::new(0, 200000000));
