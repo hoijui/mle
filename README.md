@@ -30,7 +30,7 @@ Extracts links in markup files.
 Currently `html` and `markdown` files are supported.
 The main intended purpose of the Markup Link Extractor,
 is to extract links fro ma set of files,
-and then chekc them for validity using a separate tool,
+and then check them for validity using a separate tool,
 e.g. the [Markdown Link *Checker*](https://github.com/becheran/mlc).
 Together, two such tools could be integrated in your CI pipeline
 to warn about broken links in your markup docs.
@@ -130,4 +130,3 @@ mle -h
 ```
 
 See the [reference](docs/reference.md) for all available command line arguments.
-
