@@ -137,3 +137,13 @@ mle -h
 ```
 
 See the [reference](docs/reference.md) for all available command line arguments.
+
+## Funding
+
+This project was funded by the European Regional Development Fund (ERDF)
+in the context of the [INTERFACER Project](https://www.interfacerproject.eu/),
+from July 2022 (fork from [`mlc`](https://github.com/becheran/mlc)/project start)
+until March 2023.
+
+![Logo of the EU ERDF program](
+    https://cloud.fabcity.hamburg/s/TopenKEHkWJ8j5P/download/logo-eu-erdf.png)
