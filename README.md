@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+SPDX-FileCopyrightText: 2022-2023 Robin Vobruba <hoijui.quaero@gmail.com>
 SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 
 SPDX-License-Identifier: CC0-1.0
@@ -19,6 +19,13 @@ SPDX-License-Identifier: CC0-1.0
 [![REUSE status](
     https://api.reuse.software/badge/github.com/hoijui/mle)](
     https://api.reuse.software/info/github.com/hoijui/mle)
+
+[![In cooperation with FabCity Hamburg](
+    https://custom-icon-badges.demolab.com/badge/-FCHH-dddddd.svg?logo=fc_logo)](
+    https://fabcity.hamburg)
+[![In cooperation with Open Source Ecology Germany](
+    https://custom-icon-badges.demolab.com/badge/-OSEG-555555.svg?logo=oseg_logo)](
+    https://opensourceecology.de)
 
 <!--
 [![asciicast](
