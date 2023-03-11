@@ -107,7 +107,7 @@ fn arg_no_links() -> Arg {
 fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help("Extract anchors")
-        .num_args(1)
+        .num_args(0..1)
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
