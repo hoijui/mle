@@ -330,6 +330,24 @@ mod tests {
         super::super::find_links(&markup_file, &conf).map(|(_links, anchors)| anchors)
     }
 
+    fn links(input: &str, line: usize, column: usize) {
+        let result = find_links(input).expect("No error");
+        let expected = Link::new(
+            FileLoc::dummy(),
+            Position { line, column },
+            "https://www.w3schools.com",
+        );
+        assert_eq!(vec![expected], result);
+    }
+    #[test]
+    fn links_single_t() {
+        links(
+            "<a\nhref\n=\n  \"https://www.w3schools.com\">\nVisit W3Schools.com!\n</a>",
+            4,
+            4,
+        );
+    }
+
     #[test]
     fn sc_take() -> std::io::Result<()> {
         let mut scanner = Scanner::empty();
