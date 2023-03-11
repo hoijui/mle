@@ -222,6 +222,39 @@ mod tests {
         Ok(())
     }
 
+    #[test]
+    fn empty_attrib() {
+        let input = r#"<img src="img/file.jpg" alt="" width="800" />"#;
+        let result = find_links(input).expect("No error");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn two_with_extra_attrib() {
+        let input = r#"
+        <a href="https://www.w3schools.com" target="_blank">Visit W3Schools.com!</a>
+        <a href="https://www.w3schools.com" target="_blank">Visit W3Schools.com!</a>
+        "#;
+        let result = find_links(input).expect("No error");
+        let expected1 = Link::new(
+            FileLoc::dummy(),
+            Position {
+                line: 2,
+                column: 18,
+            },
+            "https://www.w3schools.com",
+        );
+        let expected2 = Link::new(
+            FileLoc::dummy(),
+            Position {
+                line: 3,
+                column: 18,
+            },
+            "https://www.w3schools.com",
+        );
+        assert_eq!(vec![expected1, expected2], result);
+    }
+
     #[test_case(
         "<a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>",
         1,
@@ -241,6 +274,11 @@ mod tests {
         "<!--comment--><a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>",
         1,
         24
+    )]
+    #[test_case(
+        r#"<a href="https://www.w3schools.com" target="_blank">Visit W3Schools.com!</a>"#,
+        1,
+        10
     )]
     fn links(input: &str, line: usize, column: usize) {
         let result = find_links(input).expect("No error");
@@ -276,6 +314,12 @@ mod tests {
         1,
         26
     )]
+    #[test_case(
+        r#"<!--comment--><abc id="the_anchor">Visit W3Schools.com!</a>"#,
+        false,
+        1,
+        24
+    )]
     fn anchors(input: &str, direct: bool, line: usize, column: usize) {
         let result = find_anchors(input).expect("No error");
         let expected = Anchor {
@@ -295,6 +339,7 @@ mod tests {
 
     #[test_case(r#"<!--comment--><table idid="the_anchor">Visit W3Schools.com!</a>"#)]
     #[test_case(r#"<!--comment--><a namename="the_anchor">Visit W3Schools.com!</a>"#)]
+    #[test_case(r#"<!--comment--><abc name="the_anchor">Visit W3Schools.com!</abc>"#)]
     fn no_anchors(input: &str) {
         let result = find_anchors(input).expect("No error");
         assert_eq!(Vec::<Anchor>::new(), result);
