@@ -270,6 +270,50 @@ mod tests {
     }
 
     #[test]
+    fn link_with_newline() {
+        let input = "This is a [link](\nhttp://example.net/)";
+        let result = find_links(input);
+        assert_eq!(result[0].source.pos.column, 11);
+        assert_eq!(result[0].target.to_string(), "http://example.net/");
+    }
+
+    #[test]
+    fn link_relative_with_newline_and_space_wrong() {
+        let input = "[link](doc/spaced name.md)";
+        let result = find_links(input);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn link_relative_with_newline_and_space() {
+        let input = "[link](<doc/spaced name.md>)";
+        let result = find_links(input);
+        assert_eq!(result[0].source.pos.column, 1);
+        assert_eq!(result[0].target.to_string(), "doc/spaced name.md");
+    }
+
+    #[test]
+    fn link_relative_with_newline() {
+        let input = "Download the file following the [assembly guide](
+../../doc/assembly/Production_Guide.md)";
+        let result = find_links(input);
+        assert_eq!(result[0].source.pos.line, 1);
+        assert_eq!(result[0].source.pos.column, 33);
+        assert_eq!(
+            result[0].target.to_string(),
+            "../../doc/assembly/Production_Guide.md"
+        );
+    }
+
+    #[test]
+    fn link_target_on_new_line() {
+        let input = "bla [Solar Pura](\nhttp://example.net/) work,";
+        let result = find_links(input);
+        assert_eq!(result[0].source.pos.column, 5);
+        assert_eq!(result[0].target.to_string(), "http://example.net/");
+    }
+
+    #[test]
     fn no_link_colon() {
         let input = "This is not a [link]:bla.";
         let result = find_links(input);
