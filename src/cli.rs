@@ -312,7 +312,7 @@ pub fn parse_args() -> BoxResult<Config> {
     } else {
         Some(None)
     };
-    let anchors = if !args.contains_id(A_L_ANCHORS) {
+    let anchors = if args.get_raw(A_L_ANCHORS).is_none() {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_ANCHORS) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
