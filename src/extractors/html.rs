@@ -168,6 +168,24 @@ impl<'a> Scanner<'a> {
     pub fn is_done(&self) -> bool {
         self.column >= self.chars.len()
     }
+
+        pub fn debug(&self) {
+            debug!(
+                "
+full line: {}
+before:    {}
+after:     {}
+is_done:   {}
+chars.len: {}
+column:    {}",
+                self.line,
+                self.line[..self.column].to_owned(),
+                self.line[self.column..].to_owned(),
+                self.is_done(),
+                self.chars.len(),
+                self.column
+            );
+        }
 }
 
 impl super::LinkExtractor for LinkExtractor {
@@ -184,8 +202,14 @@ impl super::LinkExtractor for LinkExtractor {
         // let mut element_part: Option<Attribute>;
         let mut scanner = Scanner::empty();
         for (line, line_str) in file.content.fetch()?.as_ref().lines().enumerate() {
+            debug!("\n\nline_str:     '{line_str}'");
+            debug!("scanner.is_done: {}", scanner.is_done());
             scanner.reset(line_str);
             while !scanner.is_done() {
+                scanner.debug();
+                debug!("state:     {:#?}", state);
+                debug!("attrib:    {:#?}", attribute);
+                debug!("is_anchor: {is_anchor}");
                 match state {
                     ParserState::Comment => {
                         if scanner.take("-->") {
