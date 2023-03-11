@@ -365,11 +365,6 @@ mod tests {
     }
     #[test]
     fn links_single_t() {
-        // links(
-        //     "<!--comment--><a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>",
-        //     1,
-        //     24,
-        // );
         links(
             "<a\nhref\n=\n  \"https://www.w3schools.com\">\nVisit W3Schools.com!\n</a>",
             4,
@@ -421,22 +416,6 @@ mod tests {
         assert!(scanner.is_done());
         Ok(())
     }
-
-    // #[test]
-    // fn sc_non_ws_or_dq() -> std::io::Result<()> {
-    //     let mut scanner = Scanner::empty();
-    //     scanner.reset(r#"Hello "World"and"more"#);
-    //     assert_eq!(scanner.take_non_ws_or_dq(), "Hello");
-    //     assert!(scanner.take_single(' '));
-    //     assert!(scanner.take_single('"'));
-    //     assert_eq!(scanner.take_non_ws_or_dq(), "World");
-    //     assert!(scanner.take_single('"'));
-    //     assert_eq!(scanner.take_non_ws_or_dq(), "and");
-    //     assert!(scanner.take_single('"'));
-    //     assert_eq!(scanner.take_non_ws_or_dq(), "more");
-    //     assert!(scanner.is_done());
-    //     Ok(())
-    // }
 
     #[test]
     fn no_link() -> std::io::Result<()> {
