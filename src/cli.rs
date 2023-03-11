@@ -300,8 +300,8 @@ pub fn parse_args() -> BoxResult<Config> {
     }
 
     let files_and_dirs = files_and_dirs(&args)?;
-    let recursive = !args.contains_id(A_L_NON_RECURSIVE);
-    let links = if args.contains_id(A_L_NO_LINKS) {
+    let recursive = !args.get_flag(A_L_NON_RECURSIVE);
+    let links = if args.get_flag(A_L_NO_LINKS) {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
@@ -345,8 +345,8 @@ pub fn parse_args() -> BoxResult<Config> {
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
         .unwrap_or_default();
-    let result_extended = args.contains_id(A_L_RESULT_EXTENDED);
-    let result_flush = args.contains_id(A_L_RESULT_FLUSH);
+    let result_extended = args.get_flag(A_L_RESULT_EXTENDED);
+    let result_flush = args.get_flag(A_L_RESULT_FLUSH);
 
     Ok(Config {
         files_and_dirs,
