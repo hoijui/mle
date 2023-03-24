@@ -49,15 +49,15 @@ Use link again: [URL ex ref an again][foorl]
 
 ### HTML Anchors
 
-[HTML anchor link](./anchor_links_2.html#2nd-auto-anchor)
+[HTML anchor link](../html/anchor_links_2.html#2nd-auto-anchor)
 
-[HTML anchor link 2](./anchor_links_2.html#2nd-man-anch-1)
+[HTML anchor link 2](../html/anchor_links_2.html#2nd-man-anch-1)
 
-[URL HTML anchor link](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/markdown/anchor_links_2.html#2nd-auto-anchor)
+[URL HTML anchor link](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/html/anchor_links_2.html#2nd-auto-anchor)
 
-[URL HTML anchor link 2](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/markdown/anchor_links_2.html#2nd-auto-anchor-2)
+[URL HTML anchor link 2](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/html/anchor_links_2.html#2nd-auto-anchor-2)
 
-[URL HTML anchor link 3](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/markdown/anchor_links_2.html#2nd-man-anch-1)
+[URL HTML anchor link 3](https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/html/anchor_links_2.html#2nd-man-anch-1)
 
 [HTML reference anchor link][bar]
 
@@ -71,6 +71,6 @@ Use link again: [URL HTML ref an again][barl]
 
 [1]: #auto-anchor
 [foo]: ./anchor_links_2.md#2nd-auto-anchor
-[bar]: ./anchor_links_2.html#2nd-auto-anchor
+[bar]: ../html/anchor_links_2.html#2nd-auto-anchor
 [foorl]: https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/markdown/anchor_links_2.md#2nd-auto-anchor
-[barl]: https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/markdown/anchor_links_2.html#2nd-auto-anchor
+[barl]: https://raw.githubusercontent.com/becheran/mlc/master/benches/benchmark/html/anchor_links_2.html#2nd-auto-anchor
