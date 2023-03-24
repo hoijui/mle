@@ -55,22 +55,6 @@ impl LinkExtractor {
     }
 }
 
-pub struct BrokenLinkBuf {
-    pub span: std::ops::Range<usize>,
-    pub link_type: pulldown_cmark::LinkType,
-    pub reference: String,
-}
-
-impl BrokenLinkBuf {
-    pub fn from_ref(other: BrokenLink<'_>) -> Self {
-        Self {
-            span: other.span,
-            link_type: other.link_type,
-            reference: other.reference.as_ref().to_owned(),
-        }
-    }
-}
-
 impl super::LinkExtractor for LinkExtractor {
     fn find_links_and_anchors(
         &self,
@@ -79,18 +63,17 @@ impl super::LinkExtractor for LinkExtractor {
     ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
         let html_le = super::html::LinkExtractor();
 
-        // Setup callback that sets the URL and title when it encounters
-        // a reference to our home page.
-        let mut parser_err = None;
-        let callback = &mut |broken_link: BrokenLink| {
-            warn!("Broken reference link: {:?}", broken_link.reference);
-            parser_err = Some(BrokenLinkBuf::from_ref(broken_link));
-            // TODO: Return parser_err
-            None
-        };
-
         // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
         let pos_from_idx = Self::create_pos_from_idx(&file.content.fetch()?);
+
+        let callback = &mut |broken_link: BrokenLink| {
+            let pos = pos_from_idx(broken_link.span.start) + &file.start;
+            let annotated_target = format!("BAD_REF=>{}", broken_link.reference.as_ref());
+            let bad_link = Link::new(file.locator.clone(), pos, &annotated_target);
+            warn!("Bad reference link: {bad_link}");
+            // TODO Add bad_link to a list and return that list from this function for more flexibility on the library users side.
+            None
+        };
 
         let text = file.content.fetch()?;
         let parser = Parser::new_with_broken_link_callback(
