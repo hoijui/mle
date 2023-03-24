@@ -24,7 +24,7 @@ is-it-maintained-issue-resolution = { repository = "hoijui/mle" }
 
 [dependencies]
 async-std = "1.9.0"
-clap = { version = "4.0", features = ["cargo", "wrap_help"] }
+clap = { version = "4.1", features = ["cargo", "wrap_help"] }
 colored = "2"
 const_format = "0.2"
 csv = "1.1"
