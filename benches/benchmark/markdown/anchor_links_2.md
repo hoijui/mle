@@ -2,7 +2,7 @@
 # 2nd Auto-anchor
 
 NOTE All links in this file are *supposed to be* broken!
-It is mainly done through the use of the inexistend '1st-' part,
+It is mainly done through the use of the inexistent '1st-' part,
 and leaving out the existing '2nd-' part.
 
 Some text here.
