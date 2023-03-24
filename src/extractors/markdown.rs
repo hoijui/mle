@@ -108,8 +108,8 @@ impl super::LinkExtractor for LinkExtractor {
                 Event::Start(Tag::Heading(_level, id, _classes))
                 if conf.extract_anchors() && id.is_none() => {
                     // if let Tag::Heading(_level, id, _classes) = tag {
-                                                   gathering_for_header = true;
-                                        //   }
+                    gathering_for_header = true;
+                    // }
                     // match tag {
                     //     Tag::Heading(_level, id, _classes) => {
                     //         if gathering_anchors && id.is_none() {
