@@ -20,11 +20,6 @@ categories = ["command-line-utilities", "text-processing", "filesystem"]
 readme = "README.md"
 edition = "2021"
 
-[badges]
-maintenance = { status = "actively-developed" }
-is-it-maintained-open-issues = { repository = "hoijui/mle" }
-is-it-maintained-issue-resolution = { repository = "hoijui/mle" }
-
 [dependencies]
 async-std = "1.9.0"
 clap = { version = "4.1", features = ["cargo", "wrap_help"] }
