@@ -16,7 +16,7 @@ repository = "https://github.com/hoijui/mle"
 homepage = "https://github.com/hoijui/mle"
 documentation = "https://docs.rs/mle"
 keywords = ["link-extractor", "links", "markup", "html", "markdown"]
-categories = ["command-line-utilities", "filesystem"]
+categories = ["command-line-utilities", "text-processing", "filesystem"]
 readme = "README.md"
 edition = "2021"
 
