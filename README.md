@@ -16,6 +16,9 @@ SPDX-License-Identifier: CC0-1.0
 [![build status](
     https://gitlab.com/hoijui/mle_ci/badges/master/pipeline.svg)](
     https://gitlab.com/hoijui/mle_ci/pipelines)
+[![License](
+    https://img.shields.io/github/license/hoijui/mle.svg?style=flat)](
+    LICENSE.txt)
 [![REUSE status](
     https://api.reuse.software/badge/github.com/hoijui/mle)](
     https://api.reuse.software/info/github.com/hoijui/mle)
