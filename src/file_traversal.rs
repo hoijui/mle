@@ -64,40 +64,43 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
 
-    if let Some(file_name) = file.file_name().map(OsStr::to_string_lossy) {
-        markup_type(&file_name, markup_types).map_or_else(
-            || {
-                trace!(
-                    "Not a file of a configured markup type: '{}'",
-                    file.display()
-                );
-            },
-            |markup_type| {
-                let abs_path = fs::canonicalize(file).expect("Expected path to exist.");
-                if ignore_paths
-                    .iter()
-                    .any(|ignore_path| ignore_path.matches(&abs_path))
-                {
-                    debug!(
-                        "Ignoring file '{}', because it is in the ignore paths list.",
+    file.file_name().map(OsStr::to_string_lossy).map_or_else(
+        || Err(Error::MissingFileName(file.to_path_buf())),
+        |file_name| {
+            markup_type(&file_name, markup_types).map_or_else(
+                || {
+                    trace!(
+                        "Not a file of a configured markup type: '{}'",
                         file.display()
                     );
-                } else {
-                    let markup_file = File {
-                        markup_type,
-                        locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
-                        content: Content::LocalFile(file.to_owned()),
-                        start: Position::new(),
-                    };
-                    debug!("Found file: '{:?}'", markup_file);
-                    result.push(markup_file);
-                }
-            },
-        );
-    } else {
-        return Err(Error::MissingFileName(file.to_path_buf()));
-    }
-    Ok(())
+                    Ok(())
+                },
+                |markup_type| {
+                    let abs_path = fs::canonicalize(file)
+                        .map_err(|_err| Error::NonexistentPath(file.to_owned()))?;
+                    if ignore_paths
+                        .iter()
+                        .any(|ignore_path| ignore_path.matches(&abs_path))
+                    {
+                        debug!(
+                            "Ignoring file '{}', because it is in the ignore paths list.",
+                            file.display()
+                        );
+                    } else {
+                        let markup_file = File {
+                            markup_type,
+                            locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
+                            content: Content::LocalFile(file.to_owned()),
+                            start: Position::new(),
+                        };
+                        debug!("Found file: '{:?}'", markup_file);
+                        result.push(markup_file);
+                    }
+                    Ok(())
+                },
+            )
+        },
+    )
 }
 
 /// Searches for markup source files acording to the configuration,
