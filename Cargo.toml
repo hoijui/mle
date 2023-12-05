@@ -24,10 +24,10 @@ edition = "2021"
 rust_2021_compatibility = "warn"
 
 [lints.clippy]
-all = "deny"
-pedantic = "warn"
-nursery = "warn"
-cargo = "warn"
+all = { level = "deny", priority = -1 }
+pedantic = { level = "deny", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+cargo = { level = "warn", priority = -1 }
 #wildcard_enum_match_arm = "warn"
 #string_slice = "warn"
 #indexing_slicing = "warn"
@@ -45,10 +45,10 @@ print_stderr = "warn"
 #      the precomputations done by Regex construction
 #      can give significantly better performance
 #      than any of the `str`-based methods.
-trivial_regex = "allow"
-struct_excessive_bools = "allow"
-#fn_params_excessive_bools = "allow"
-default_trait_access = "allow"
+trivial_regex = { level = "allow", priority = 1 }
+default_trait_access = { level = "allow", priority = 1 }
+struct_excessive_bools = { level = "allow", priority = 1 }
+#fn_params_excessive_bools = { level = "allow", priority = 1 }
 
 [dependencies]
 async-std = "1.9.0"
