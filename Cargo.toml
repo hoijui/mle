@@ -49,6 +49,7 @@ trivial_regex = { level = "allow", priority = 1 }
 default_trait_access = { level = "allow", priority = 1 }
 struct_excessive_bools = { level = "allow", priority = 1 }
 #fn_params_excessive_bools = { level = "allow", priority = 1 }
+too_many_lines = { level = "allow", priority = 1 }
 
 [dependencies]
 async-std = "1.9.0"
