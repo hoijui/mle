@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2021-2022 Robin Vobruba <hoijui.quaero@gmail.com>
+# SPDX-FileCopyrightText: 2021 - 2023 Robin Vobruba <hoijui.quaero@gmail.com>
 #
 # SPDX-License-Identifier: Unlicense
 
@@ -38,6 +38,9 @@ jobs:
         uses: actions/checkout@v3
         if: env.OUR_VERSION == ''
         with:
+          # This makes sure we also get tags,
+          # so we get the correct version; see bug:
+          # https://github.com/actions/checkout/issues/701
           fetch-depth: 0
           submodules: true
 

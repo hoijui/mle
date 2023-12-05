@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2021-2022 Robin Vobruba <hoijui.quaero@gmail.com>
+# SPDX-FileCopyrightText: 2021 - 2023 Robin Vobruba <hoijui.quaero@gmail.com>
 #
 # SPDX-License-Identifier: Unlicense
 
@@ -28,6 +28,10 @@ jobs:
       - name: "Check out the repo"
         uses: actions/checkout@v3
         with:
+          # This makes sure we also get tags,
+          # so we get the correct version; see bug:
+          # https://github.com/actions/checkout/issues/701
+          fetch-depth: 0
           submodules: true
 
       - name: "Install STOML (BASH TOML parser)"
