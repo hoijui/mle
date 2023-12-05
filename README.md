@@ -7,21 +7,30 @@ SPDX-License-Identifier: CC0-1.0
 
 # Markup Link Extractor
 
-[![crates.io](
-    https://img.shields.io/crates/v/mle.svg?color=orange)](
-    https://crates.io/crates/mle)
-[![downloads](
-    https://badgen.net/crates/d/mle?color=blue)](
-    https://crates.io/crates/mle)
-[![build status](
-    https://gitlab.com/hoijui/mle_ci/badges/master/pipeline.svg)](
-    https://gitlab.com/hoijui/mle_ci/pipelines)
-[![License](
-    https://img.shields.io/github/license/hoijui/mle.svg?style=flat)](
+[![License: AGPL-3.0-or-later](
+    https://img.shields.io/badge/License-AGPL%203.0+-blue.svg)](
     LICENSE.txt)
 [![REUSE status](
     https://api.reuse.software/badge/github.com/hoijui/mle)](
     https://api.reuse.software/info/github.com/hoijui/mle)
+[![Repo](
+    https://img.shields.io/badge/Repo-GitHub-555555&logo=github.svg)](
+    https://github.com/hoijui/mle)
+[![Package Releases](
+    https://img.shields.io/crates/v/mle.svg?color=orange)](
+    https://crates.io/crates/mle)
+[![Documentation Releases](
+    https://img.shields.io/badge/docs.rs-codify_hoijui-66c2a5?labelColor=555555&logo=docs.rs)](
+    https://docs.rs/codify_hoijui)
+[![downloads](
+    https://badgen.net/crates/d/mle?color=blue)](
+    https://crates.io/crates/mle)
+[![Dependency Status](
+    https://deps.rs/repo/github/hoijui/mle/status.svg)](
+    https://deps.rs/repo/github/hoijui/mle)
+[![Build Status](
+    https://github.com/hoijui/mle/workflows/build/badge.svg)](
+    https://github.com/hoijui/mle/actions)
 
 [![In cooperation with FabCity Hamburg](
     https://raw.githubusercontent.com/osegermany/tiny-files/master/res/media/img/badge-fchh.svg)](
