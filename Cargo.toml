@@ -48,6 +48,7 @@ print_stderr = "warn"
 trivial_regex = "allow"
 struct_excessive_bools = "allow"
 #fn_params_excessive_bools = "allow"
+default_trait_access = "allow"
 
 [dependencies]
 async-std = "1.9.0"
