@@ -59,7 +59,7 @@ pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), 
 /// # Errors
 ///
 /// If the supplied `file` has no name (e.g. '.').
-/// The code-logic should prevent this from ever happening.
+/// The code-logic should prevent this from ever being supplied.
 pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
