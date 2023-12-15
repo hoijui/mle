@@ -1,19 +1,9 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2023 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#[macro_use]
-extern crate log;
-#[macro_use]
-extern crate clap;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate const_format;
-
 pub mod anchor;
-pub mod cli;
 pub mod config;
 pub mod extractors;
 pub mod file_traversal;
@@ -28,7 +18,7 @@ use crate::anchor::Anchor;
 use crate::link::Link;
 use crate::markup::File;
 pub use colored::*;
-use config::Config;
+pub use config::Config;
 use git_version::git_version;
 use state::State;
 pub use wildmatch::WildMatch;

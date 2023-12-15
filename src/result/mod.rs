@@ -104,7 +104,7 @@ fn construct_out_stream(specifier: &Option<PathBuf>) -> Box<dyn Write + 'static>
 /// Pretty-prints a list of errors to `log::error!`.
 pub fn write_to_stderr(errors: &[BoxError]) {
     for error in errors {
-        error!("{error:#?}");
+        log::error!("{error:#?}");
     }
 }
 
@@ -175,7 +175,7 @@ pub trait Sink {
     /// # Errors
     /// If writing to the output stream for errors failed.
     fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
-        error!("{error:#?}");
+        log::error!("{error:#?}");
         Ok(())
     }
 

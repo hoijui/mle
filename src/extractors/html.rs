@@ -216,7 +216,7 @@ impl super::LinkExtractor for LinkExtractor {
                         if scanner.take_single('>') {
                             state = ParserState::Text;
                         } else if let Some(attrib_name) = scanner.take_non('=') {
-                            debug!("attrib_name: '{attrib_name}'");
+                            log::debug!("attrib_name: '{attrib_name}'");
                             match attrib_name {
                                 "href" if is_anchor && conf.extract_links() => {
                                     state = ParserState::EqualSign;

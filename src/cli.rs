@@ -2,13 +2,17 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::ignore_path::IgnorePath;
-use crate::result;
-use crate::Config;
-use crate::{ignore_link, ignore_path};
-use crate::{markup, BoxResult};
 use clap::builder::ValueParser;
+use clap::command;
+use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
+use const_format::formatcp;
+use lazy_static::lazy_static;
+use mle::ignore_path::IgnorePath;
+use mle::result;
+use mle::Config;
+use mle::{ignore_link, ignore_path};
+use mle::{markup, BoxResult};
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -280,7 +284,7 @@ fn print_version_and_exit(quiet: bool) {
     if !quiet {
         print!("{} ", clap::crate_name!());
     }
-    println!("{}", crate::VERSION);
+    println!("{}", mle::VERSION);
     std::process::exit(0);
 }
 

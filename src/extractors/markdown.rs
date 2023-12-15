@@ -70,7 +70,7 @@ impl super::LinkExtractor for LinkExtractor {
             let pos = pos_from_idx(broken_link.span.start) + &file.start;
             let annotated_target = format!("BAD_REF=>{}", broken_link.reference.as_ref());
             let bad_link = Link::new(file.locator.clone(), pos, &annotated_target);
-            warn!("Bad reference link: {bad_link}");
+            log::warn!("Bad reference link: {bad_link}");
             // TODO Add bad_link to a list and return that list from this function for more flexibility on the library users side.
             None
         };

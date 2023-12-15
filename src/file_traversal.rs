@@ -35,9 +35,10 @@ pub enum Error {
 pub fn scan(config: &Config, root: &Path, result: &mut Vec<File>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
 
-    debug!(
+    log::debug!(
         "Searching for files of markup types '{:?}' in directory '{:?}' ...",
-        markup_types, root
+        markup_types,
+        root
     );
 
     for entry in WalkDir::new(root)
@@ -69,7 +70,7 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
         |file_name| {
             markup_type(&file_name, markup_types).map_or_else(
                 || {
-                    trace!(
+                    log::trace!(
                         "Not a file of a configured markup type: '{}'",
                         file.display()
                     );
@@ -82,7 +83,7 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
                         .iter()
                         .any(|ignore_path| ignore_path.matches(&abs_path))
                     {
-                        debug!(
+                        log::debug!(
                             "Ignoring file '{}', because it is in the ignore paths list.",
                             file.display()
                         );
@@ -93,7 +94,7 @@ pub fn add(config: &Config, file: &Path, result: &mut Vec<File>) -> Result<(), E
                             content: Content::LocalFile(file.to_owned()),
                             start: Position::new(),
                         };
-                        debug!("Found file: '{:?}'", markup_file);
+                        log::debug!("Found file: '{:?}'", markup_file);
                         result.push(markup_file);
                     }
                     Ok(())
