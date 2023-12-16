@@ -489,4 +489,119 @@ mod tests {
         assert!(result.is_empty());
         // TODO: Check broken links
     }
+
+    #[test]
+    fn checkboxes() {
+        let input = "
+- [ ] unchecked
+- [x] checked lower
+- [X] checked upper
+
+* [ ] unchecked
+* [x] checked lower
+* [X] checked upper
+
+1. [ ] unchecked
+2. [x] checked lower
+3. [X] checked upper
+
+1. [ ] unchecked
+1. [x] checked lower
+1. [X] checked upper
+
+a) [ ] unchecked
+b) [x] checked lower
+c) [X] checked upper
+
+[ ] unchecked
+[x] checked lower
+[X] checked upper
+
+# Hack
+
+Define referencable link tags,
+so the above woudl be valid links,
+if (wrongly) detected as such.
+
+[ ]: unchecked
+[x]: checked-lower
+[X]: checked-upper
+";
+        let result = find_links(input);
+        assert!(result.is_empty());
+        // TODO Ensure that also no broken links were found
+    }
+
+    #[test]
+    fn checkboxes_quoted() {
+        let input = r#"
+- \[ \] unchecked
+- \[x\] checked lower
+- \[X\] checked upper
+
+* \[ \] unchecked
+* \[x\] checked lower
+* \[X\] checked upper
+
+1. \[ \] unchecked
+2. \[x\] checked lower
+3. \[X\] checked upper
+
+1. \[ \] unchecked
+1. \[x\] checked lower
+1. \[X\] checked upper
+
+a) \[ \] unchecked
+b) \[x\] checked lower
+c) \[X\] checked upper
+
+\[ \] unchecked
+\[x\] checked lower
+\[X\] checked upper
+
+# Hack
+
+Define referencable link tags,
+so the above woudl be valid links,
+if (wrongly) detected as such.
+
+[ ]: unchecked
+[x]: checked-lower
+[X]: checked-upper
+"#;
+        let result = find_links(input);
+        assert!(result.is_empty());
+        // TODO Ensure that also no broken links were found
+    }
+
+    #[test]
+    fn non_checkboxes() {
+        let input = "
+- [ ](a)
+- [x](b)
+- [X]()
+
+* [ ](a)
+* [x](b)
+* [X](c)
+
+1. [ ](a)
+2. [x](b)
+3. [X](c)
+
+1. [ ](a)
+1. [x](b)
+1. [X](c)
+
+a) [ ](a)
+b) [x](b)
+c) [X](c)
+
+[ ](a)
+[x](b)
+[X](c)
+";
+        let result = find_links(input);
+        assert_eq!(result.len(), 18);
+    }
 }
