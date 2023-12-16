@@ -442,7 +442,31 @@ mod tests {
     fn referenced_link() {
         let link_str = "http://example.net/";
         let input = &format!(
-            "This is [an example][arbitrary case-insensitive reference text] reference-style link.\n\n[Arbitrary CASE-insensitive reference text]: {}",
+            "This is [an example][myref] reference-style link.\n\n[myref]: {}",
+            link_str
+        );
+        let result = find_links(input);
+        let expected = link_new_http_no_anchor(link_str, 1, 9);
+        assert_eq!(vec![expected], result);
+    }
+
+    #[test]
+    fn referenced_link_with_spaces() {
+        let link_str = "http://example.net/";
+        let input = &format!(
+            "This is [an example][space containing reference text] reference-style link.\n\n[space containing reference text]: {}",
+            link_str
+        );
+        let result = find_links(input);
+        let expected = link_new_http_no_anchor(link_str, 1, 9);
+        assert_eq!(vec![expected], result);
+    }
+
+    #[test]
+    fn referenced_link_case_insensitive() {
+        let link_str = "http://example.net/";
+        let input = &format!(
+            "This is [an example][case-insensitive reference text] reference-style link.\n\n[CASE-insensitive Reference Text]: {}",
             link_str
         );
         let result = find_links(input);
@@ -453,19 +477,16 @@ mod tests {
     #[test]
     fn referenced_link_tag_only() {
         let link_str = "http://example.net/";
-        let input = &format!(
-            "Foo Bar\n\n[Arbitrary CASE-insensitive reference text]: {}",
-            link_str
-        );
+        let input = &format!("Foo Bar\n\n[tag-without-reference]: {}", link_str);
         let result = find_links(input);
-        assert_eq!(0, result.len());
+        assert!(result.is_empty());
     }
 
     #[test]
-    fn referenced_link_no_tag_only() {
+    fn referenced_link_no_tag_only_reference() {
         let input = "[link][reference]";
         let result = find_links(input);
-        assert_eq!(0, result.len());
+        assert!(result.is_empty());
         // TODO: Check broken links
     }
 }
