@@ -516,6 +516,37 @@ c) [X] checked upper
 [ ] unchecked
 [x] checked lower
 [X] checked upper
+";
+        let result = find_links(input);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn checkboxes_with_tags() {
+        let input = "
+- [ ] unchecked
+- [x] checked lower
+- [X] checked upper
+
+* [ ] unchecked
+* [x] checked lower
+* [X] checked upper
+
+1. [ ] unchecked
+2. [x] checked lower
+3. [X] checked upper
+
+1. [ ] unchecked
+1. [x] checked lower
+1. [X] checked upper
+
+a) [ ] unchecked
+b) [x] checked lower
+c) [X] checked upper
+
+[ ] unchecked
+[x] checked lower
+[X] checked upper
 
 # Hack
 
