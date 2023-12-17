@@ -560,7 +560,6 @@ if (wrongly) detected as such.
 ";
         let result = find_links(input);
         assert!(result.is_empty());
-        // TODO Ensure that also no broken links were found
     }
 
     #[test]
@@ -602,7 +601,6 @@ if (wrongly) detected as such.
 "#;
         let result = find_links(input);
         assert!(result.is_empty());
-        // TODO Ensure that also no broken links were found
     }
 
     #[test]
