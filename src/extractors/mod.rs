@@ -11,6 +11,11 @@ use crate::config::Config;
 use crate::link::Link;
 use crate::markup::{self, File};
 
+pub struct ParseRes {
+    pub links: Vec<Link>,
+    pub anchors: Vec<Anchor>,
+}
+
 pub fn remove_anchor(link: &mut String) -> Option<String> {
     link.find('#').map(|anchor_pos| {
         // let anchor = link.rsplit(pat: P)(suffix: P)(new_len: usize)
@@ -26,7 +31,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// # Errors
 ///
 /// If fetching the markup file content failed.
-pub fn find_links(file: &File, conf: &Config) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
+pub fn find_links(file: &File, conf: &Config) -> std::io::Result<ParseRes> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
     log::debug!(
@@ -69,9 +74,5 @@ pub trait LinkExtractor {
     ///
     /// # Errors
     /// If fetching the markup file content failed.
-    fn find_links_and_anchors(
-        &self,
-        file: &File,
-        conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)>;
+    fn find_links_and_anchors(&self, file: &File, conf: &Config) -> std::io::Result<ParseRes>;
 }

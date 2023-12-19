@@ -39,9 +39,9 @@ fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
     }
     for file in files {
         match extractors::find_links(&file, conf) {
-            Ok((mut file_links, mut file_anchor_targets)) => {
-                links.append(&mut file_links);
-                anchor_targets.append(&mut file_anchor_targets);
+            Ok(mut parsed) => {
+                links.append(&mut parsed.links);
+                anchor_targets.append(&mut parsed.anchors);
             }
             Err(err) => {
                 errors.push(err.into());

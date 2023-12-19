@@ -60,7 +60,7 @@ impl super::LinkExtractor for LinkExtractor {
         &self,
         file: &File,
         conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
+    ) -> std::io::Result<super::ParseRes> {
         let html_le = super::html::LinkExtractor();
 
         // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
@@ -162,12 +162,12 @@ impl super::LinkExtractor for LinkExtractor {
                         content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
                     };
-                    let (mut sub_links, mut sub_anchors) = html_le.find_links_and_anchors(&sub_markup, conf)?;
+                    let mut sub_parsed = html_le.find_links_and_anchors(&sub_markup, conf)?;
                     if conf.extract_links() {
-                        links.append(&mut sub_links);
+                        links.append(&mut sub_parsed.links);
                     }
                     if conf.extract_anchors() {
-                        anchors.append(&mut sub_anchors);
+                        anchors.append(&mut sub_parsed.anchors);
                     }
 
                     if gathering_for_header { // TODO ... OR_THIS (see TODO above)
@@ -184,7 +184,7 @@ impl super::LinkExtractor for LinkExtractor {
                 _ => (),
             };
         }
-        Ok((links, anchors))
+        Ok(super::ParseRes { links, anchors })
     }
 }
 
@@ -200,7 +200,7 @@ mod tests {
         let markup_file = File::dummy(content, markup::Type::Markdown);
         let conf = Config::default();
         super::super::find_links(&markup_file, &conf)
-            .map(|(links, _anchors)| links)
+            .map(|parsed| parsed.links)
             .expect("No error")
     }
 

@@ -8,13 +8,13 @@ use std::{path::PathBuf, rc::Rc, str::FromStr};
 #[cfg(test)]
 use mle::extractors::find_links;
 use mle::{
-    anchor::Anchor,
     config::Config,
-    link::{FileLoc, FileSystemLoc, Link},
+    extractors::ParseRes,
+    link::{FileLoc, FileSystemLoc},
     markup::{Content, File, Type},
 };
 
-fn extract(md_file: PathBuf) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
+fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
     let locator = Rc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
     let file = File {
         markup_type: Type::Markdown,
@@ -30,14 +30,14 @@ fn extract(md_file: PathBuf) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
 fn no_links() {
     let md_file = PathBuf::from_str("./benches/benchmark/markdown/no_links/no_links.md")
         .expect("To never fail");
-    let (links, _anchors) = extract(md_file).expect("No errors");
-    assert!(links.is_empty());
+    let parsed = extract(md_file).expect("No errors");
+    assert!(parsed.links.is_empty());
 }
 
 #[test]
 fn some_links() {
     let md_file = PathBuf::from_str("./benches/benchmark/markdown/many_links/many_links.md")
         .expect("To never fail");
-    let (links, _anchors) = extract(md_file).expect("No errors");
-    assert_eq!(links.len(), 11);
+    let parsed = extract(md_file).expect("No errors");
+    assert_eq!(parsed.links.len(), 11);
 }

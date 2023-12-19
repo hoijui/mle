@@ -175,7 +175,7 @@ impl super::LinkExtractor for LinkExtractor {
         &self,
         file: &File,
         conf: &Config,
-    ) -> std::io::Result<(Vec<Link>, Vec<Anchor>)> {
+    ) -> std::io::Result<super::ParseRes> {
         let mut links: Vec<Link> = Vec::new();
         let mut anchors: Vec<Anchor> = Vec::new();
         let mut attribute: Option<Attribute> = None;
@@ -299,7 +299,7 @@ impl super::LinkExtractor for LinkExtractor {
                 }
             }
         }
-        Ok((links, anchors))
+        Ok(super::ParseRes { links, anchors })
     }
 }
 
@@ -317,7 +317,7 @@ mod tests {
     fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let conf = Config::default();
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf).map(|(links, _anchors)| links)
+        super::super::find_links(&markup_file, &conf).map(|parsed| parsed.links)
     }
 
     fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
@@ -327,7 +327,7 @@ mod tests {
             ..Config::default()
         };
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf).map(|(_links, anchors)| anchors)
+        super::super::find_links(&markup_file, &conf).map(|parsed| parsed.anchors)
     }
 
     fn links(input: &str, line: usize, column: usize) {
