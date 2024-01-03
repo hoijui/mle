@@ -80,7 +80,7 @@ fn arg_files() -> Arg {
             See also --{A_L_NON_RECURSIVE}."
         ))
         .num_args(1..)
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .value_name("FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
@@ -115,7 +115,7 @@ fn arg_anchors() -> Arg {
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .action(ArgAction::Set)
 }
 
@@ -180,7 +180,7 @@ fn arg_links_file() -> Arg {
         .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .short(A_S_LINKS_FILE)
         .long(A_L_LINKS_FILE)
         .action(ArgAction::Set)
