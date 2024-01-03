@@ -5,6 +5,7 @@
 
 use clap::{builder::PossibleValue, ValueEnum};
 use reqwest::Url;
+use serde::{Deserialize, Serialize};
 use std::{
     borrow::Cow,
     ffi::OsStr,
@@ -57,7 +58,7 @@ pub struct File<'a> {
     pub start: Position,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Type {
     Markdown,
     Html,

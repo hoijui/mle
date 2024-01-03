@@ -14,7 +14,7 @@ use std::{
 };
 
 use clap::{builder::PossibleValue, ValueEnum};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     anchor::{self, Anchor},
@@ -32,7 +32,7 @@ const EXT_JSON: &str = "json";
 const EXT_RDF_TURTLE: &str = "ttl";
 const ALL_EXTS: [&str; 5] = [EXT_TEXT, EXT_MARKDOWN, EXT_CSV, EXT_JSON, EXT_RDF_TURTLE];
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Type {
     #[default]
     Text,
