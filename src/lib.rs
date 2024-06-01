@@ -26,7 +26,7 @@ pub use wildmatch::WildMatch;
 pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
 pub type BoxResult<T> = Result<T, BoxError>;
 
-pub const VERSION: &str = git_version!();
+pub const VERSION: &str = git_version!(cargo_prefix = "", fallback = "unknown");
 
 fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxError>) {
     let mut files: Vec<File> = Vec::new();
