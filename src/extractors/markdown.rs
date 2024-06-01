@@ -88,7 +88,7 @@ impl super::LinkExtractor for LinkExtractor {
         let mut header_content: Vec<String> = Vec::new();
         for (evt, range) in parser.into_offset_iter() {
             match evt {
-                Event::Start(Tag::Heading(_level, id, _classes))
+                Event::Start(Tag::Heading {level: _, id, classes: _, attrs: _})
                 if conf.extract_anchors() && id.is_none() => {
                     // if let Tag::Heading(_level, id, _classes) = tag {
                     gathering_for_header = true;
@@ -102,19 +102,19 @@ impl super::LinkExtractor for LinkExtractor {
                     //     _ => (),
                     // }
                 }
-                Event::End(tag) => {
+                Event::Start(tag) => {
                     match tag {
-                        Tag::Link(_link_type, destination, _title)
-                        | Tag::Image(_link_type, destination, _title)
+                        Tag::Link {link_type: _, dest_url, title: _, id: _}
+                        | Tag::Image {link_type: _, dest_url, title: _, id: _}
                         if conf.extract_links() => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             links.push(Link::new(
                                 file.locator.clone(),
                                 pos,
-                                &destination,
+                                &dest_url,
                             ));
                         }
-                        Tag::Heading(_level, id, _classes)
+                        Tag::Heading {level: _, id, classes: _, attrs: _}
                         if conf.extract_anchors() => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             let source = Locator {
@@ -125,7 +125,7 @@ impl super::LinkExtractor for LinkExtractor {
                             let id_str : String = if let Some(id_cont) = id {
                                     r#type = anchor::Type::TitleManual;
                                     // eprint!("XXX Title with manual id!: '{}'\n", id_cont);
-                                    id_cont.to_owned()
+                                    id_cont.to_string()
                                 } else {
                                     r#type = anchor::Type::TitleAuto;
                                     gathering_for_header = false;
@@ -154,7 +154,7 @@ impl super::LinkExtractor for LinkExtractor {
                         _ => (),
                     };
                 }
-                Event::Html(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
+                Event::Html(content) | Event::InlineHtml(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 0 };
                     let sub_markup = File {
                         markup_type: markup::Type::Html,
@@ -235,7 +235,7 @@ mod tests {
         let result = find_links(input);
         let img = link_new_http_no_anchor("http://meritbadge.herokuapp.com/mle", 3, 2);
         let link = link_new_http_no_anchor("https://crates.io/crates/mle", 3, 1);
-        assert_eq!(vec![img, link], result);
+        assert_eq!(vec![link, img], result);
     }
 
     #[test]
