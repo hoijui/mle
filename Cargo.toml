@@ -19,6 +19,7 @@ keywords = ["link-extractor", "links", "markup", "html", "markdown"]
 categories = ["command-line-utilities", "text-processing", "filesystem"]
 readme = "README.md"
 edition = "2021"
+publish = true
 
 [lints.rust]
 rust_2021_compatibility = { level = "warn", priority = -1 }
