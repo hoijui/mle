@@ -9,9 +9,14 @@ mod txt;
 use std::{
     fs::File,
     io::{ErrorKind, Write},
-    path::PathBuf,
     str::FromStr,
 };
+
+// #[cfg(feature = "async")]
+// use async_std::path::PathBuf;
+// #[cfg(not(feature = "async"))]
+// use std::path::PathBuf;
+use crate::path_buf::PathBuf;
 
 use clap::{builder::PossibleValue, ValueEnum};
 use serde::{Deserialize, Serialize};

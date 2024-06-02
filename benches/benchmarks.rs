@@ -21,7 +21,9 @@ fn end_to_end_benchmark() {
     init();
     let config = Config {
         files_and_dirs: vec![
-            fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap(),
+            fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir")
+                .unwrap()
+                .into(),
         ],
         markup_types: vec![Type::Markdown],
         ..Default::default()

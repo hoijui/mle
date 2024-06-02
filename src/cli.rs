@@ -14,10 +14,15 @@ use mle::Config;
 use mle::{ignore_link, ignore_path};
 use mle::{markup, BoxResult};
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::{env, io};
 use wildmatch::WildMatch;
+
+// #[cfg(feature = "async")]
+// use async_std::path::PathBuf;
+use mle::path_buf::PathBuf;
+// #[cfg(not(feature = "async"))]
+// use std::path::PathBuf;
 
 const A_N_FILES: &str = "files";
 const A_L_VERSION: &str = "version";
@@ -80,7 +85,7 @@ fn arg_files() -> Arg {
             See also --{A_L_NON_RECURSIVE}."
         ))
         .num_args(1..)
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .value_name("FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
@@ -115,7 +120,7 @@ fn arg_anchors() -> Arg {
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .action(ArgAction::Set)
 }
 
@@ -180,7 +185,7 @@ fn arg_links_file() -> Arg {
         .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .short(A_S_LINKS_FILE)
         .long(A_L_LINKS_FILE)
         .action(ArgAction::Set)
@@ -265,14 +270,14 @@ fn arg_matcher() -> Command {
 }
 
 fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
-    let mut files_and_dirs = vec![];
-    if let Some(out_files) = args.get_many::<PathBuf>(A_N_FILES) {
+    let mut files_and_dirs: Vec<PathBuf> = vec![];
+    if let Some(out_files) = args.get_many::<std::path::PathBuf>(A_N_FILES) {
         for out_file in out_files {
             files_and_dirs.push(out_file.into());
         }
     }
     if files_and_dirs.is_empty() {
-        files_and_dirs.push(env::current_dir()?);
+        files_and_dirs.push(env::current_dir()?.into());
     }
 
     Ok(files_and_dirs)

@@ -43,7 +43,7 @@ print_stdout = "warn"
 print_stderr = "warn"
 # NOTE allowed because:
 #      If the same regex is going to be applied to multiple inputs,
-#      the precomputations done by Regex construction
+#      the pre-computations done by Regex construction
 #      can give significantly better performance
 #      than any of the `str`-based methods.
 trivial_regex = { level = "allow", priority = 1 }
@@ -53,14 +53,17 @@ struct_excessive_bools = { level = "allow", priority = 1 }
 too_many_lines = { level = "allow", priority = 1 }
 
 [dependencies]
+async-std = { version = "1.12" }
+async-walkdir = { version = "1.0", default-features = false }
 clap = { version = "4.5", features = ["cargo", "wrap_help"] }
 colored = { version = "2.1", default-features = false }
 const_format = { version = "0.2", default-features = false }
 csv = { version = "1.3", default-features = false }
 # email_address = "0.2"
 env_logger = { version = "0.11", default-features = false }
+futures = { version = "0.3", default-features = false }
 git-version = { version = "0.3", default-features = false }
-lazy_static = { version = "1.4", default-features = false } # TODO Use once_cell instead
+lazy_static = { version = "1.4", default-features = false } # TODO Use std::sync::LazyLock instead
 log = { version = "0.4", default-features = false }
 #pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
 pulldown-cmark = { version = "0.11", default-features = false }
@@ -72,13 +75,15 @@ serde_json = { version = "1.0", default-features = false, features = ["std"] }
 serde_regex = { version = "1.1", default-features = false }
 simplelog = { version = "0.12", default-features = false }
 thiserror = { version = "1.0", default-features = false }
+tokio = { version = "1.38", default-features = false, features = ["rt-multi-thread", "macros", "time"] }
 url = { version = "2.5", default-features = false, features = ["serde"] }
-walkdir = { version = "2.5", default-features = false }
+# walkdir = { version = "2.5", default-features = false }
 wildmatch = { version = "2.3", default-features = false, features = [ "serde" ] }
 
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false }
 ntest = { version = "0.9", default-features = false }
+tokio-test = "0.4"
 
 [[bench]]
 name = "benchmarks"

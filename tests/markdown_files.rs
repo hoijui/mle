@@ -3,7 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{path::PathBuf, rc::Rc, str::FromStr};
+use mle::path_buf::PathBuf;
+use std::{rc::Rc, str::FromStr};
 
 #[cfg(test)]
 use mle::extractors::find_links;
@@ -14,7 +15,7 @@ use mle::{
     markup::{Content, File, Type},
 };
 
-fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
+async fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
     let locator = Rc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
     let file = File {
         markup_type: Type::Markdown,
@@ -23,21 +24,21 @@ fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
         ..Default::default()
     };
     let conf = Config::default();
-    find_links(&file, &conf)
+    find_links(&file, &conf).await
 }
 
-#[test]
-fn no_links() {
+#[tokio::test]
+async fn no_links() {
     let md_file = PathBuf::from_str("./benches/benchmark/markdown/no_links/no_links.md")
         .expect("To never fail");
-    let parsed = extract(md_file).expect("No errors");
+    let parsed = extract(md_file).await.expect("No errors");
     assert!(parsed.links.is_empty());
 }
 
-#[test]
-fn some_links() {
+#[tokio::test]
+async fn some_links() {
     let md_file = PathBuf::from_str("./benches/benchmark/markdown/many_links/many_links.md")
         .expect("To never fail");
-    let parsed = extract(md_file).expect("No errors");
+    let parsed = extract(md_file).await.expect("No errors");
     assert_eq!(parsed.links.len(), 11);
 }

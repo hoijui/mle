@@ -11,7 +11,9 @@ use std::{convert::Infallible, fmt, str::FromStr};
 
 use relative_path::RelativePathBuf;
 use reqwest::Url;
-use std::path::{Path, PathBuf};
+
+use crate::path_buf::PathBuf;
+use async_std::path::Path;
 
 use crate::markup;
 
@@ -240,6 +242,23 @@ impl Target {
         }
     }
 
+    /// Makes relative paths absolute and resolves `../` and `./` relative parts.
+    /// This is useful, for example when trying to group all `Target`s
+    /// that point to the same resource/file.
+    #[must_use]
+    pub fn canonical(&self, base: &Path) -> Cow<'_, Self> {
+        match self {
+            Self::FileSystem(fs_target) => match &fs_target.file {
+                FileSystemLoc::Relative(_path) => Cow::Owned(Self::FileSystem(FileSystemTarget {
+                    file: fs_target.file.to_absolute(base).into_owned(),
+                    anchor: fs_target.anchor.clone(),
+                })),
+                FileSystemLoc::Absolute(_path) => Cow::Borrowed(self),
+            },
+            _ => Cow::Borrowed(self),
+        }
+    }
+
     /// Removes the fragment from a link, if one is present.
     /// Otherwise it returns `self`.
     #[must_use]
@@ -317,6 +336,30 @@ impl FileSystemLoc {
         }
         .unwrap_or(false)
     }
+
+    /// Returns or constructs the absolute version of this location.
+    #[must_use]
+    pub fn to_absolute(&self, base: &Path) -> Cow<Self> {
+        match self {
+            Self::Absolute(_path) => Cow::Borrowed(self),
+            Self::Relative(path) => Cow::Owned(Self::Absolute(path.to_path(base).into())),
+        }
+    }
+
+    /// Returns or constructs the absolute version of this location.
+    ///
+    /// # Panics
+    ///
+    /// If `to_absolute(&self, base: &Path)` returned `Self::Relative`.
+    #[must_use]
+    pub fn to_absolute_path(&self, base: &Path) -> Cow<PathBuf> {
+        match self.to_absolute(base).into_owned() {
+            Self::Absolute(path) => Cow::Owned(path),
+            Self::Relative(_) => {
+                panic!("FileSystemLoc::to_absolute(base) returned a Self::Relative -> BAD!")
+            }
+        }
+    }
 }
 
 impl std::fmt::Display for FileSystemLoc {
@@ -336,7 +379,7 @@ impl From<&Path> for FileSystemLoc {
             Self::Relative(RelativePathBuf::from_path(path).expect(
                 "`Path.is_relative(path)` should mean `RelativePathBuf::from_path(path)` will not fail"))
         } else {
-            Self::Absolute(path.to_owned())
+            Self::Absolute(path.to_owned().into())
         }
     }
 }

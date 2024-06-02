@@ -6,14 +6,10 @@
 use clap::{builder::PossibleValue, ValueEnum};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use std::{
-    borrow::Cow,
-    ffi::OsStr,
-    fs,
-    path::{Path, PathBuf},
-    rc::Rc,
-    str::FromStr,
-};
+use std::{borrow::Cow, ffi::OsStr, rc::Rc, str::FromStr};
+
+use crate::path_buf::PathBuf;
+use async_std::{fs, path::Path};
 
 use crate::link::{FileLoc, Position};
 
@@ -32,9 +28,9 @@ impl<'a> Content<'a> {
     /// # Errors
     /// If the content has to be read from a URL or the File-System,
     /// there might be an read error.
-    pub fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
+    pub async fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
         match self {
-            Self::LocalFile(file_name) => fs::read_to_string(file_name).map(Cow::Owned),
+            Self::LocalFile(file_name) => fs::read_to_string(file_name).await.map(Cow::Owned),
             Self::InMemory(content) => Ok(Cow::Borrowed(content)),
         }
     }

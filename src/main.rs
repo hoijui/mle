@@ -9,12 +9,11 @@ use env_logger::Env;
 use mle::state::State;
 use mle::BoxResult;
 
-type MainRes = BoxResult<()>;
-
-fn main() -> MainRes {
+#[tokio::main]
+async fn main() -> BoxResult<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let config = cli::parse_args()?;
     let mut state = State::new(config);
     log::debug!("Config: {:?}", &state.config);
-    mle::run(&mut state)
+    mle::run(&mut state).await
 }

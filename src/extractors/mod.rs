@@ -41,14 +41,14 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// # Errors
 ///
 /// If fetching the markup file content failed.
-pub fn find_links(file: &File, conf: &Config) -> std::io::Result<ParseRes> {
+pub async fn find_links<'a>(file: &File<'a>, conf: &Config) -> std::io::Result<ParseRes> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
     log::debug!(
-        "Scannig file at location '{:#?}' for links ...",
+        "Scanning file at location '{:#?}' for links ...",
         file.locator
     );
-    link_extractor.find_links_and_anchors(file, conf)
+    link_extractor.find_links_and_anchors(file, conf).await
     // match file.content.fetch() {
     //     Ok(text) => {
     //         // let (mut links, anchor_targets) =
@@ -71,10 +71,30 @@ pub fn find_links(file: &File, conf: &Config) -> std::io::Result<ParseRes> {
     // }
 }
 
-fn link_extractor_factory(markup_type: markup::Type) -> Box<dyn LinkExtractor> {
+enum LinkExtractorCont {
+    Markdown(markdown::LinkExtractor),
+    Html(html::LinkExtractor),
+}
+
+impl LinkExtractor for LinkExtractorCont {
+    async fn find_links_and_anchors<'a>(
+        &self,
+        file: &File<'a>,
+        conf: &Config,
+    ) -> std::io::Result<ParseRes> {
+        match self {
+            LinkExtractorCont::Markdown(internal) => {
+                internal.find_links_and_anchors(file, conf).await
+            }
+            LinkExtractorCont::Html(internal) => internal.find_links_and_anchors(file, conf).await,
+        }
+    }
+}
+
+fn link_extractor_factory(markup_type: markup::Type) -> LinkExtractorCont {
     match markup_type {
-        markup::Type::Markdown => Box::new(markdown::LinkExtractor()),
-        markup::Type::Html => Box::new(html::LinkExtractor()),
+        markup::Type::Markdown => LinkExtractorCont::Markdown(markdown::LinkExtractor()),
+        markup::Type::Html => LinkExtractorCont::Html(html::LinkExtractor()),
     }
 }
 
@@ -84,5 +104,9 @@ pub trait LinkExtractor {
     ///
     /// # Errors
     /// If fetching the markup file content failed.
-    fn find_links_and_anchors(&self, file: &File, conf: &Config) -> std::io::Result<ParseRes>;
+    async fn find_links_and_anchors<'a>(
+        &self,
+        file: &File<'a>,
+        conf: &Config,
+    ) -> std::io::Result<ParseRes>;
 }

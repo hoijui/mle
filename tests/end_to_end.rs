@@ -13,9 +13,10 @@ use mle::result;
 use mle::state::State;
 use std::convert::TryInto;
 
+#[tokio::test]
 async fn end_to_end() {
     let config = Config {
-        files_and_dirs: vec![benches_dir().join("benchmark")],
+        files_and_dirs: vec![benches_dir().join("benchmark").into()],
         recursive: true,
         links: Some(None),
         anchors: Some(None),
@@ -33,15 +34,16 @@ async fn end_to_end() {
         ..Default::default()
     };
     let mut state = State::new(config);
-    if let Err(e) = mle::run(&mut state) {
+    if let Err(e) = mle::run(&mut state).await {
         panic!("Test with custom root failed. {:?}", e);
     }
 }
 
+#[tokio::test]
 async fn end_to_end_different_root() {
     let test_files = benches_dir().join("different_root");
     let config = Config {
-        files_and_dirs: vec![test_files.clone()],
+        files_and_dirs: vec![test_files.clone().into()],
         links: Some(None),
         anchors: Some(None),
         result_format: result::Type::Json,
@@ -49,7 +51,7 @@ async fn end_to_end_different_root() {
         ..Default::default()
     };
     let mut state = State::new(config);
-    if let Err(e) = mle::run(&mut state) {
+    if let Err(e) = mle::run(&mut state).await {
         panic!("Test with custom root failed. {:?}", e);
     }
 }

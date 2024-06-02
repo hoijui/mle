@@ -18,12 +18,8 @@
 use std::borrow::Borrow;
 use std::borrow::Cow;
 use std::env;
-use std::path::Component;
-use std::path::Path;
-use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::Arc;
-
 use crate::link::FileSystemLoc;
 use crate::link::FileTarget;
 use crate::link::MarkupAnchorTarget;
@@ -36,8 +32,12 @@ use colored::ColoredString;
 use colored::Colorize;
 use relative_path::RelativePath;
 use reqwest::Url;
-use std::path::MAIN_SEPARATOR;
 use walkdir::WalkDir;
+
+#[cfg(feature = "async")]
+use async_std::{Component, Path, PathBuf, MAIN_SEPARATOR};
+#[cfg(not(feature = "async"))]
+use std::path::{Component, Path, PathBuf, MAIN_SEPARATOR};
 
 pub async fn get_canonical(
     orig: &Link,
@@ -248,6 +248,7 @@ mod tests {
         test_link(link, &Type::FileSystem);
     }
 
+    #[cfg_attr(feature = "async", tokio::test)]
     async fn remove_dot() {
         let source = Path::new(file!())
             .parent()
