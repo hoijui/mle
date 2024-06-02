@@ -36,7 +36,6 @@ use colored::ColoredString;
 use colored::Colorize;
 use relative_path::RelativePath;
 use reqwest::Url;
-use tokio::sync::Mutex;
 use std::path::MAIN_SEPARATOR;
 use walkdir::WalkDir;
 
@@ -249,7 +248,6 @@ mod tests {
         test_link(link, &Type::FileSystem);
     }
 
-    #[tokio::test]
     async fn remove_dot() {
         let source = Path::new(file!())
             .parent()

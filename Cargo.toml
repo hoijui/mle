@@ -52,35 +52,32 @@ struct_excessive_bools = { level = "allow", priority = 1 }
 too_many_lines = { level = "allow", priority = 1 }
 
 [dependencies]
-async-std = "1.9"
 clap = { version = "4.1", features = ["cargo", "wrap_help"] }
-colored = "2"
-const_format = "0.2"
-csv = "1.1"
+colored = { version = "2.1", default-features = false }
+const_format = { version = "0.2", default-features = false }
+csv = { version = "1.1", default-features = false }
 # email_address = "0.2"
-env_logger = "0.10"
-futures = "0.3"
-git-version = "0.3"
-lazy_static = "1.4.0"
-log = "0.4"
+env_logger = { version = "0.10", default-features = false }
+git-version = { version = "0.3", default-features = false }
+lazy_static = { version = "1.4.0", default-features = false }
+log = { version = "0.4", default-features = false }
 #pulldown-cmark = {git = "https://github.com/lo48576/pulldown-cmark", branch="feature/heading-attrs"}
-pulldown-cmark = "0.9"
-regex = "1.10"
-relative-path = { version = "1.7", features = ["serde"] }
-reqwest = { version = "0.11", features = ["native-tls-vendored"] }
-serde = { version = "1.0", features = ["derive", "rc"] }
-serde_json = "1.0"
-serde_regex = "1.1"
-simplelog = "0.12"
-thiserror = "1.0"
-tokio = { version = "1.5", features = ["rt-multi-thread", "macros", "time"] }
-url = { version = "2.2", features = ["serde"] }
-walkdir = "2.3"
-wildmatch = "2.1"
+pulldown-cmark = { version = "0.9", default-features = false }
+regex = { version = "1.10", default-features = false }
+relative-path = { version = "1.7", default-features = false, features = ["serde"] }
+reqwest = { version = "0.11", default-features = false, features = ["native-tls-vendored"] }
+serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
+serde_json = { version = "1.0", default-features = false }
+serde_regex = { version = "1.1", default-features = false }
+simplelog = { version = "0.12", default-features = false }
+thiserror = { version = "1.0", default-features = false }
+url = { version = "2.2", default-features = false, features = ["serde"] }
+walkdir = { version = "2.3", default-features = false }
+wildmatch = { version = "2.2", default-features = false, features = [ "serde" ] }
 
 [dev-dependencies]
-criterion = "0.5"
-ntest = "0.9"
+criterion = { version = "0.5", default-features = false }
+ntest = { version = "0.9", default-features = false }
 
 [[bench]]
 name = "benchmarks"

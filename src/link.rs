@@ -105,6 +105,11 @@ impl Link {
             target: Target::from(raw_target),
         }
     }
+
+    #[must_use]
+    pub const fn is_invalid(&self) -> bool {
+        matches!(self.target, Target::Invalid(..))
+    }
 }
 
 impl fmt::Display for Locator {

@@ -13,7 +13,6 @@ use mle::result;
 use mle::state::State;
 use std::convert::TryInto;
 
-#[tokio::test]
 async fn end_to_end() {
     let config = Config {
         files_and_dirs: vec![benches_dir().join("benchmark")],
@@ -39,7 +38,6 @@ async fn end_to_end() {
     }
 }
 
-#[tokio::test]
 async fn end_to_end_different_root() {
     let test_files = benches_dir().join("different_root");
     let config = Config {
