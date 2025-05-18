@@ -54,7 +54,7 @@ too_many_lines = { level = "allow", priority = 1 }
 
 [dependencies]
 async-std = { version = "1.12" }
-async-walkdir = { version = "1.0", default-features = false }
+async-walkdir = { version = "2.1", default-features = false }
 clap = { version = "4.5", features = ["cargo", "wrap_help"] }
 colored = { version = "3.0", default-features = false }
 const_format = { version = "0.2", default-features = false }
