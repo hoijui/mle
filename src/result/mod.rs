@@ -185,8 +185,8 @@ pub trait Sink {
         Ok(())
     }
 
-    /// Finalizes/Clsoes this sink.
-    /// This will be caleld exactly once,
+    /// Finalizes/Closes this sink.
+    /// This will be called exactly once,
     /// and no `sink_*` functions may be called after this function has been called.
     ///
     /// # Errors
@@ -382,26 +382,26 @@ impl Serialize for AnchorRec<'_> {
 }
 
 impl<'a> AnchorRec<'a> {
-    fn new(anc: &'a Anchor, extended: bool) -> Self {
+    fn new(anchor: &'a Anchor, extended: bool) -> Self {
         if extended {
             Self::Extended(AnchorExtendedRec {
-                src_file: anc.source.file.to_string(),
-                src_line: anc.source.pos.line,
-                src_column: anc.source.pos.column,
-                src_is_file_system: anc.source.file.is_file_system(),
-                src_is_url: anc.source.file.is_url(),
-                src_is_local: anc.source.file.is_local(),
-                src_is_remote: anc.source.file.is_remote(),
-                name: &anc.name,
-                // r#type: format!("{:?}", anc.r#type),
-                r#type: anc.r#type,
+                src_file: anchor.source.file.to_string(),
+                src_line: anchor.source.pos.line,
+                src_column: anchor.source.pos.column,
+                src_is_file_system: anchor.source.file.is_file_system(),
+                src_is_url: anchor.source.file.is_url(),
+                src_is_local: anchor.source.file.is_local(),
+                src_is_remote: anchor.source.file.is_remote(),
+                name: &anchor.name,
+                // r#type: format!("{:?}", anchor.r#type),
+                r#type: anchor.r#type,
             })
         } else {
             Self::Simple(AnchorSimpleRec {
-                src_file: anc.source.file.to_string(),
-                src_line: anc.source.pos.line,
-                src_column: anc.source.pos.column,
-                name: &anc.name,
+                src_file: anchor.source.file.to_string(),
+                src_line: anchor.source.pos.line,
+                src_column: anchor.source.pos.column,
+                name: &anchor.name,
             })
         }
     }
@@ -446,26 +446,26 @@ impl Serialize for AnchorOwnedRec {
 }
 
 impl AnchorOwnedRec {
-    fn new(anc: &Anchor, extended: bool) -> Self {
+    fn new(anchor: &Anchor, extended: bool) -> Self {
         if extended {
             Self::Extended(AnchorExtendedOwnedRec {
-                src_file: anc.source.file.to_string(),
-                src_line: anc.source.pos.line,
-                src_column: anc.source.pos.column,
-                src_is_file_system: anc.source.file.is_file_system(),
-                src_is_url: anc.source.file.is_url(),
-                src_is_local: anc.source.file.is_local(),
-                src_is_remote: anc.source.file.is_remote(),
-                name: anc.name.to_string(),
-                // r#type: format!("{:?}", anc.r#type),
-                r#type: anc.r#type,
+                src_file: anchor.source.file.to_string(),
+                src_line: anchor.source.pos.line,
+                src_column: anchor.source.pos.column,
+                src_is_file_system: anchor.source.file.is_file_system(),
+                src_is_url: anchor.source.file.is_url(),
+                src_is_local: anchor.source.file.is_local(),
+                src_is_remote: anchor.source.file.is_remote(),
+                name: anchor.name.to_string(),
+                // r#type: format!("{:?}", anchor.r#type),
+                r#type: anchor.r#type,
             })
         } else {
             Self::Simple(AnchorSimpleOwnedRec {
-                src_file: anc.source.file.to_string(),
-                src_line: anc.source.pos.line,
-                src_column: anc.source.pos.column,
-                name: anc.name.to_string(),
+                src_file: anchor.source.file.to_string(),
+                src_line: anchor.source.pos.line,
+                src_column: anchor.source.pos.column,
+                name: anchor.name.to_string(),
             })
         }
     }
