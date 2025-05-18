@@ -9,6 +9,7 @@ use crate::{anchor::Anchor, config::Config};
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.
+///
 /// If the Result is Err, it means the URL has been checked,
 /// but was not available, or anchor parsing has failed.
 /// If the Option is None, it means the URL was checked and evaluated as for available,
@@ -18,6 +19,7 @@ pub type AnchorTargets = Option<Vec<Anchor>>;
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.
+///
 /// If the Result is Err, it means the URL has been checked,
 /// but was not available, or anchor parsing has failed.
 /// If the Option is None, it means the URL was checked and evaluated as for available,

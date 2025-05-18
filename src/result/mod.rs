@@ -99,6 +99,7 @@ impl FromStr for Type {
     }
 }
 
+#[allow(clippy::ref_option)]
 fn construct_out_stream(specifier: &Option<PathBuf>) -> Box<dyn Write + 'static> {
     specifier.as_ref().map_or_else(
         || Box::new(std::io::stdout()) as Box<dyn Write>,

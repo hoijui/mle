@@ -90,16 +90,13 @@ pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Re
         .map(OsStr::to_string_lossy)
         .ok_or_else(|| Error::MissingFileName(file.into()))?;
 
-    let markup_type =
-        if let Some(markup_type) = markup_type(file_name_os_str.as_ref(), markup_types) {
-            markup_type
-        } else {
-            log::trace!(
-                "Not a file of a configured markup type: '{}'",
-                file.display()
-            );
-            return Ok(());
-        };
+    let Some(markup_type) = markup_type(file_name_os_str.as_ref(), markup_types) else {
+        log::trace!(
+            "Not a file of a configured markup type: '{}'",
+            file.display()
+        );
+        return Ok(());
+    };
 
     let abs_path = fs::canonicalize(file)
         .await
