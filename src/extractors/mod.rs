@@ -41,7 +41,7 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// # Errors
 ///
 /// If fetching the markup file content failed.
-pub async fn find_links<'a>(file: &File<'a>, conf: &Config) -> std::io::Result<ParseRes> {
+pub async fn find_links(file: &File<'_>, conf: &Config) -> std::io::Result<ParseRes> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
     log::debug!(
@@ -77,9 +77,9 @@ enum LinkExtractorCont {
 }
 
 impl LinkExtractor for LinkExtractorCont {
-    async fn find_links_and_anchors<'a>(
+    async fn find_links_and_anchors(
         &self,
-        file: &File<'a>,
+        file: &File<'_>,
         conf: &Config,
     ) -> std::io::Result<ParseRes> {
         match self {
@@ -96,15 +96,15 @@ const fn link_extractor_factory(markup_type: markup::Type) -> LinkExtractorCont 
     }
 }
 
-pub trait LinkExtractor {
+pub(crate) trait LinkExtractor {
     /// Finds links (and optionally anchors),
     /// using the markup file specific link extractor internally.
     ///
     /// # Errors
     /// If fetching the markup file content failed.
-    async fn find_links_and_anchors<'a>(
+    async fn find_links_and_anchors(
         &self,
-        file: &File<'a>,
+        file: &File<'_>,
         conf: &Config,
     ) -> std::io::Result<ParseRes>;
 }

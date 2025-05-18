@@ -45,10 +45,10 @@ pub enum Error {
 /// If any of the (markup) files supplied or found through scanning supplied dirs
 /// has no name (e.g. '.').
 /// The code-logic should prevent this from ever happening.
-pub async fn scan<'a>(
+pub async fn scan(
     config: &Config,
     root: &Path,
-    result: &mut Vec<File<'a>>,
+    result: &mut Vec<File<'_>>,
 ) -> Result<(), Error> {
     let markup_types = &config.markup_types;
 
@@ -85,10 +85,10 @@ pub async fn scan<'a>(
 ///
 /// If the supplied `file` has no name (e.g. '.').
 /// The code-logic should prevent this from ever being supplied.
-pub async fn add<'a>(
+pub async fn add(
     config: &Config,
     file: &Path,
-    result: &mut Vec<File<'a>>,
+    result: &mut Vec<File<'_>>,
 ) -> Result<(), Error> {
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
@@ -192,7 +192,7 @@ pub async fn add<'a>(
 /// If a file or path supplied does not exist,
 /// or if any file supplied or found through scanning has no name (e.g. '.').
 /// The code-logic should prevent the second case from ever happening.
-pub async fn find<'a>(config: &Config, result: &mut Vec<File<'a>>) -> Result<(), Error> {
+pub async fn find(config: &Config, result: &mut Vec<File<'_>>) -> Result<(), Error> {
     for file_or_dir in &config.files_and_dirs {
         if file_or_dir.is_file().await {
             add(config, file_or_dir.as_ref(), result).await?;

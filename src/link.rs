@@ -331,7 +331,7 @@ impl FileSystemLoc {
         match self {
             Self::Absolute(path) => path
                 .file_name()
-                .map(|file_name| markup::Type::is_markup_file(format!("{file_name:#?}").as_str())),
+                .map(|file_name| markup::Type::is_markup_file(format!("{}", file_name.display()).as_str())),
             Self::Relative(path) => path.file_name().map(markup::Type::is_markup_file),
         }
         .unwrap_or(false)

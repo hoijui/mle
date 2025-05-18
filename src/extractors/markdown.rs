@@ -57,9 +57,9 @@ impl LinkExtractor {
 }
 
 impl super::LinkExtractor for LinkExtractor {
-    async fn find_links_and_anchors<'a>(
+    async fn find_links_and_anchors(
         &self,
-        file: &File<'a>,
+        file: &File<'_>,
         conf: &Config,
     ) -> std::io::Result<super::ParseRes> {
         let html_le = super::html::LinkExtractor();
