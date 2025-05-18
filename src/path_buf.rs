@@ -17,23 +17,34 @@ use {
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PathBuf(AsyncPathBuf);
 
+impl Default for PathBuf {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PathBuf {
+    #[must_use]
     pub fn new() -> Self {
-        PathBuf(AsyncPathBuf::new())
+        Self(AsyncPathBuf::new())
     }
 
+    #[must_use]
     pub fn file_name(&self) -> Option<&OsStr> {
         self.0.file_name()
     }
 
+    #[must_use]
     pub fn display(&self) -> std::path::Display<'_> {
         self.0.display()
     }
 
+    #[must_use]
     pub fn is_relative(&self) -> bool {
         self.0.is_relative()
     }
 
+    #[must_use]
     pub fn is_absolute(&self) -> bool {
         self.0.is_absolute()
     }
@@ -50,6 +61,7 @@ impl PathBuf {
         self.0.exists().await
     }
 
+    #[must_use]
     pub fn as_os_str(&self) -> &OsStr {
         self.0.as_os_str()
     }
@@ -63,13 +75,13 @@ impl Display for PathBuf {
 
 impl AsRef<std::path::Path> for PathBuf {
     fn as_ref(&self) -> &std::path::Path {
-        &self.0.as_ref()
+        self.0.as_ref()
     }
 }
 
 impl AsRef<async_std::path::Path> for PathBuf {
     fn as_ref(&self) -> &async_std::path::Path {
-        &self.0.as_ref()
+        self.0.as_ref()
     }
 }
 
@@ -83,37 +95,37 @@ impl FromStr for PathBuf {
 
 impl From<&async_std::path::Path> for PathBuf {
     fn from(path: &async_std::path::Path) -> Self {
-        PathBuf(AsyncPathBuf::from(path))
+        Self(AsyncPathBuf::from(path))
     }
 }
 
 impl From<&std::path::Path> for PathBuf {
     fn from(path: &std::path::Path) -> Self {
-        PathBuf(AsyncPathBuf::from(path))
+        Self(AsyncPathBuf::from(path))
     }
 }
 
 impl From<&std::path::PathBuf> for PathBuf {
     fn from(path: &std::path::PathBuf) -> Self {
-        PathBuf(AsyncPathBuf::from(path))
+        Self(AsyncPathBuf::from(path))
     }
 }
 
 impl From<std::path::PathBuf> for PathBuf {
     fn from(path: std::path::PathBuf) -> Self {
-        PathBuf(AsyncPathBuf::from(path))
+        Self(AsyncPathBuf::from(path))
     }
 }
 
 impl From<AsyncPathBuf> for PathBuf {
     fn from(path: AsyncPathBuf) -> Self {
-        PathBuf(path)
+        Self(path)
     }
 }
 
 impl From<&str> for PathBuf {
     fn from(path: &str) -> Self {
-        PathBuf(AsyncPathBuf::from(path))
+        Self(AsyncPathBuf::from(path))
     }
 }
 
@@ -121,7 +133,7 @@ impl From<&str> for PathBuf {
 struct PathBufVisitor;
 
 // #[cfg(feature = "serde")]
-impl<'de> Visitor<'de> for PathBufVisitor {
+impl Visitor<'_> for PathBufVisitor {
     type Value = PathBuf;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

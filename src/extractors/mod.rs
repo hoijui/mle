@@ -83,15 +83,13 @@ impl LinkExtractor for LinkExtractorCont {
         conf: &Config,
     ) -> std::io::Result<ParseRes> {
         match self {
-            LinkExtractorCont::Markdown(internal) => {
-                internal.find_links_and_anchors(file, conf).await
-            }
-            LinkExtractorCont::Html(internal) => internal.find_links_and_anchors(file, conf).await,
+            Self::Markdown(internal) => internal.find_links_and_anchors(file, conf).await,
+            Self::Html(internal) => internal.find_links_and_anchors(file, conf).await,
         }
     }
 }
 
-fn link_extractor_factory(markup_type: markup::Type) -> LinkExtractorCont {
+const fn link_extractor_factory(markup_type: markup::Type) -> LinkExtractorCont {
     match markup_type {
         markup::Type::Markdown => LinkExtractorCont::Markdown(markdown::LinkExtractor()),
         markup::Type::Html => LinkExtractorCont::Html(html::LinkExtractor()),

@@ -15,7 +15,7 @@ use crate::path_buf::PathBuf;
 #[cfg(feature = "async")]
 use async_std::path::Path;
 #[cfg(not(feature = "async"))]
-use std::{fs, path::Path};
+use std::path::Path;
 
 #[derive(Debug)]
 pub enum Error {

@@ -64,7 +64,7 @@ pub async fn scan<'a>(
             Some(Ok(entry)) => {
                 if let Ok(file_type) = entry.file_type().await {
                     if !file_type.is_dir() {
-                        add(config, entry.path().as_ref(), result).await?
+                        add(config, entry.path().as_ref(), result).await?;
                     }
                 }
             }
@@ -98,16 +98,16 @@ pub async fn add<'a>(
         .map(OsStr::to_string_lossy)
         .ok_or_else(|| Error::MissingFileName(file.into()))?;
 
-    let markup_type = match markup_type(file_name_os_str.as_ref(), markup_types) {
-        Some(markup_type) => markup_type,
-        None => {
+    let markup_type =
+        if let Some(markup_type) = markup_type(file_name_os_str.as_ref(), markup_types) {
+            markup_type
+        } else {
             log::trace!(
                 "Not a file of a configured markup type: '{}'",
                 file.display()
             );
             return Ok(());
-        }
-    };
+        };
 
     let abs_path = fs::canonicalize(file)
         .await
@@ -123,7 +123,7 @@ pub async fn add<'a>(
     } else {
         let markup_file = File {
             markup_type,
-            locator: Rc::new(FileLoc::System(FileSystemLoc::from(file.as_ref()))),
+            locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
             content: Content::LocalFile(file.into()),
             start: Position::new(),
         };

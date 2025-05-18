@@ -270,7 +270,7 @@ fn arg_matcher() -> Command {
 }
 
 fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
-    let mut files_and_dirs: Vec<PathBuf> = vec![];
+    let mut files_and_dirs = vec![];
     if let Some(out_files) = args.get_many::<std::path::PathBuf>(A_N_FILES) {
         for out_file in out_files {
             files_and_dirs.push(out_file.into());

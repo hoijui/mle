@@ -255,7 +255,7 @@ impl<'a> LinkRec<'a> {
     }
 }
 
-impl<'a> Serialize for LinkRec<'a> {
+impl Serialize for LinkRec<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -368,7 +368,7 @@ enum AnchorRec<'a> {
     Extended(AnchorExtendedRec<'a>),
 }
 
-impl<'a> Serialize for AnchorRec<'a> {
+impl Serialize for AnchorRec<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,

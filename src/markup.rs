@@ -117,10 +117,8 @@ impl Type {
     /// (usually) judging from the file-extension.
     #[must_use]
     pub fn is_markup_url(url: &Url) -> bool {
-        url.path_segments().map_or(false, |path_segments| {
-            path_segments.last().map_or(false, |last_path_segment| {
-                Self::is_markup_file(last_path_segment)
-            })
+        url.path_segments().is_some_and(|mut path_segments| {
+            path_segments.next_back().is_some_and(Self::is_markup_file)
         })
     }
 

@@ -65,7 +65,7 @@ impl super::LinkExtractor for LinkExtractor {
         let html_le = super::html::LinkExtractor();
 
         // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
-        let pos_from_idx = Self::create_pos_from_idx(&file.content.fetch().await?.as_ref());
+        let pos_from_idx = Self::create_pos_from_idx(file.content.fetch().await?.as_ref());
 
         let callback = &mut |broken_link: BrokenLink| {
             let refrnc = broken_link.reference.as_ref();
@@ -180,7 +180,7 @@ impl super::LinkExtractor for LinkExtractor {
                             });
                         }
                         _ => (),
-                    };
+                    }
                 }
                 Event::Html(content) | Event::InlineHtml(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 0 };
@@ -210,7 +210,7 @@ impl super::LinkExtractor for LinkExtractor {
                     }
                 }
                 _ => (),
-            };
+            }
         }
         Ok(super::ParseRes { links, anchors })
     }
@@ -393,7 +393,7 @@ mod tests {
     #[tokio::test]
     async fn image_reference() {
         let link_str = "http://example.net/";
-        let input = &format!("\n\nBla ![This is an image link]({})", link_str);
+        let input = &format!("\n\nBla ![This is an image link]({link_str})");
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 3, 5);
         assert_eq!(vec![expected], result);
@@ -402,7 +402,7 @@ mod tests {
     #[tokio::test]
     async fn link_no_title() {
         let link_str = "http://example.net/";
-        let input = &format!("[This link]({}) has no title attribute.", link_str);
+        let input = &format!("[This link]({link_str}) has no title attribute.");
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 1);
         assert_eq!(vec![expected], result);
@@ -411,7 +411,7 @@ mod tests {
     #[tokio::test]
     async fn link_with_title() {
         let link_str = "http://example.net/";
-        let input = &format!("\n123[This is a link]({} \"with title\") oh yea.", link_str);
+        let input = &format!("\n123[This is a link]({link_str} \"with title\") oh yea.");
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 2, 4);
         assert_eq!(vec![expected], result);
@@ -477,10 +477,8 @@ mod tests {
     #[tokio::test]
     async fn referenced_link() {
         let link_str = "http://example.net/";
-        let input = &format!(
-            "This is [an example][myref] reference-style link.\n\n[myref]: {}",
-            link_str
-        );
+        let input =
+            &format!("This is [an example][myref] reference-style link.\n\n[myref]: {link_str}");
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
         assert_eq!(vec![expected], result);
@@ -490,8 +488,7 @@ mod tests {
     async fn referenced_link_with_spaces() {
         let link_str = "http://example.net/";
         let input = &format!(
-            "This is [an example][space containing reference text] reference-style link.\n\n[space containing reference text]: {}",
-            link_str
+            "This is [an example][space containing reference text] reference-style link.\n\n[space containing reference text]: {link_str}"
         );
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
@@ -502,8 +499,7 @@ mod tests {
     async fn referenced_link_case_insensitive() {
         let link_str = "http://example.net/";
         let input = &format!(
-            "This is [an example][case-insensitive reference text] reference-style link.\n\n[CASE-insensitive Reference Text]: {}",
-            link_str
+            "This is [an example][case-insensitive reference text] reference-style link.\n\n[CASE-insensitive Reference Text]: {link_str}"
         );
         let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
@@ -513,7 +509,7 @@ mod tests {
     #[tokio::test]
     async fn referenced_link_tag_only() {
         let link_str = "http://example.net/";
-        let input = &format!("Foo Bar\n\n[tag-without-reference]: {}", link_str);
+        let input = &format!("Foo Bar\n\n[tag-without-reference]: {link_str}");
         let result = find_links(input).await;
         assert!(result.is_empty());
     }
@@ -600,7 +596,7 @@ if (wrongly) detected as such.
 
     #[tokio::test]
     async fn checkboxes_quoted() {
-        let input = r#"
+        let input = r"
 - \[ \] unchecked
 - \[x\] checked lower
 - \[X\] checked upper
@@ -634,7 +630,7 @@ if (wrongly) detected as such.
 [ ]: unchecked
 [x]: checked-lower
 [X]: checked-upper
-"#;
+";
         let result = find_links(input).await;
         assert!(result.is_empty());
     }
