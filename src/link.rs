@@ -329,9 +329,9 @@ impl FileSystemLoc {
     /// (usually) judging from the file-extension.
     fn is_markup(&self) -> bool {
         match self {
-            Self::Absolute(path) => path
-                .file_name()
-                .map(|file_name| markup::Type::is_markup_file(format!("{}", file_name.display()).as_str())),
+            Self::Absolute(path) => path.file_name().map(|file_name| {
+                markup::Type::is_markup_file(format!("{}", file_name.display()).as_str())
+            }),
             Self::Relative(path) => path.file_name().map(markup::Type::is_markup_file),
         }
         .unwrap_or(false)

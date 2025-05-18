@@ -45,11 +45,7 @@ pub enum Error {
 /// If any of the (markup) files supplied or found through scanning supplied dirs
 /// has no name (e.g. '.').
 /// The code-logic should prevent this from ever happening.
-pub async fn scan(
-    config: &Config,
-    root: &Path,
-    result: &mut Vec<File<'_>>,
-) -> Result<(), Error> {
+pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
 
     log::debug!(
@@ -85,11 +81,7 @@ pub async fn scan(
 ///
 /// If the supplied `file` has no name (e.g. '.').
 /// The code-logic should prevent this from ever being supplied.
-pub async fn add(
-    config: &Config,
-    file: &Path,
-    result: &mut Vec<File<'_>>,
-) -> Result<(), Error> {
+pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Result<(), Error> {
     let markup_types = &config.markup_types;
     let ignore_paths = &config.ignore_paths;
 
