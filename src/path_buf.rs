@@ -5,7 +5,7 @@
 
 use async_std::path::PathBuf as AsyncPathBuf;
 
-use std::{ffi::OsStr, fmt::Display, str::FromStr};
+use std::{ffi::OsStr, fmt::Display, path::StripPrefixError, str::FromStr};
 use {
     serde::{
         de::{Deserialize, Deserializer, Unexpected, Visitor},
@@ -64,6 +64,34 @@ impl PathBuf {
     #[must_use]
     pub fn as_os_str(&self) -> &OsStr {
         self.0.as_os_str()
+    }
+
+    #[must_use]
+    pub fn extension(&self) -> Option<&OsStr> {
+        self.0.extension()
+    }
+
+    #[must_use]
+    pub fn parent(&self) -> Option<&async_std::path::Path> {
+        self.0.parent()
+    }
+
+    #[must_use]
+    pub fn as_path(&self) -> &async_std::path::Path {
+        self.0.as_path()
+    }
+
+    #[must_use]
+    pub fn join<P: AsRef<async_std::path::Path>>(&self, path: P) -> Self {
+        Self(self.0.join(path))
+    }
+
+    #[must_use]
+    pub fn strip_prefix<P>(&self, base: P) -> Result<&async_std::path::Path, StripPrefixError>
+    where
+        P: AsRef<async_std::path::Path>,
+        {
+        self.0.strip_prefix(base)
     }
 }
 
