@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::sync::LazyLock;
+
 use crate::anchor;
 use crate::anchor::Anchor;
 use crate::config::Config;
@@ -12,17 +14,14 @@ use crate::link::Position;
 use crate::markup;
 use crate::markup::Content;
 use crate::markup::File;
-use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;
 
 pub struct LinkExtractor();
 
-lazy_static! {
-    static ref NON_ID_CHARS: Regex = Regex::new(r"[^A-Za-z0-9 -]").unwrap();
-    static ref LEADING_NUMBER: Regex = Regex::new(r"^[0-9]+").unwrap();
-    static ref CHECK_BOX_VALUES: Regex = Regex::new(r"^[ xX]?$").unwrap();
-}
+static NON_ID_CHARS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^A-Za-z0-9 -]").unwrap());
+static LEADING_NUMBER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9]+").unwrap());
+static CHECK_BOX_VALUES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[ xX]?$").unwrap());
 
 /// 1. downcase the headline
 /// 2. remove anything that is not a letter, number, space or hyphen

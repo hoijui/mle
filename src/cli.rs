@@ -7,7 +7,6 @@ use clap::command;
 use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use const_format::formatcp;
-use lazy_static::lazy_static;
 use mle::ignore_path::IgnorePath;
 use mle::result;
 use mle::Config;
@@ -15,6 +14,7 @@ use mle::{ignore_link, ignore_path};
 use mle::{markup, BoxResult};
 use std::collections::HashSet;
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::{env, io};
 use wildmatch::WildMatch;
 
@@ -52,9 +52,7 @@ const A_S_RESULT_EXTENDED: char = 'E';
 const A_L_RESULT_FLUSH: &str = "result-flush";
 const A_S_RESULT_FLUSH: char = 'f';
 
-lazy_static! {
-    static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
-}
+static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
 
 fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
@@ -218,8 +216,8 @@ fn arg_result_flush() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
-lazy_static! {
-    static ref ARGS: [Arg; 13] = [
+static ARGS: LazyLock<[Arg; 13]> = LazyLock::new(|| {
+    [
         arg_version(),
         arg_quiet(),
         arg_files(),
@@ -234,8 +232,8 @@ lazy_static! {
         arg_result_format(),
         arg_result_extended(),
         arg_result_flush(),
-    ];
-}
+    ]
+});
 
 fn find_duplicate_short_options() -> Vec<char> {
     let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
