@@ -581,8 +581,8 @@ c) [X] checked upper
 
 # Hack
 
-Define referencable link tags,
-so the above woudl be valid links,
+Define referenceable link tags,
+so the above would be valid links,
 if (wrongly) detected as such.
 
 [ ]: unchecked
