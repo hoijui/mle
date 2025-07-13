@@ -4,7 +4,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use mle::path_buf::PathBuf;
-use std::{rc::Rc, str::FromStr};
+use std::{str::FromStr, sync::Arc};
 
 #[cfg(test)]
 use mle::extractors::find_links;
@@ -16,7 +16,7 @@ use mle::{
 };
 
 async fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
-    let locator = Rc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
+    let locator = Arc::new(FileLoc::System(FileSystemLoc::from(md_file.clone())));
     let file = File {
         markup_type: Type::Markdown,
         content: Content::LocalFile(md_file),

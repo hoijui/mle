@@ -6,7 +6,7 @@
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::ops::{Add, Sub};
-use std::rc::Rc;
+use std::sync::Arc;
 use std::{convert::Infallible, fmt, str::FromStr};
 
 use relative_path::RelativePathBuf;
@@ -72,7 +72,7 @@ pub struct FileSystemTarget {
 /// including both the file and the position inside the file.
 #[derive(PartialEq, Eq, Clone, Serialize, Deserialize)]
 pub struct Locator {
-    pub file: Rc<FileLoc>,
+    pub file: Arc<FileLoc>,
     /// Where in the `file` this locator points to
     pub pos: Position,
 }
@@ -94,14 +94,14 @@ impl Default for FileLoc {
 
 impl FileLoc {
     #[must_use]
-    pub fn dummy() -> Rc<Self> {
-        Rc::new(Self::default())
+    pub fn dummy() -> Arc<Self> {
+        Arc::new(Self::default())
     }
 }
 
 impl Link {
     #[must_use]
-    pub fn new(file: Rc<FileLoc>, pos: Position, raw_target: &str) -> Self {
+    pub fn new(file: Arc<FileLoc>, pos: Position, raw_target: &str) -> Self {
         Self {
             source: Locator { file, pos },
             target: Target::from(raw_target),

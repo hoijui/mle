@@ -7,7 +7,7 @@ use crate::link::{FileLoc, FileSystemLoc, Position};
 use crate::markup::{self, Content, File};
 use crate::Config;
 use std::ffi::OsStr;
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::path_buf::PathBuf;
 use futures::StreamExt;
@@ -112,7 +112,7 @@ pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Re
     } else {
         let markup_file = File {
             markup_type,
-            locator: Rc::new(FileLoc::System(FileSystemLoc::from(file))),
+            locator: Arc::new(FileLoc::System(FileSystemLoc::from(file))),
             content: Content::LocalFile(file.into()),
             start: Position::new(),
         };

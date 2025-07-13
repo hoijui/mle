@@ -6,7 +6,7 @@
 use clap::{builder::PossibleValue, ValueEnum};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, ffi::OsStr, rc::Rc, str::FromStr};
+use std::{borrow::Cow, ffi::OsStr, str::FromStr, sync::Arc};
 
 use crate::path_buf::PathBuf;
 use async_std::{fs, path::Path};
@@ -45,7 +45,7 @@ impl Default for Content<'_> {
 #[derive(Debug, Default)]
 pub struct File<'a> {
     pub markup_type: Type,
-    pub locator: Rc<FileLoc>,
+    pub locator: Arc<FileLoc>,
     pub content: Content<'a>,
     /// The first position of the above `content` is at this location.
     /// In the normal sense, this is line 0, column 0,
