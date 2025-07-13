@@ -3,6 +3,8 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::sync::LazyLock;
+
 use crate::anchor;
 use crate::anchor::Anchor;
 use crate::config::Config;
@@ -12,16 +14,14 @@ use crate::link::Position;
 use crate::markup;
 use crate::markup::Content;
 use crate::markup::File;
-use lazy_static::lazy_static;
 use pulldown_cmark::{BrokenLink, Event, Options, Parser, Tag};
 use regex::Regex;
 
 pub struct LinkExtractor();
 
-lazy_static! {
-    static ref NON_ID_CHARS: Regex = Regex::new(r"[^A-Za-z0-9 -]").unwrap();
-    static ref LEADING_NUMBER: Regex = Regex::new(r"^[0-9]+").unwrap();
-}
+static NON_ID_CHARS: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^A-Za-z0-9 -]").unwrap());
+static LEADING_NUMBER: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[0-9]+").unwrap());
+static CHECK_BOX_VALUES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[ xX]?$").unwrap());
 
 /// 1. downcase the headline
 /// 2. remove anything that is not a letter, number, space or hyphen
@@ -56,26 +56,53 @@ impl LinkExtractor {
 }
 
 impl super::LinkExtractor for LinkExtractor {
-    fn find_links_and_anchors(
+    async fn find_links_and_anchors(
         &self,
-        file: &File,
+        file: &File<'_>,
         conf: &Config,
     ) -> std::io::Result<super::ParseRes> {
         let html_le = super::html::LinkExtractor();
 
         // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
-        let pos_from_idx = Self::create_pos_from_idx(&file.content.fetch()?);
+        let pos_from_idx = Self::create_pos_from_idx(file.content.fetch().await?.as_ref());
 
         let callback = &mut |broken_link: BrokenLink| {
-            let pos = pos_from_idx(broken_link.span.start) + &file.start;
-            let annotated_target = format!("BAD_REF=>{}", broken_link.reference.as_ref());
-            let bad_link = Link::new(file.locator.clone(), pos, &annotated_target);
-            log::warn!("Bad reference link: {bad_link}");
+            let refrnc = broken_link.reference.as_ref();
+            if CHECK_BOX_VALUES.is_match(refrnc) {
+                // As we will not be able to get everyone to use the correct:
+                //
+                // ```
+                // - \[x\] bli`
+                // - \[ \] bla
+                // ```
+                //
+                // instead of:
+                //
+                // ```
+                // - [x] bli`
+                // - [ ] bla
+                // ```
+                //
+                // Both because it is much uglier
+                // and because not all renderers support it,
+                // let's ignore the later,
+                // if they appear here as invalid reference links.
+                log::debug!("Broken reference link detected for link reference: {refrnc:#?}");
+                return None;
+                // let pos = pos_from_idx(broken_link.span.start) + &file.start;
+                // let annotated_target = format!("MISSING_REF-{refrnc}");
+                // let bad_link = Link::new(file.locator.clone(), pos, &annotated_target);
+                // log::warn!("Bad reference link: {bad_link}");
+                // return Some((
+                //     CowStr::from(annotated_target),
+                //     CowStr::from(refrnc.to_owned()),
+                // ));
+            }
             // TODO Add bad_link to a list and return that list from this function for more flexibility on the library users side.
             None
         };
 
-        let text = file.content.fetch()?;
+        let text = file.content.fetch().await?;
         let parser = Parser::new_with_broken_link_callback(
             &text,
             Options::ENABLE_HEADING_ATTRIBUTES,
@@ -152,7 +179,7 @@ impl super::LinkExtractor for LinkExtractor {
                             });
                         }
                         _ => (),
-                    };
+                    }
                 }
                 Event::Html(content) | Event::InlineHtml(content) /* TODO FALL_THROUGH_TO_NEXT_THREE, OR ... (see TODO below) */ => {
                     let cur_pos = pos_from_idx(range.start) + &file.start - Position { line: 1, column: 0 };
@@ -162,7 +189,7 @@ impl super::LinkExtractor for LinkExtractor {
                         content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
                     };
-                    let mut sub_parsed = html_le.find_links_and_anchors(&sub_markup, conf)?;
+                    let mut sub_parsed = html_le.find_links_and_anchors(&sub_markup, conf).await?;
                     if conf.extract_links() {
                         links.append(&mut sub_parsed.links);
                     }
@@ -182,7 +209,7 @@ impl super::LinkExtractor for LinkExtractor {
                     }
                 }
                 _ => (),
-            };
+            }
         }
         Ok(super::ParseRes { links, anchors })
     }
@@ -196,10 +223,17 @@ mod tests {
     use ntest::test_case;
     use url::Url;
 
-    fn find_links(content: &str) -> Vec<Link> {
+    macro_rules! aw_through_engine {
+        ($e:expr) => {
+            tokio_test::block_on($e)
+        };
+    }
+
+    async fn find_links(content: &str) -> Vec<Link> {
         let markup_file = File::dummy(content, markup::Type::Markdown);
         let conf = Config::default();
         super::super::find_links(&markup_file, &conf)
+            .await
             .map(|parsed| parsed.links)
             .expect("No error")
     }
@@ -214,72 +248,72 @@ mod tests {
         }
     }
 
-    #[test]
-    fn inline_no_link() {
+    #[tokio::test]
+    async fn inline_no_link() {
         let input = "]This is not a () link](! has no title attribute.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn commented_link() {
+    #[tokio::test]
+    async fn commented_link() {
         let input = "]This is not a () <!--[link](link)-->.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn nested_links() {
+    #[tokio::test]
+    async fn nested_links() {
         let input =
             "\n\r\t\n[![](http://meritbadge.herokuapp.com/mle)](https://crates.io/crates/mle)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let img = link_new_http_no_anchor("http://meritbadge.herokuapp.com/mle", 3, 2);
         let link = link_new_http_no_anchor("https://crates.io/crates/mle", 3, 1);
         assert_eq!(vec![link, img], result);
     }
 
-    #[test]
-    fn link_escaped() {
+    #[tokio::test]
+    async fn link_escaped() {
         let input = "This is not a \\[link\\](random_link).";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn link_in_headline() {
+    #[tokio::test]
+    async fn link_in_headline() {
         let input = "  # This is a [link](http://example.net/).";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result[0].source.pos.column, 15);
     }
 
-    #[test]
-    fn link_with_newline() {
+    #[tokio::test]
+    async fn link_with_newline() {
         let input = "This is a [link](\nhttp://example.net/)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result[0].source.pos.column, 11);
         assert_eq!(result[0].target.to_string(), "http://example.net/");
     }
 
-    #[test]
-    fn link_relative_with_newline_and_space_wrong() {
+    #[tokio::test]
+    async fn link_relative_with_newline_and_space_wrong() {
         let input = "[link](doc/spaced name.md)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn link_relative_with_newline_and_space() {
+    #[tokio::test]
+    async fn link_relative_with_newline_and_space() {
         let input = "[link](<doc/spaced name.md>)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result[0].source.pos.column, 1);
         assert_eq!(result[0].target.to_string(), "doc/spaced name.md");
     }
 
-    #[test]
-    fn link_relative_with_newline() {
+    #[tokio::test]
+    async fn link_relative_with_newline() {
         let input = "Download the file following the [assembly guide](
 ../../doc/assembly/Production_Guide.md)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result[0].source.pos.line, 1);
         assert_eq!(result[0].source.pos.column, 33);
         assert_eq!(
@@ -288,104 +322,105 @@ mod tests {
         );
     }
 
-    #[test]
-    fn link_target_on_new_line() {
+    #[tokio::test]
+    async fn link_target_on_new_line() {
         let input = "bla [Solar Pura](\nhttp://example.net/) work,";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result[0].source.pos.column, 5);
         assert_eq!(result[0].target.to_string(), "http://example.net/");
     }
 
-    #[test]
-    fn no_link_colon() {
+    #[tokio::test]
+    async fn no_link_colon() {
         let input = "This is not a [link]:bla.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn inline_code() {
+    #[tokio::test]
+    async fn inline_code() {
         let input = " `[code](http://example.net/)`, no link!.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn link_near_inline_code() {
+    #[tokio::test]
+    async fn link_near_inline_code() {
         let input = " `bug` [code](http://example.net/), link!.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 1, 8);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn link_very_near_inline_code() {
+    #[tokio::test]
+    async fn link_very_near_inline_code() {
         let input = "`bug`[code](http://example.net/)";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 1, 6);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn code_block() {
+    #[tokio::test]
+    async fn code_block() {
         let input = " ``` js\n[code](http://example.net/)```, no link!.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn html_code_block() {
+    #[tokio::test]
+    async fn html_code_block() {
         let input = "<script>\n[code](http://example.net/)</script>, no link!.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn escaped_code_block() {
+    #[tokio::test]
+    async fn escaped_code_block() {
         let input = "   klsdjf \\`[escape](http://example.net/)\\`, no link!.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 1, 13);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn link_in_code_block() {
+    #[tokio::test]
+    async fn link_in_code_block() {
         let input = "```\n[only code](http://example.net/)\n```.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn image_reference() {
+    #[tokio::test]
+    async fn image_reference() {
         let link_str = "http://example.net/";
-        let input = &format!("\n\nBla ![This is an image link]({})", link_str);
-        let result = find_links(input);
+        let input = &format!("\n\nBla ![This is an image link]({link_str})");
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 3, 5);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn link_no_title() {
+    #[tokio::test]
+    async fn link_no_title() {
         let link_str = "http://example.net/";
-        let input = &format!("[This link]({}) has no title attribute.", link_str);
-        let result = find_links(input);
+        let input = &format!("[This link]({link_str}) has no title attribute.");
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 1);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn link_with_title() {
+    #[tokio::test]
+    async fn link_with_title() {
         let link_str = "http://example.net/";
-        let input = &format!("\n123[This is a link]({} \"with title\") oh yea.", link_str);
-        let result = find_links(input);
+        let input = &format!("\n123[This is a link]({link_str} \"with title\") oh yea.");
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 2, 4);
         assert_eq!(vec![expected], result);
     }
 
+    // #[tokio::test]
     #[test_case("<http://example.net/>", 1)]
     #[test_case("This is a short link <http://example.net/>", 22)]
     fn inline_link(input: &str, column: usize) {
-        let result = find_links(input);
+        let result = aw_through_engine!(find_links(input));
         let expected = link_new_http_no_anchor("http://example.net/", 1, column);
         assert_eq!(vec![expected], result);
     }
@@ -395,7 +430,7 @@ mod tests {
     // #[test_case("This is a short link http://example.net/", 22)]
     // #[test_case("This is a short link https://example.net/", 22)]
     // fn inline_link_github(input: &str, column: usize) {
-    //     let result = find_links(input);
+    //     let result = find_links(input).await;
     //     let expected = link_new_http_no_anchor("http://example.net/", 1, column);
     //     assert_eq!(vec![expected], result);
     // }
@@ -409,89 +444,85 @@ mod tests {
         test_name = "html_link_no_target"
     )]
     fn html_link(input: &str) {
-        let result = find_links(input);
+        let result = aw_through_engine!(find_links(input));
         let expected = link_new_http_no_anchor("http://example.net/", 1, 11);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn html_link_ident() {
+    #[tokio::test]
+    async fn html_link_ident() {
         let input = "123<a href=\"http://example.net/\"> link text</a>";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 1, 14);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn html_link_new_http_no_anchor_line() {
+    #[tokio::test]
+    async fn html_link_new_http_no_anchor_line() {
         let input = "\n123<a href=\"http://example.net/\"> link text</a>";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 2, 14);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn raw_html_issue_31() {
+    #[tokio::test]
+    async fn raw_html_issue_31() {
         let input = "Some text <a href=\"http://example.net/\">link text</a> more text.";
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor("http://example.net/", 1, 21);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn referenced_link() {
+    #[tokio::test]
+    async fn referenced_link() {
         let link_str = "http://example.net/";
-        let input = &format!(
-            "This is [an example][myref] reference-style link.\n\n[myref]: {}",
-            link_str
-        );
-        let result = find_links(input);
+        let input =
+            &format!("This is [an example][myref] reference-style link.\n\n[myref]: {link_str}");
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn referenced_link_with_spaces() {
+    #[tokio::test]
+    async fn referenced_link_with_spaces() {
         let link_str = "http://example.net/";
         let input = &format!(
-            "This is [an example][space containing reference text] reference-style link.\n\n[space containing reference text]: {}",
-            link_str
+            "This is [an example][space containing reference text] reference-style link.\n\n[space containing reference text]: {link_str}"
         );
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn referenced_link_case_insensitive() {
+    #[tokio::test]
+    async fn referenced_link_case_insensitive() {
         let link_str = "http://example.net/";
         let input = &format!(
-            "This is [an example][case-insensitive reference text] reference-style link.\n\n[CASE-insensitive Reference Text]: {}",
-            link_str
+            "This is [an example][case-insensitive reference text] reference-style link.\n\n[CASE-insensitive Reference Text]: {link_str}"
         );
-        let result = find_links(input);
+        let result = find_links(input).await;
         let expected = link_new_http_no_anchor(link_str, 1, 9);
         assert_eq!(vec![expected], result);
     }
 
-    #[test]
-    fn referenced_link_tag_only() {
+    #[tokio::test]
+    async fn referenced_link_tag_only() {
         let link_str = "http://example.net/";
-        let input = &format!("Foo Bar\n\n[tag-without-reference]: {}", link_str);
-        let result = find_links(input);
+        let input = &format!("Foo Bar\n\n[tag-without-reference]: {link_str}");
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn referenced_link_no_tag_only_reference() {
+    #[tokio::test]
+    async fn referenced_link_no_tag_only_reference() {
         let input = "[link][reference]";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
         // TODO: Check broken links
     }
 
-    #[test]
-    fn checkboxes() {
+    #[tokio::test]
+    async fn checkboxes() {
         let input = "
 - [ ] unchecked
 - [x] checked lower
@@ -517,12 +548,12 @@ c) [X] checked upper
 [x] checked lower
 [X] checked upper
 ";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn checkboxes_with_tags() {
+    #[tokio::test]
+    async fn checkboxes_with_tags() {
         let input = "
 - [ ] unchecked
 - [x] checked lower
@@ -550,21 +581,21 @@ c) [X] checked upper
 
 # Hack
 
-Define referencable link tags,
-so the above woudl be valid links,
+Define referenceable link tags,
+so the above would be valid links,
 if (wrongly) detected as such.
 
 [ ]: unchecked
 [x]: checked-lower
 [X]: checked-upper
 ";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn checkboxes_quoted() {
-        let input = r#"
+    #[tokio::test]
+    async fn checkboxes_quoted() {
+        let input = r"
 - \[ \] unchecked
 - \[x\] checked lower
 - \[X\] checked upper
@@ -598,13 +629,13 @@ if (wrongly) detected as such.
 [ ]: unchecked
 [x]: checked-lower
 [X]: checked-upper
-"#;
-        let result = find_links(input);
+";
+        let result = find_links(input).await;
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn non_checkboxes() {
+    #[tokio::test]
+    async fn non_checkboxes() {
         let input = "
 - [ ](a)
 - [x](b)
@@ -630,7 +661,7 @@ c) [X](c)
 [x](b)
 [X](c)
 ";
-        let result = find_links(input);
+        let result = find_links(input).await;
         assert_eq!(result.len(), 18);
     }
 }

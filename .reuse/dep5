@@ -5,9 +5,11 @@ Source: https://gitlab.com/hoijui/mle
 
 Files:
     benches/*.md
+    benches/*.md*
     benches/*.html
     benches/*.MD
     benches/*.xhtml
+    benches/*notmd
     benches/*notmd
 Copyright:
     Robin Vobruba <hoijui.quaero@gmail.com>

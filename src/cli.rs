@@ -7,17 +7,22 @@ use clap::command;
 use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use const_format::formatcp;
-use lazy_static::lazy_static;
 use mle::ignore_path::IgnorePath;
 use mle::result;
 use mle::Config;
 use mle::{ignore_link, ignore_path};
 use mle::{markup, BoxResult};
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::LazyLock;
 use std::{env, io};
 use wildmatch::WildMatch;
+
+// #[cfg(feature = "async")]
+// use async_std::path::PathBuf;
+use mle::path_buf::PathBuf;
+// #[cfg(not(feature = "async"))]
+// use std::path::PathBuf;
 
 const A_N_FILES: &str = "files";
 const A_L_VERSION: &str = "version";
@@ -47,9 +52,7 @@ const A_S_RESULT_EXTENDED: char = 'E';
 const A_L_RESULT_FLUSH: &str = "result-flush";
 const A_S_RESULT_FLUSH: char = 'f';
 
-lazy_static! {
-    static ref STDOUT_PATH: PathBuf = PathBuf::from_str("-").unwrap();
-}
+static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
 
 fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
@@ -80,7 +83,7 @@ fn arg_files() -> Arg {
             See also --{A_L_NON_RECURSIVE}."
         ))
         .num_args(1..)
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .value_name("FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
@@ -115,7 +118,7 @@ fn arg_anchors() -> Arg {
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .action(ArgAction::Set)
 }
 
@@ -180,7 +183,7 @@ fn arg_links_file() -> Arg {
         .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        .value_parser(value_parser!(PathBuf))
+        .value_parser(value_parser!(std::path::PathBuf))
         .short(A_S_LINKS_FILE)
         .long(A_L_LINKS_FILE)
         .action(ArgAction::Set)
@@ -213,8 +216,8 @@ fn arg_result_flush() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
-lazy_static! {
-    static ref ARGS: [Arg; 13] = [
+static ARGS: LazyLock<[Arg; 13]> = LazyLock::new(|| {
+    [
         arg_version(),
         arg_quiet(),
         arg_files(),
@@ -229,8 +232,8 @@ lazy_static! {
         arg_result_format(),
         arg_result_extended(),
         arg_result_flush(),
-    ];
-}
+    ]
+});
 
 fn find_duplicate_short_options() -> Vec<char> {
     let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
@@ -266,13 +269,13 @@ fn arg_matcher() -> Command {
 
 fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files_and_dirs = vec![];
-    if let Some(out_files) = args.get_many::<PathBuf>(A_N_FILES) {
+    if let Some(out_files) = args.get_many::<std::path::PathBuf>(A_N_FILES) {
         for out_file in out_files {
             files_and_dirs.push(out_file.into());
         }
     }
     if files_and_dirs.is_empty() {
-        files_and_dirs.push(env::current_dir()?);
+        files_and_dirs.push(env::current_dir()?.into());
     }
 
     Ok(files_and_dirs)

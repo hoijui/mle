@@ -3,13 +3,14 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::path::PathBuf;
+use crate::path_buf::PathBuf;
 
+use serde::{Deserialize, Serialize};
 use wildmatch::WildMatch;
 
 use crate::{ignore_path::IgnorePath, markup, result};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
     /// Markup files and dirs to scan for markup files.
     /// Out of all the resulting markup files,
@@ -64,7 +65,7 @@ impl Default for Config {
             anchors: None,
             ignore_paths: Default::default(),
             ignore_links: Default::default(),
-            markup_types: Default::default(),
+            markup_types: vec![markup::Type::Markdown, markup::Type::Html],
             result_format: Default::default(),
             result_extended: false,
             result_flush: false,

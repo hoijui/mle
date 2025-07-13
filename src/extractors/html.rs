@@ -52,7 +52,7 @@ impl<'a> Scanner<'a> {
         let found = self
             .line
             .get(self.column..self.column + token.len())
-            .map_or(false, |slc| slc.eq(token));
+            .is_some_and(|slc| slc.eq(token));
         if found {
             self.column += token.len();
         }
@@ -63,7 +63,7 @@ impl<'a> Scanner<'a> {
         let mut found = self
             .line
             .get(self.column..self.column + token.len())
-            .map_or(false, |slc| slc.eq(token));
+            .is_some_and(|slc| slc.eq(token));
         if found {
             found = false;
             let mut count = 0;
@@ -86,7 +86,7 @@ impl<'a> Scanner<'a> {
         let found = self
             .chars
             .get(self.column)
-            .map_or(false, |slc| slc.eq(&token));
+            .is_some_and(|slc| slc.eq(&token));
         if found {
             self.column += 1;
         }
@@ -165,15 +165,15 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    pub fn is_done(&self) -> bool {
+    pub const fn is_done(&self) -> bool {
         self.column >= self.chars.len()
     }
 }
 
 impl super::LinkExtractor for LinkExtractor {
-    fn find_links_and_anchors(
+    async fn find_links_and_anchors(
         &self,
-        file: &File,
+        file: &File<'_>,
         conf: &Config,
     ) -> std::io::Result<super::ParseRes> {
         let mut links: Vec<Link> = Vec::new();
@@ -183,7 +183,7 @@ impl super::LinkExtractor for LinkExtractor {
         let mut is_anchor = false;
         // let mut element_part: Option<Attribute>;
         let mut scanner = Scanner::empty();
-        for (line, line_str) in file.content.fetch()?.as_ref().lines().enumerate() {
+        for (line, line_str) in file.content.fetch().await?.as_ref().lines().enumerate() {
             scanner.reset(line_str);
             while !scanner.is_done() {
                 match state {
@@ -254,46 +254,43 @@ impl super::LinkExtractor for LinkExtractor {
                     ParserState::Attribute => {
                         scanner.skip_ws();
                         if let Some(attrib_cont) = attribute {
-                            match scanner.take_any() {
-                                Some('"') => {
-                                    let attrib_column = scanner.column;
-                                    let attrib_target = scanner.take_non('"').expect(
-                                        "Bad HTML! need to finnish attribute value with '\"' (Note: We do not support multi-line attribute values (yet)!)",
-                                    );
-                                    scanner.take_single('"');
-                                    let pos = Position {
-                                        line: line + 1,
-                                        column: attrib_column + 1,
-                                    } + &file.start;
-                                    match attrib_cont {
-                                        Attribute::Href => links.push(Link::new(
-                                            file.locator.clone(),
+                            if scanner.take_any() == Some('"') {
+                                let attrib_column = scanner.column;
+                                let attrib_target = scanner.take_non('"').expect(
+                                    "Bad HTML! need to finish attribute value with '\"' (Note: We do not support multi-line attribute values (yet)!)",
+                                );
+                                scanner.take_single('"');
+                                let pos = Position {
+                                    line: line + 1,
+                                    column: attrib_column + 1,
+                                } + &file.start;
+                                match attrib_cont {
+                                    Attribute::Href => links.push(Link::new(
+                                        file.locator.clone(),
+                                        pos,
+                                        attrib_target,
+                                    )),
+                                    Attribute::Name => anchors.push(Anchor {
+                                        source: link::Locator {
+                                            file: file.locator.clone(),
                                             pos,
-                                            attrib_target,
-                                        )),
-                                        Attribute::Name => anchors.push(Anchor {
-                                            source: link::Locator {
-                                                file: file.locator.clone(),
-                                                pos,
-                                            },
-                                            name: attrib_target.to_string(),
-                                            r#type: anchor::Type::Direct,
-                                        }),
-                                        Attribute::Id => anchors.push(Anchor {
-                                            source: link::Locator {
-                                                file: file.locator.clone(),
-                                                pos,
-                                            },
-                                            name: attrib_target.to_string(),
-                                            r#type: anchor::Type::ElementId,
-                                        }),
-                                        Attribute::Other => {}
-                                    }
-                                    state = ParserState::Element;
-                                    attribute = None;
+                                        },
+                                        name: attrib_target.to_string(),
+                                        r#type: anchor::Type::Direct,
+                                    }),
+                                    Attribute::Id => anchors.push(Anchor {
+                                        source: link::Locator {
+                                            file: file.locator.clone(),
+                                            pos,
+                                        },
+                                        name: attrib_target.to_string(),
+                                        r#type: anchor::Type::ElementId,
+                                    }),
+                                    Attribute::Other => {}
                                 }
-                                Some(_) | None => {}
-                            };
+                                state = ParserState::Element;
+                                attribute = None;
+                            }
                         }
                     }
                 }
@@ -314,24 +311,28 @@ mod tests {
     use super::*;
     use ntest::test_case;
 
-    fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
+    async fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let conf = Config::default();
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf).map(|parsed| parsed.links)
+        super::super::find_links(&markup_file, &conf)
+            .await
+            .map(|parsed| parsed.links)
     }
 
-    fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
+    async fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
         let conf = Config {
             links: None,
             anchors: Some(None),
             ..Config::default()
         };
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf).map(|parsed| parsed.anchors)
+        super::super::find_links(&markup_file, &conf)
+            .await
+            .map(|parsed| parsed.anchors)
     }
 
-    fn links(input: &str, line: usize, column: usize) {
-        let result = find_links(input).expect("No error");
+    async fn links(input: &str, line: usize, column: usize) {
+        let result = find_links(input).await.expect("No error");
         let expected = Link::new(
             FileLoc::dummy(),
             Position { line, column },
@@ -339,13 +340,15 @@ mod tests {
         );
         assert_eq!(vec![expected], result);
     }
-    #[test]
-    fn links_single_t() {
+
+    #[tokio::test]
+    async fn links_single_t() {
         links(
             "<a\nhref\n=\n  \"https://www.w3schools.com\">\nVisit W3Schools.com!\n</a>",
             4,
             4,
-        );
+        )
+        .await;
     }
 
     #[test]
@@ -393,36 +396,36 @@ mod tests {
         Ok(())
     }
 
-    #[test]
-    fn no_link() -> std::io::Result<()> {
+    #[tokio::test]
+    async fn no_link() -> std::io::Result<()> {
         let input = "]This is not a <has> no link <h1>Bla</h1> attribute.";
-        let result = find_links(input)?;
+        let result = find_links(input).await?;
         assert!(result.is_empty());
         Ok(())
     }
 
-    #[test]
-    fn commented() -> std::io::Result<()> {
+    #[tokio::test]
+    async fn commented() -> std::io::Result<()> {
         let input = "df <!-- <a href=\"http://wiki.selfhtml.org\"> haha</a> -->";
-        let result = find_links(input)?;
+        let result = find_links(input).await?;
         assert!(result.is_empty());
         Ok(())
     }
 
-    #[test]
-    fn empty_attrib() {
+    #[tokio::test]
+    async fn empty_attrib() {
         let input = r#"<img src="img/file.jpg" alt="" width="800" />"#;
-        let result = find_links(input).expect("No error");
+        let result = find_links(input).await.expect("No error");
         assert!(result.is_empty());
     }
 
-    #[test]
-    fn two_with_extra_attrib() {
+    #[tokio::test]
+    async fn two_with_extra_attrib() {
         let input = r#"
         <a href="https://www.w3schools.com" target="_blank">Visit W3Schools.com!</a>
         <a href="https://www.w3schools.com" target="_blank">Visit W3Schools.com!</a>
         "#;
-        let result = find_links(input).expect("No error");
+        let result = find_links(input).await.expect("No error");
         let expected1 = Link::new(
             FileLoc::dummy(),
             Position {
@@ -440,6 +443,12 @@ mod tests {
             "https://www.w3schools.com",
         );
         assert_eq!(vec![expected1, expected2], result);
+    }
+
+    macro_rules! aw_through_engine {
+        ($e:expr) => {
+            tokio_test::block_on($e)
+        };
     }
 
     #[test_case(
@@ -468,7 +477,7 @@ mod tests {
         10
     )]
     fn links(input: &str, line: usize, column: usize) {
-        let result = find_links(input).expect("No error");
+        let result = aw_through_engine!(find_links(input)).expect("No error");
         let expected = Link::new(
             FileLoc::dummy(),
             Position { line, column },
@@ -508,7 +517,7 @@ mod tests {
         24
     )]
     fn anchors(input: &str, direct: bool, line: usize, column: usize) {
-        let result = find_anchors(input).expect("No error");
+        let result = aw_through_engine!(find_anchors(input)).expect("No error");
         let expected = Anchor {
             source: link::Locator {
                 file: FileLoc::dummy(),
@@ -528,7 +537,7 @@ mod tests {
     #[test_case(r#"<!--comment--><a namename="the_anchor">Visit W3Schools.com!</a>"#)]
     #[test_case(r#"<!--comment--><abc name="the_anchor">Visit W3Schools.com!</abc>"#)]
     fn no_anchors(input: &str) {
-        let result = find_anchors(input).expect("No error");
+        let result = aw_through_engine!(find_anchors(input)).expect("No error");
         assert_eq!(Vec::<Anchor>::new(), result);
     }
 }

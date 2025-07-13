@@ -6,14 +6,10 @@
 use clap::{builder::PossibleValue, ValueEnum};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
-use std::{
-    borrow::Cow,
-    ffi::OsStr,
-    fs,
-    path::{Path, PathBuf},
-    rc::Rc,
-    str::FromStr,
-};
+use std::{borrow::Cow, ffi::OsStr, str::FromStr, sync::Arc};
+
+use crate::path_buf::PathBuf;
+use async_std::{fs, path::Path};
 
 use crate::link::{FileLoc, Position};
 
@@ -32,9 +28,9 @@ impl<'a> Content<'a> {
     /// # Errors
     /// If the content has to be read from a URL or the File-System,
     /// there might be an read error.
-    pub fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
+    pub async fn fetch(&self) -> Result<Cow<'a, str>, std::io::Error> {
         match self {
-            Self::LocalFile(file_name) => fs::read_to_string(file_name).map(Cow::Owned),
+            Self::LocalFile(file_name) => fs::read_to_string(file_name).await.map(Cow::Owned),
             Self::InMemory(content) => Ok(Cow::Borrowed(content)),
         }
     }
@@ -49,7 +45,7 @@ impl Default for Content<'_> {
 #[derive(Debug, Default)]
 pub struct File<'a> {
     pub markup_type: Type,
-    pub locator: Rc<FileLoc>,
+    pub locator: Arc<FileLoc>,
     pub content: Content<'a>,
     /// The first position of the above `content` is at this location.
     /// In the normal sense, this is line 0, column 0,
@@ -121,10 +117,8 @@ impl Type {
     /// (usually) judging from the file-extension.
     #[must_use]
     pub fn is_markup_url(url: &Url) -> bool {
-        url.path_segments().map_or(false, |path_segments| {
-            path_segments.last().map_or(false, |last_path_segment| {
-                Self::is_markup_file(last_path_segment)
-            })
+        url.path_segments().is_some_and(|mut path_segments| {
+            path_segments.next_back().is_some_and(Self::is_markup_file)
         })
     }
 
