@@ -86,11 +86,38 @@ impl PathBuf {
         Self(self.0.join(path))
     }
 
-    #[must_use]
+    /// Returns a path that becomes `self` when joined onto `base`.
+    ///
+    /// # Errors
+    ///
+    /// If `base` is not a prefix of `self` (i.e., [`starts_with`]
+    /// returns `false`), returns [`Err`].
+    ///
+    /// [`starts_with`]: #method.starts_with
+    /// [`Err`]: https://doc.rust-lang.org/std/result/enum.Result.html#variant.Err
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use async_std::path::{Path, PathBuf};
+    ///
+    /// let path = Path::new("/test/haha/foo.txt");
+    ///
+    /// assert_eq!(path.strip_prefix("/"), Ok(Path::new("test/haha/foo.txt")));
+    /// assert_eq!(path.strip_prefix("/test"), Ok(Path::new("haha/foo.txt")));
+    /// assert_eq!(path.strip_prefix("/test/"), Ok(Path::new("haha/foo.txt")));
+    /// assert_eq!(path.strip_prefix("/test/haha/foo.txt"), Ok(Path::new("")));
+    /// assert_eq!(path.strip_prefix("/test/haha/foo.txt/"), Ok(Path::new("")));
+    /// assert_eq!(path.strip_prefix("test").is_ok(), false);
+    /// assert_eq!(path.strip_prefix("/haha").is_ok(), false);
+    ///
+    /// let prefix = PathBuf::from("/test/");
+    /// assert_eq!(path.strip_prefix(prefix), Ok(Path::new("haha/foo.txt")));
+    /// ```
     pub fn strip_prefix<P>(&self, base: P) -> Result<&async_std::path::Path, StripPrefixError>
     where
         P: AsRef<async_std::path::Path>,
-        {
+    {
         self.0.strip_prefix(base)
     }
 }

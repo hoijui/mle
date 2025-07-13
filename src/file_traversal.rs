@@ -49,9 +49,7 @@ pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> R
     let markup_types = &config.markup_types;
 
     log::debug!(
-        "Searching for files of markup types '{:?}' in directory '{:?}' ...",
-        markup_types,
-        root
+        "Searching for files of markup types '{markup_types:?}' in directory '{root:?}' ..."
     );
 
     let mut dir_walker = WalkDir::new(root);
@@ -116,7 +114,7 @@ pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Re
             content: Content::LocalFile(file.into()),
             start: Position::new(),
         };
-        log::debug!("Found file: '{:?}'", markup_file);
+        log::debug!("Found file: '{markup_file:?}'");
         result.push(markup_file);
     }
 

@@ -339,7 +339,7 @@ impl FileSystemLoc {
 
     /// Returns or constructs the absolute version of this location.
     #[must_use]
-    pub fn to_absolute(&self, base: &Path) -> Cow<Self> {
+    pub fn to_absolute(&self, base: &Path) -> Cow<'_, Self> {
         match self {
             Self::Absolute(_path) => Cow::Borrowed(self),
             Self::Relative(path) => Cow::Owned(Self::Absolute(path.to_path(base).into())),
@@ -352,7 +352,7 @@ impl FileSystemLoc {
     ///
     /// If `to_absolute(&self, base: &Path)` returned `Self::Relative`.
     #[must_use]
-    pub fn to_absolute_path(&self, base: &Path) -> Cow<PathBuf> {
+    pub fn to_absolute_path(&self, base: &Path) -> Cow<'_, PathBuf> {
         match self.to_absolute(base).into_owned() {
             Self::Absolute(path) => Cow::Owned(path),
             Self::Relative(_) => {
