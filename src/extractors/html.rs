@@ -451,6 +451,26 @@ mod tests {
         };
     }
 
+    #[tokio::test]
+    async fn document() {
+        find_links(
+            "
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>My First Heading</h1>
+
+<p>My first paragraph.</p>
+
+</body>
+</html>
+",
+        )
+        .await
+        .expect("No error");
+    }
+
     #[test_case(
         "<a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>",
         1,
