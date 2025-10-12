@@ -17,6 +17,7 @@ enum ParserState {
     Element,
     EqualSign,
     Attribute,
+    DocType,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -147,8 +148,20 @@ impl<'a> Scanner<'a> {
         &self.line[self.column - count..self.column]
     }
 
-    pub fn take_non(&mut self, token: char) -> Option<&'a str> {
+    pub fn take_non_ws_or_in(&mut self, token: &str) -> &'a str {
         let mut count = 0;
+        while let Some(chr) = self.chars.get(self.column + count) {
+            if chr.is_whitespace() || token.contains(*chr) {
+                break;
+            }
+            count += 1;
+        }
+        self.column += count;
+        &self.line[self.column - count..self.column]
+    }
+
+    pub fn take_non(&mut self, token: char) -> Option<&'a str> {
+        let mut count: usize = 0;
         let mut found = false;
         while let Some(chr) = self.chars.get(self.column + count) {
             if chr == &token {
@@ -197,8 +210,10 @@ impl super::LinkExtractor for LinkExtractor {
                     ParserState::Text => {
                         if scanner.take("<!--") {
                             state = ParserState::Comment;
+                        } else if scanner.take("<!") {
+                            // e.g. <!DOCTYPE
+                            state = ParserState::DocType;
                         } else if scanner.take_single('<') {
-                            // not "<a"!
                             scanner.skip_ws();
                             let _end = scanner.take_single('/');
                             let elem = scanner.take_non_ws_or('>');
@@ -209,6 +224,23 @@ impl super::LinkExtractor for LinkExtractor {
                             }
                         } else {
                             scanner.take_any();
+                        }
+                    }
+                    ParserState::DocType => {
+                        scanner.skip_ws();
+                        if scanner.take_single('>') {
+                            state = ParserState::Text;
+                        } else {
+                            let part = scanner.take_non_ws_or_in(">\"");
+                            log::debug!("<!part: '{part}'");
+                            if scanner.take_single('>') {
+                                state = ParserState::Text;
+                            } else if scanner.take_single('"') {
+                                scanner.take_non('"');
+                                scanner.take_single('"');
+                            } else {
+                                scanner.skip_ws();
+                            }
                         }
                     }
                     ParserState::Element => {
