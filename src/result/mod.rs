@@ -456,7 +456,7 @@ impl AnchorOwnedRec {
                 src_is_url: anchor.source.file.is_url(),
                 src_is_local: anchor.source.file.is_local(),
                 src_is_remote: anchor.source.file.is_remote(),
-                name: anchor.name.to_string(),
+                name: anchor.name.clone(),
                 // r#type: format!("{:?}", anchor.r#type),
                 r#type: anchor.r#type,
             })
@@ -465,7 +465,7 @@ impl AnchorOwnedRec {
                 src_file: anchor.source.file.to_string(),
                 src_line: anchor.source.pos.line,
                 src_column: anchor.source.pos.column,
-                name: anchor.name.to_string(),
+                name: anchor.name.clone(),
             })
         }
     }

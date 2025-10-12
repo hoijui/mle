@@ -54,8 +54,9 @@ pub struct File<'a> {
     pub start: Position,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
 pub enum Type {
+    #[default]
     Markdown,
     Html,
 }
@@ -68,12 +69,6 @@ impl ValueEnum for Type {
 
     fn to_possible_value(&self) -> Option<PossibleValue> {
         Some(self.as_str().into())
-    }
-}
-
-impl Default for Type {
-    fn default() -> Self {
-        Self::Markdown
     }
 }
 
