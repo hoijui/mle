@@ -340,13 +340,15 @@ pub fn parse_args() -> BoxResult<Config> {
         .unwrap_or_default()
         .map(ToOwned::to_owned)
         .collect();
-    let mut markup_types = vec![markup::Type::Markdown, markup::Type::Html];
-    if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
-        markup_types = types
+    let markup_types = if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
+        types
             .copied()
             .map(markup::Type::from_str)
-            .collect::<Result<Vec<markup::Type>, _>>()?;
-    }
+            .collect::<Result<Vec<markup::Type>, _>>()?
+    } else {
+        vec![markup::Type::Markdown, markup::Type::Html]
+    };
+
     let result_format = args
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
         .copied()
