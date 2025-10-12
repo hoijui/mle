@@ -471,6 +471,14 @@ mod tests {
         .expect("No error");
     }
 
+    #[test_case("<!DOCTYPE html>")]
+    #[test_case("<!DocType html>")]
+    #[test_case("<!Doctype html>")]
+    #[test_case("<!doctype html>")]
+    fn doc_type(input: &str) {
+        aw_through_engine!(find_links(input)).expect("No error");
+    }
+
     #[test_case(
         "<a href=\"https://www.w3schools.com\">Visit W3Schools.com!</a>",
         1,
