@@ -14,6 +14,7 @@ use {
     std::{fmt, str},
 };
 
+/// This wrapper exists so we can derive stuff on it.
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct PathBuf(AsyncPathBuf);
 
@@ -27,6 +28,11 @@ impl PathBuf {
     #[must_use]
     pub fn new() -> Self {
         Self(AsyncPathBuf::new())
+    }
+
+    #[must_use]
+    pub const fn from(path: AsyncPathBuf) -> Self {
+        Self(path)
     }
 
     #[must_use]
