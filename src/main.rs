@@ -6,8 +6,8 @@
 mod cli;
 
 use env_logger::Env;
-use mle::state::State;
 use mle::BoxResult;
+use mle::state::State;
 
 #[tokio::main]
 async fn main() -> BoxResult<()> {

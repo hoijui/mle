@@ -3,9 +3,9 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::Config;
 use crate::link::{FileLoc, FileSystemLoc, Position};
 use crate::markup::{self, Content, File};
-use crate::Config;
 use std::ffi::OsStr;
 use std::sync::Arc;
 
@@ -56,10 +56,10 @@ pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> R
     loop {
         match dir_walker.next().await {
             Some(Ok(entry)) => {
-                if let Ok(file_type) = entry.file_type().await {
-                    if !file_type.is_dir() {
-                        add(config, entry.path().as_ref(), result).await?;
-                    }
+                if let Ok(file_type) = entry.file_type().await
+                    && !file_type.is_dir()
+                {
+                    add(config, entry.path().as_ref(), result).await?;
                 }
             }
             // Some(Err(err)) => Err(err)?,

@@ -18,11 +18,11 @@ documentation = "https://docs.rs/mle"
 keywords = ["link-extractor", "links", "markup", "html", "markdown"]
 categories = ["command-line-utilities", "text-processing", "filesystem"]
 readme = "README.md"
-edition = "2021"
+edition = "2024"
 publish = true
 
 [lints.rust]
-rust_2021_compatibility = { level = "warn", priority = -1 }
+rust_2024_compatibility = { level = "warn", priority = -1 }
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }

@@ -116,10 +116,10 @@ impl<'a> Scanner<'a> {
     }
 
     pub fn is_non_ws(&self) -> bool {
-        if let Some(chr) = self.chars.get(self.column) {
-            if chr.is_whitespace() {
-                return false;
-            }
+        if let Some(chr) = self.chars.get(self.column)
+            && chr.is_whitespace()
+        {
+            return false;
         }
         true
     }
@@ -285,44 +285,42 @@ impl super::LinkExtractor for LinkExtractor {
                     }
                     ParserState::Attribute => {
                         scanner.skip_ws();
-                        if let Some(attrib_cont) = attribute {
-                            if scanner.take_any() == Some('"') {
-                                let attrib_column = scanner.column;
-                                let attrib_target = scanner.take_non('"').expect(
-                                    "Bad HTML! need to finish attribute value with '\"' (Note: We do not support multi-line attribute values (yet)!)",
-                                );
-                                scanner.take_single('"');
-                                let pos = Position {
-                                    line: line + 1,
-                                    column: attrib_column + 1,
-                                } + &file.start;
-                                match attrib_cont {
-                                    Attribute::Href => links.push(Link::new(
-                                        file.locator.clone(),
-                                        pos,
-                                        attrib_target,
-                                    )),
-                                    Attribute::Name => anchors.push(Anchor {
-                                        source: link::Locator {
-                                            file: file.locator.clone(),
-                                            pos,
-                                        },
-                                        name: attrib_target.to_string(),
-                                        r#type: anchor::Type::Direct,
-                                    }),
-                                    Attribute::Id => anchors.push(Anchor {
-                                        source: link::Locator {
-                                            file: file.locator.clone(),
-                                            pos,
-                                        },
-                                        name: attrib_target.to_string(),
-                                        r#type: anchor::Type::ElementId,
-                                    }),
-                                    Attribute::Other => {}
+                        if let Some(attrib_cont) = attribute
+                            && scanner.take_any() == Some('"')
+                        {
+                            let attrib_column = scanner.column;
+                            let attrib_target = scanner.take_non('"').expect(
+                                "Bad HTML! need to finish attribute value with '\"' (Note: We do not support multi-line attribute values (yet)!)",
+                            );
+                            scanner.take_single('"');
+                            let pos = Position {
+                                line: line + 1,
+                                column: attrib_column + 1,
+                            } + &file.start;
+                            match attrib_cont {
+                                Attribute::Href => {
+                                    links.push(Link::new(file.locator.clone(), pos, attrib_target));
                                 }
-                                state = ParserState::Element;
-                                attribute = None;
+                                Attribute::Name => anchors.push(Anchor {
+                                    source: link::Locator {
+                                        file: file.locator.clone(),
+                                        pos,
+                                    },
+                                    name: attrib_target.to_string(),
+                                    r#type: anchor::Type::Direct,
+                                }),
+                                Attribute::Id => anchors.push(Anchor {
+                                    source: link::Locator {
+                                        file: file.locator.clone(),
+                                        pos,
+                                    },
+                                    name: attrib_target.to_string(),
+                                    r#type: anchor::Type::ElementId,
+                                }),
+                                Attribute::Other => {}
                             }
+                            state = ParserState::Element;
+                            attribute = None;
                         }
                     }
                 }

@@ -57,12 +57,12 @@ impl super::Sink for Sink {
     }
 
     fn finalize(&mut self) -> std::io::Result<()> {
-        if let Some(ref links_writer_m) = &self.links_stream {
+        if let Some(links_writer_m) = &self.links_stream {
             let mut links_writer = links_writer_m.lock().expect("we do not use MT");
             let json = serde_json::to_string_pretty(&self.links)?;
             write!(links_writer, "{json}")?;
         }
-        if let Some(ref anchors_writer_m) = &self.anchors_stream {
+        if let Some(anchors_writer_m) = &self.anchors_stream {
             let mut anchors_writer = anchors_writer_m.lock().expect("we do not use MT");
             let json = serde_json::to_string_pretty(&self.anchors)?;
             write!(anchors_writer, "{json}")?;

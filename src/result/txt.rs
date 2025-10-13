@@ -31,7 +31,7 @@ impl super::Sink for Sink {
     }
 
     fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
-        if let Some(ref links_writer_m) = &self.links_stream {
+        if let Some(links_writer_m) = &self.links_stream {
             let mut links_writer = links_writer_m.lock().expect("we do not use MT");
             writeln!(links_writer, "{link}")?;
             if self.flush {

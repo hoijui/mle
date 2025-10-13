@@ -3,7 +3,7 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use clap::{builder::PossibleValue, ValueEnum};
+use clap::{ValueEnum, builder::PossibleValue};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, ffi::OsStr, str::FromStr, sync::Arc};

@@ -34,7 +34,7 @@ impl super::Sink for Sink {
     }
 
     fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
-        if let Some(ref links_writer_m) = &self.links_writer {
+        if let Some(links_writer_m) = &self.links_writer {
             let mut links_writer = links_writer_m.lock().expect("we do not use MT");
             let rec = LinkRec::new(link, self.extended);
             links_writer.serialize(rec)?;

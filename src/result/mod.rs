@@ -18,14 +18,14 @@ use std::{
 // use std::path::PathBuf;
 use crate::path_buf::PathBuf;
 
-use clap::{builder::PossibleValue, ValueEnum};
+use clap::{ValueEnum, builder::PossibleValue};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    BoxError,
     anchor::{self, Anchor},
     config::Config,
     link::Link,
-    BoxError,
 };
 
 type Writer = Option<Box<dyn Write + 'static>>;

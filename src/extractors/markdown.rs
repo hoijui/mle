@@ -38,7 +38,7 @@ fn generate_id(text: &str, gfm_style: bool) -> String {
 }
 
 impl LinkExtractor {
-    fn create_pos_from_idx(content: &str) -> impl Fn(usize) -> Position {
+    fn create_pos_from_idx(content: &str) -> impl Fn(usize) -> Position + use<> {
         let line_lengths: Vec<usize> = content.lines().map(str::len).collect();
         move |idx: usize| -> Position {
             let mut line = 1;
