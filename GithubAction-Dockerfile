@@ -1,15 +1,15 @@
-# SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+# SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 # SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 #
 # SPDX-License-Identifier: Unlicense
 
-FROM hoijui/mle:0.14.3
+FROM hoijui/mle:0.27.0
 
 LABEL repository="https://github.com/hoijui/mle"
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY LICENSE README.md /
+COPY LICENSE.txt README.md /
 
 ENTRYPOINT ["/entrypoint.sh"]
