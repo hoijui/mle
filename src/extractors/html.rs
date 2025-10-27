@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -382,18 +382,17 @@ mod tests {
     }
 
     #[test]
-    fn sc_take() -> std::io::Result<()> {
+    fn sc_take() {
         let mut scanner = Scanner::empty();
         scanner.reset("Hello World");
         assert!(scanner.take("Hello"));
         assert!(scanner.take_single(' '));
         assert!(scanner.take("World"));
         assert!(scanner.is_done());
-        Ok(())
     }
 
     #[test]
-    fn sc_take_any() -> std::io::Result<()> {
+    fn sc_take_any() {
         let mut scanner = Scanner::empty();
         scanner.reset("Hello World");
         assert!(scanner.take("Hello"));
@@ -401,29 +400,26 @@ mod tests {
         assert!(scanner.take("World"));
         assert_eq!(scanner.take_any(), None);
         assert!(scanner.is_done());
-        Ok(())
     }
 
     #[test]
-    fn sc_skip_ws() -> std::io::Result<()> {
+    fn sc_skip_ws() {
         let mut scanner = Scanner::empty();
         scanner.reset("Hello \t \n\r\n \t World");
         assert!(scanner.take("Hello"));
         assert!(scanner.skip_ws());
         assert!(scanner.take("World"));
         assert!(scanner.is_done());
-        Ok(())
     }
 
     #[test]
-    fn sc_non_ws() -> std::io::Result<()> {
+    fn sc_non_ws() {
         let mut scanner = Scanner::empty();
         scanner.reset("Hello World");
         assert_eq!(scanner.take_non_ws(), "Hello");
         assert!(scanner.take_single(' '));
         assert_eq!(scanner.take_non_ws(), "World");
         assert!(scanner.is_done());
-        Ok(())
     }
 
     #[tokio::test]
