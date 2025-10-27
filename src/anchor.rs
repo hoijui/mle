@@ -32,14 +32,15 @@ pub enum Type {
 ///
 /// In Markdown - in addition to the HTML form -
 /// different MD flavors support different anchors:
-/// * GFM supplies auto-generated anchors for headers,
+///
+/// - GFM supplies auto-generated anchors for headers,
 ///   using the following rules:
 ///   1. downcase the headline
 ///   2. remove anything that is not a letter, number, space or hyphen
 ///   3. change any space to a hyphen
 ///      so `# My 1. @#%^$^-cool header!!`
 ///      will have the anchor `my-1--cool-header`
-/// * Pandoc MD supports similar (but sadly not equal) auto-generated anchors,
+/// - Pandoc MD supports similar (but sadly not equal) auto-generated anchors,
 ///   or additionally manually set anchors for headers,
 ///   using the following syntax:
 ///   `# My header {#manual-anchor}`

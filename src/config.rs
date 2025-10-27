@@ -18,14 +18,16 @@ pub struct Config {
     pub files_and_dirs: Vec<PathBuf>,
     pub recursive: bool,
     /// Where to store links to.
-    /// None => do not extract links,
-    /// Some(None) => extract links and write them to stdout,
-    /// Some(Some(path)) => extract links and write them to file `path`.
+    ///
+    /// - `None` => do not extract links,
+    /// - `Some(None)` => extract links and write them to stdout,
+    /// - `Some(Some(path))` => extract links and write them to file `path`.
     pub links: Option<Option<PathBuf>>,
     /// Where to store anchors to.
-    /// None => do not extract anchors,
-    /// Some(None) => extract anchors and write them to stdout,
-    /// Some(Some(path)) => extract anchors and write them to file `path`.
+    ///
+    /// - `None` => do not extract anchors,
+    /// - `Some(None)` => extract anchors and write them to stdout,
+    /// - `Some(Some(path))` => extract anchors and write them to file `path`.
     pub anchors: Option<Option<PathBuf>>,
     // pub match_file_extension: bool,
     pub ignore_paths: Vec<IgnorePath>,
@@ -35,9 +37,10 @@ pub struct Config {
     pub result_format: result::Type,
     /// Whether to include non-essential information in the resulting report.
     /// Non-essential are things like:
-    /// * is the link local
-    /// * is the link a URL or to the file-system
-    /// * which type of anchor it is (e.g. from a title or anchor tag)
+    ///
+    /// - is the link local
+    /// - is the link a URL or to the file-system
+    /// - which type of anchor it is (e.g. from a title or anchor tag)
     pub result_extended: bool,
     /// Whether to flush output streams after each item (link, anchor, error),
     /// for the result formats that support it.
