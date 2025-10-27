@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -49,26 +49,6 @@ pub async fn find_links(file: &File<'_>, conf: &Config) -> std::io::Result<Parse
         file.locator
     );
     link_extractor.find_links_and_anchors(file, conf).await
-    // match file.content.fetch() {
-    //     Ok(text) => {
-    //         // let (mut links, anchor_targets) =
-    //             link_extractor.find_links_and_anchors(&file, anchors_only)//;
-    //         // for l in &mut links {
-    //         //     l.source = file.locator.to_string();
-    //         //     l.anchor = remove_anchor(&mut l.target);
-    //         //     //println!("XXX {:?}", l);
-    //         // }
-    //         // (links, anchor_targets)
-    //     }
-    //     Err(e) => {
-    //         warn!(
-    //             "File '{:#?}'. IO Error: '{}'. Check your file encoding.",
-    //             file.locator, e
-    //         );
-    //         // (vec![], vec![])
-    //         Err(...)
-    //     }
-    // }
 }
 
 enum LinkExtractorCont {
