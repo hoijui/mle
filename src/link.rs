@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -10,7 +10,7 @@ use std::sync::Arc;
 use std::{convert::Infallible, fmt, str::FromStr};
 
 use relative_path::RelativePathBuf;
-use reqwest::Url;
+use url::Url;
 
 use crate::path_buf::PathBuf;
 use async_std::path::Path;
@@ -25,7 +25,7 @@ pub enum FileSystemLoc {
     /// An absolute file-system path
     Absolute(PathBuf),
     // /// A (probably) remote file (has to be without anchor/fragment)
-    // Url(reqwest::Url),
+    // Url(url::Url),
 }
 
 /// The location of a markup content (file)
@@ -117,6 +117,18 @@ impl Link {
 impl fmt::Display for Locator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}:{}", self.file, self.pos)
+    }
+}
+
+impl From<&Path> for FileLoc {
+    fn from(path: &Path) -> Self {
+        Self::System(FileSystemLoc::from(path))
+    }
+}
+
+impl From<Url> for FileLoc {
+    fn from(url: Url) -> Self {
+        Self::Url(url)
     }
 }
 
@@ -411,10 +423,10 @@ impl FromStr for FileSystemLoc {
 impl Add for Position {
     type Output = Self;
 
-    fn add(self, rrhs: Self) -> Self::Output {
+    fn add(self, rhs: Self) -> Self::Output {
         Self {
-            line: self.line + rrhs.line,
-            column: self.column + rrhs.column,
+            line: self.line + rhs.line,
+            column: self.column + rhs.column,
         }
     }
 }
@@ -422,10 +434,10 @@ impl Add for Position {
 impl Add<&Self> for Position {
     type Output = Self;
 
-    fn add(self, rrhs: &Self) -> Self::Output {
+    fn add(self, rhs: &Self) -> Self::Output {
         Self {
-            line: self.line + rrhs.line,
-            column: self.column + rrhs.column,
+            line: self.line + rhs.line,
+            column: self.column + rhs.column,
         }
     }
 }
@@ -433,10 +445,10 @@ impl Add<&Self> for Position {
 impl Sub for Position {
     type Output = Self;
 
-    fn sub(self, rrhs: Self) -> Self::Output {
+    fn sub(self, rhs: Self) -> Self::Output {
         Self {
-            line: self.line - rrhs.line,
-            column: self.column - rrhs.column,
+            line: self.line - rhs.line,
+            column: self.column - rhs.column,
         }
     }
 }
@@ -444,10 +456,10 @@ impl Sub for Position {
 impl Sub<&Self> for Position {
     type Output = Self;
 
-    fn sub(self, rrhs: &Self) -> Self::Output {
+    fn sub(self, rhs: &Self) -> Self::Output {
         Self {
-            line: self.line - rrhs.line,
-            column: self.column - rrhs.column,
+            line: self.line - rhs.line,
+            column: self.column - rhs.column,
         }
     }
 }

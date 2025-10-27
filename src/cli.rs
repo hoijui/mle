@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -7,11 +7,10 @@ use clap::command;
 use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use const_format::formatcp;
+use mle::BoxResult;
 use mle::Config;
-use mle::ignore_path::IgnorePath;
+use mle::ignore_link;
 use mle::result;
-use mle::{BoxResult, markup};
-use mle::{ignore_link, ignore_path};
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -24,25 +23,17 @@ use mle::path_buf::PathBuf;
 // #[cfg(not(feature = "async"))]
 // use std::path::PathBuf;
 
-const A_N_FILES: &str = "files";
+const A_N_MARKUP_FILES: &str = "markup_files";
 const A_L_VERSION: &str = "version";
 const A_S_VERSION: char = 'V';
 const A_S_QUIET: char = 'q';
 const A_L_QUIET: &str = "quiet";
-const A_L_NON_RECURSIVE: &str = "non-recursive";
-const A_S_NON_RECURSIVE: char = 'N';
 const A_L_NO_LINKS: &str = "no-links";
 const A_S_NO_LINKS: char = 'n';
 const A_L_ANCHORS: &str = "anchors";
 const A_S_ANCHORS: char = 'a';
-//const A_L_MATCH_FILE_EXTENSION: &str = "match-file-extension";
-//const A_S_MATCH_FILE_EXTENSION: char = 'M';
-const A_L_IGNORE_PATHS: &str = "ignore-paths";
-const A_S_IGNORE_PATHS: char = 'I';
 const A_L_IGNORE_LINKS: &str = "ignore-links";
 const A_S_IGNORE_LINKS: char = 'i';
-const A_L_MARKUP_TYPES: &str = "markup-types";
-const A_S_MARKUP_TYPES: char = 'm';
 const A_L_LINKS_FILE: &str = "links-file";
 const A_S_LINKS_FILE: char = 'P';
 const A_L_RESULT_FORMAT: &str = "result-format";
@@ -75,27 +66,15 @@ fn arg_quiet() -> Arg {
         .long(A_L_QUIET)
 }
 
-fn arg_files() -> Arg {
-    Arg::new(A_N_FILES)
-        .help("The markup files and dirs to scann for markup files")
-        .long_help(formatcp!(
-            "The markup files and root directories to scann for markup files. \
-            See also --{A_L_NON_RECURSIVE}."
-        ))
+fn arg_markup_files() -> Arg {
+    Arg::new(A_N_MARKUP_FILES)
+        .help("The markup files to extract links and/or anchors from")
         .num_args(1..)
         .value_parser(value_parser!(std::path::PathBuf))
-        .value_name("FILE")
+        .value_name("MARKUP_FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
-        .default_value(".")
-}
-
-fn arg_non_recursive() -> Arg {
-    Arg::new(A_L_NON_RECURSIVE)
-        .help("Do not scan for files recursively")
-        .short(A_S_NON_RECURSIVE)
-        .long(A_L_NON_RECURSIVE)
-        .action(ArgAction::SetTrue)
+        .required(true)
 }
 
 fn arg_no_links() -> Arg {
@@ -122,32 +101,6 @@ fn arg_anchors() -> Arg {
         .action(ArgAction::Set)
 }
 
-/*
-fn arg_match_file_extension() -> Arg {
-    Arg::new(A_L_MATCH_FILE_EXTENSION)
-        .help("Do check for the exact file extension when searching for a file")
-        .short(A_S_MATCH_FILE_EXTENSION)
-        .long(A_L_MATCH_FILE_EXTENSION)
-        .action(ArgAction::SetTrue)
-}
-*/
-
-fn arg_ignore_paths() -> Arg {
-    Arg::new(A_L_IGNORE_PATHS)
-        .help("List of files and directories which will not be scanned; space separated")
-        .long_help(
-            "One or more files or directories which will not be scanned, \
-            separated by white-space.",
-        )
-        .num_args(1..)
-        .value_name("PATH/GLOB")
-        .value_hint(ValueHint::FilePath)
-        .short(A_S_IGNORE_PATHS)
-        .long(A_L_IGNORE_PATHS)
-        .action(ArgAction::Append)
-        .value_parser(ValueParser::new(ignore_path::parse))
-}
-
 fn arg_ignore_links() -> Arg {
     Arg::new(A_L_IGNORE_LINKS)
         .help("List of links which will not be extracted; space separated")
@@ -160,20 +113,6 @@ fn arg_ignore_links() -> Arg {
         .value_name("GLOB")
         .short(A_S_IGNORE_LINKS)
         .long(A_L_IGNORE_LINKS)
-        .action(ArgAction::Append)
-}
-
-fn arg_markup_types() -> Arg {
-    Arg::new(A_L_MARKUP_TYPES)
-        .help(
-            "List of markup types from which links shall be extracted; \
-            space separated. Possible values are found in auto-complete, \
-            or when you use a wrong one",
-        )
-        .num_args(1..)
-        .value_parser(value_parser!(markup::Type))
-        .short(A_S_MARKUP_TYPES)
-        .long(A_L_MARKUP_TYPES)
         .action(ArgAction::Append)
 }
 
@@ -216,18 +155,14 @@ fn arg_result_flush() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
-static ARGS: LazyLock<[Arg; 13]> = LazyLock::new(|| {
+static ARGS: LazyLock<[Arg; 10]> = LazyLock::new(|| {
     [
         arg_version(),
         arg_quiet(),
-        arg_files(),
-        arg_non_recursive(),
+        arg_markup_files(),
         arg_no_links(),
         arg_anchors(),
-        //arg_match_file_extension(),
-        arg_ignore_paths(),
         arg_ignore_links(),
-        arg_markup_types(),
         arg_links_file(),
         arg_result_format(),
         arg_result_extended(),
@@ -267,18 +202,18 @@ fn arg_matcher() -> Command {
         .args(ARGS.iter())
 }
 
-fn files_and_dirs(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
-    let mut files_and_dirs = vec![];
-    if let Some(out_files) = args.get_many::<std::path::PathBuf>(A_N_FILES) {
-        for out_file in out_files {
-            files_and_dirs.push(out_file.into());
+fn markup_files(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
+    let mut files = vec![];
+    if let Some(arg_files) = args.get_many::<std::path::PathBuf>(A_N_MARKUP_FILES) {
+        for arg_file in arg_files {
+            files.push(arg_file.into());
         }
     }
-    if files_and_dirs.is_empty() {
-        files_and_dirs.push(env::current_dir()?.into());
+    if files.is_empty() {
+        return Err(io::Error::other("No markup files provided on the CLI"));
     }
 
-    Ok(files_and_dirs)
+    Ok(files)
 }
 
 fn print_version_and_exit(quiet: bool) {
@@ -305,8 +240,7 @@ pub fn parse_args() -> BoxResult<Config> {
         print_version_and_exit(quiet);
     }
 
-    let files_and_dirs = files_and_dirs(&args)?;
-    let recursive = !args.get_flag(A_L_NON_RECURSIVE);
+    let markup_files = markup_files(&args)?;
     let links = if args.get_flag(A_L_NO_LINKS) {
         None
     } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
@@ -329,25 +263,12 @@ pub fn parse_args() -> BoxResult<Config> {
     } else {
         Some(None)
     };
-    //let match_file_extension = args.value_of(A_L_MATCH_FILE_EXTENSION);
-    let ignore_paths: Vec<IgnorePath> = args
-        .get_many::<IgnorePath>(A_L_IGNORE_PATHS)
-        .unwrap_or_default()
-        .map(ToOwned::to_owned)
-        .collect();
+
     let ignore_links: Vec<WildMatch> = args
         .get_many::<WildMatch>(A_L_IGNORE_LINKS)
         .unwrap_or_default()
         .map(ToOwned::to_owned)
         .collect();
-    let markup_types = if let Some(types) = args.get_many::<&str>(A_L_MARKUP_TYPES) {
-        types
-            .copied()
-            .map(markup::Type::from_str)
-            .collect::<Result<Vec<markup::Type>, _>>()?
-    } else {
-        vec![markup::Type::Markdown, markup::Type::Html]
-    };
 
     let result_format = args
         .get_one::<result::Type>(A_L_RESULT_FORMAT)
@@ -357,15 +278,10 @@ pub fn parse_args() -> BoxResult<Config> {
     let result_flush = args.get_flag(A_L_RESULT_FLUSH);
 
     Ok(Config {
-        files_and_dirs,
-        recursive,
+        markup_files,
         links,
         anchors,
-        //match_file_extension,
-        ignore_paths,
         ignore_links,
-        markup_types,
-        //dry,
         result_format,
         result_extended,
         result_flush,

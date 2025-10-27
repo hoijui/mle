@@ -4,11 +4,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use clap::{ValueEnum, builder::PossibleValue};
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, ffi::OsStr, str::FromStr, sync::Arc};
+use thiserror::Error;
+use url::Url;
 
-use crate::path_buf::PathBuf;
+use crate::{markup, path_buf::PathBuf};
 use async_std::{fs, path::Path};
 
 use crate::link::{FileLoc, Position};
@@ -72,6 +73,41 @@ impl ValueEnum for Type {
     }
 }
 
+#[derive(Debug, Error)]
+pub enum TypeExtractionError {
+    #[error("File extension '{0}' does not match any supported markup type")]
+    UnsupportedFileExt(String),
+    #[error("File has no extension, so we can not determine markup type")]
+    NoFileExt,
+}
+
+impl Type {
+    fn try_from_file_name(file_name: impl AsRef<str>) -> Result<Self, TypeExtractionError> {
+        let ext_opt = Self::get_extension_from_filename(file_name.as_ref());
+        if let Some(ext) = ext_opt {
+            for t in Self::value_variants() {
+                for known_ext in t.file_extensions() {
+                    if ext == known_ext {
+                        return Ok(*t);
+                    }
+                }
+            }
+            Err(TypeExtractionError::UnsupportedFileExt(ext.to_string()))
+        } else {
+            Err(TypeExtractionError::NoFileExt)
+        }
+    }
+}
+
+impl TryFrom<&Path> for Type {
+    type Error = TypeExtractionError;
+
+    fn try_from(path: &Path) -> Result<Self, TypeExtractionError> {
+        let file_name = path.display().to_string();
+        Self::try_from_file_name(&file_name)
+    }
+}
+
 impl FromStr for Type {
     type Err = &'static str;
 
@@ -94,17 +130,7 @@ impl Type {
     /// (usually) judging from the file-extension.
     #[must_use]
     pub fn is_markup_file(file_name: &str) -> bool {
-        let ext_opt = Self::get_extension_from_filename(file_name);
-        if let Some(ext) = ext_opt {
-            for t in Self::value_variants() {
-                for known_ext in t.file_extensions() {
-                    if ext == known_ext {
-                        return true;
-                    }
-                }
-            }
-        }
-        false
+        Self::try_from_file_name(file_name).is_ok()
     }
 
     /// Analyzes whether a URL, if pointing to a file, is likely to contain
@@ -145,6 +171,21 @@ impl<'a> File<'a> {
             locator: FileLoc::dummy(),
             start: Position::new(),
         }
+    }
+}
+
+impl TryFrom<PathBuf> for File<'_> {
+    type Error = TypeExtractionError;
+
+    fn try_from(path: PathBuf) -> Result<Self, Self::Error> {
+        let markup_type = markup::Type::try_from(path.as_path())?;
+        let locator = Arc::new(FileLoc::from(path.as_path()));
+        Ok(Self {
+            markup_type,
+            locator,
+            content: Content::LocalFile(path),
+            start: Position::new(),
+        })
     }
 }
 

@@ -3,14 +3,11 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::Config;
-use crate::link::{FileLoc, FileSystemLoc, Position};
-use crate::markup::{self, Content, File};
-use std::ffi::OsStr;
-use std::sync::Arc;
-
-use crate::path_buf::PathBuf;
 use futures::StreamExt;
+use mle::ignore_path::IgnorePath;
+use mle::markup::{self};
+use mle::path_buf::PathBuf;
+use std::ffi::OsStr;
 use {
     async_std::{fs, path::Path},
     async_walkdir::WalkDir,
@@ -28,15 +25,6 @@ pub enum Error {
     IO(#[from] std::io::Error),
 }
 
-// #[cfg(feature = "async")]
-// fn follow_links_on<'a>(dir_walker: WalkDir) -> WalkDir {
-//     dir_walker
-// }
-// #[cfg(not(feature = "async"))]
-// fn follow_links_on<'a>(dir_walker: WalkDir) -> WalkDir {
-//     dir_walker.follow_links(false)
-// }
-
 /// Searches for markup source files according to the configuration,
 /// and stores them in `result`.
 ///
@@ -45,9 +33,12 @@ pub enum Error {
 /// If any of the (markup) files supplied or found through scanning supplied dirs
 /// has no name (e.g. '.').
 /// The code-logic should prevent this from ever happening.
-pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> Result<(), Error> {
-    let markup_types = &config.markup_types;
-
+pub async fn scan(
+    root: &Path,
+    markup_types: &[markup::Type],
+    ignore_paths: &[IgnorePath],
+    result: &mut Vec<PathBuf>,
+) -> Result<(), Error> {
     log::debug!(
         "Searching for files of markup types '{markup_types:?}' in directory '{root:?}' ..."
     );
@@ -59,7 +50,7 @@ pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> R
                 if let Ok(file_type) = entry.file_type().await
                     && !file_type.is_dir()
                 {
-                    add(config, entry.path().as_ref(), result).await?;
+                    add(markup_types, ignore_paths, entry.path().as_ref(), result).await?;
                 }
             }
             // Some(Err(err)) => Err(err)?,
@@ -79,16 +70,39 @@ pub async fn scan(config: &Config, root: &Path, result: &mut Vec<File<'_>>) -> R
 ///
 /// If the supplied `file` has no name (e.g. '.').
 /// The code-logic should prevent this from ever being supplied.
-pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Result<(), Error> {
-    let markup_types = &config.markup_types;
-    let ignore_paths = &config.ignore_paths;
+pub async fn add(
+    markup_types: &[markup::Type],
+    ignore_paths: &[IgnorePath],
+    file: &Path,
+    result: &mut Vec<PathBuf>,
+) -> Result<(), Error> {
+    // let markup_types = &config.markup_types;
+    // let ignore_paths = all_ignored_paths(config);
+
+    // let gitignored_files: Option<Vec<PathBuf>> = if config.optional.gitignore.is_some() {
+    //     let files = find_git_ignored_files();
+    //     debug!("Found gitignored files: {files:?}");
+    //     files
+    // } else {
+    //     None
+    // };
+
+    // let is_gitignore_enabled = gitignored_files.is_some();
+
+    // let gituntracked_files: Option<Vec<PathBuf>> = if config.optional.gituntracked.is_some() {
+    //     let files = find_git_untracked_files();
+    //     debug!("Found gituntracked files: {files:?}");
+    //     files
+    // } else {
+    //     None
+    // };
 
     let file_name_os_str = file
         .file_name()
         .map(OsStr::to_string_lossy)
         .ok_or_else(|| Error::MissingFileName(file.into()))?;
 
-    let Some(markup_type) = markup_type(file_name_os_str.as_ref(), markup_types) else {
+    let Some(_markup_type) = markup_type(file_name_os_str.as_ref(), markup_types) else {
         log::trace!(
             "Not a file of a configured markup type: '{}'",
             file.display()
@@ -108,14 +122,16 @@ pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Re
             file.display()
         );
     } else {
-        let markup_file = File {
-            markup_type,
-            locator: Arc::new(FileLoc::System(FileSystemLoc::from(file))),
-            content: Content::LocalFile(file.into()),
-            start: Position::new(),
-        };
-        log::debug!("Found file: '{markup_file:?}'");
-        result.push(markup_file);
+        // let markup_file = File {
+        //     markup_type,
+        //     locator: Arc::new(FileLoc::System(FileSystemLoc::from(file))),
+        //     content: Content::LocalFile(file.into()),
+        //     start: Position::new(),
+        // };
+        // log::debug!("Found file: '{markup_file:?}'");
+        // result.push(markup_file);
+        log::debug!("Found file: '{file:?}'");
+        result.push(file.into());
     }
 
     //     ,
@@ -179,25 +195,20 @@ pub async fn add(config: &Config, file: &Path, result: &mut Vec<File<'_>>) -> Re
 /// If a file or path supplied does not exist,
 /// or if any file supplied or found through scanning has no name (e.g. '.').
 /// The code-logic should prevent the second case from ever happening.
-pub async fn find(config: &Config, result: &mut Vec<File<'_>>) -> Result<(), Error> {
-    for file_or_dir in &config.files_and_dirs {
-        if file_or_dir.is_file().await {
-            add(config, file_or_dir.as_ref(), result).await?;
-        } else if file_or_dir.is_dir().await {
-            scan(config, file_or_dir.as_ref(), result).await?;
-        } else if !file_or_dir.exists().await {
-            return Err(Error::NonexistentPath(file_or_dir.clone()));
-        } else {
-            return Err(Error::MissingFileName(file_or_dir.clone()));
-        }
-    }
-    Ok(())
+pub async fn find(
+    root: &Path,
+    markup_types: &[markup::Type],
+    ignore_paths: &[IgnorePath],
+) -> Result<Vec<PathBuf>, Error> {
+    let mut result = vec![];
+    scan(root, markup_types, ignore_paths, &mut result).await?;
+    Ok(result)
 }
 
 /// Identifies the markup type a file path belongs to,
 /// if any, out of a given set of markup types.
 #[must_use]
-pub fn markup_type(file: &str, markup_types: &[markup::Type]) -> Option<markup::Type> {
+fn markup_type(file: &str, markup_types: &[markup::Type]) -> Option<markup::Type> {
     let file_low = file.to_lowercase();
     for markup_type in markup_types {
         let extensions = markup_type.file_extensions();

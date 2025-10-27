@@ -1,15 +1,13 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#[cfg(test)]
-#[macro_use]
-extern crate criterion;
+mod file_traversal;
 
-use criterion::Criterion;
+use criterion::{Criterion, criterion_group, criterion_main};
 use mle::config::Config;
-use mle::markup::Type;
+use mle::markup;
 use mle::state::State;
 use std::fs;
 
@@ -17,19 +15,21 @@ fn init() {
     let _ = env_logger::builder().is_test(true).try_init();
 }
 
-fn end_to_end_benchmark() {
+async fn end_to_end_benchmark() {
     init();
+    let markup_types = vec![markup::Type::Markdown];
+    let root = fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap();
+    let ignore_paths = vec![];
+    let markup_files =
+        crate::file_traversal::find(root.as_path().into(), &markup_types, &ignore_paths)
+            .await
+            .unwrap();
     let config = Config {
-        files_and_dirs: vec![
-            fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir")
-                .unwrap()
-                .into(),
-        ],
-        markup_types: vec![Type::Markdown],
+        markup_files,
         ..Default::default()
     };
     let mut state = State::new(config);
-    let _ = mle::run(&mut state);
+    mle::run(&mut state).await.unwrap();
 }
 
 fn criterion_benchmark(c: &mut Criterion) {

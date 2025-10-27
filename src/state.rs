@@ -5,6 +5,8 @@
 
 use std::collections::HashMap;
 
+use async_std::io;
+
 use crate::{anchor::Anchor, config::Config};
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
@@ -25,7 +27,7 @@ pub type AnchorTargets = Option<Vec<Anchor>>;
 /// If the Option is None, it means the URL was checked and evaluated as for available,
 /// but no parsing of anchors was tried.
 /// If the Vec is empty, it means that the document was parsed, but no anchors were found.
-pub type RemoteCache = HashMap<reqwest::Url, reqwest::Result<AnchorTargets>>;
+pub type RemoteCache = HashMap<url::Url, io::Result<AnchorTargets>>;
 
 #[derive(Default, Debug)]
 pub struct State {

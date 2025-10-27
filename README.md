@@ -1,5 +1,5 @@
 <!--
-SPDX-FileCopyrightText: 2022-2023 Robin Vobruba <hoijui.quaero@gmail.com>
+SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 
 SPDX-License-Identifier: CC0-1.0
@@ -45,22 +45,30 @@ SPDX-License-Identifier: CC0-1.0
     https://asciinema.org/a/299100)
 -->
 
-Extracts links in markup files.
-Currently `html` and `markdown` files are supported.
+Extracts links and_or anchors from markup files.
+Currently, `markdown`/`md` and `html` files are supported.
 The main intended purpose of the Markup Link Extractor,
-is to extract links fro ma set of files,
+is to extract links from a set of files,
 and then check them for validity using a separate tool,
-e.g. the [Markdown Link *Checker*](https://github.com/becheran/mlc).
+e.g. the [Markdown Link *Checker*](https://github.com/hoijui/mlc).
 Together, two such tools could be integrated in your CI pipeline
 to warn about broken links in your markup docs.
 
 ## Features
 
-* Find links in `markdown` and `html` files
+* Extracts links from `markdown`/`md` and `html` files
+* Extracts anchors from `markdown`/`md` and `html` files. \
+  Anchors are parts of a file that can be linked to,
+  by appending the parts identifier/name to the file path/URL after a `#` (hash); \
+  e.g. `https://www.example.com/some-dir/some-file.html#sub-section`
 * Support HTML links and plain URLs in `markdown` files
-* User friendly command line interface
+* Command line interface according to the [UNIX philosophy],
+  first item: of "Make each program do one thing well". \
+  -> Therefore, this tool does not scan for markup files,
+  nor does it check the links itself.
 * Easy [CI pipeline integration](#ci-pipeline-integration)
 * Very fast execution using [async](https://rust-lang.github.io/async-book/)
+* Operates offline, accessing only files on the local file-system
 
 <!--
 * Throttle option to prevent *429 Too Many Requests* errors
@@ -117,38 +125,43 @@ curl -L https://github.com/hoijui/mle/releases/download/v0.14.3/mle -o mle
 chmod +x mle
 ```
 
-For example take a look at the [ntest repo](https://github.com/becheran/ntest/blob/master/.gitlab-ci.yml)
+For example take a look at the [ntest repo](
+    https://github.com/becheran/ntest/blob/master/.gitlab-ci.yml)
 which uses *mle* in the CI pipeline.
 
 ### Docker
 
-Use the *mle* docker image from the [docker hub](https://hub.docker.com/repository/docker/hoijui/mle),
+Use the *mle* docker image from the [docker hub](
+    https://hub.docker.com/repository/docker/hoijui/mle),
 which includes *mle*.
 
 ## Usage
 
 Once you have *mle* installed,
 it can be called from the command line.
-The following call will extract all links in markup files found in the current folder
-and all subdirectories:
+The following call will extract all links in markup files
+found under the current folder (including sub-directories):
 
 ``` bash
-mle
+mle ./**.{html,md}"
 ```
 
-Another example is to call *mle* on a certain directory or file:
+This extracts links from all git-tracked MarkDown files,
+except those matching `README` or `LICENSE`.
 
 ``` bash
-mle ./docs
+# explicit version
+mle "$(git ls-files ./**.md | \
+    grep --invert-match --ignore-case --regexp README --regexp LICENSE)"
+# same in short form
+mle "$(git ls-files ./**.md | grep -v -i -e README -e LICENSE)"
 ```
 
 Call *mle* with the `--help` flag to display all available cli arguments:
 
 ``` bash
-mle -h
+mle --help
 ```
-
-See the [reference](docs/reference.md) for all available command line arguments.
 
 ## Funding
 
@@ -159,3 +172,5 @@ until March 2023.
 
 ![Logo of the EU ERDF program](
     https://cloud.fabcity.hamburg/s/TopenKEHkWJ8j5P/download/logo-eu-erdf.png)
+
+[UNIX philosophy]: https://en.wikipedia.org/wiki/Unix_philosophy#Origin
