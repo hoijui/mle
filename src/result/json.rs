@@ -56,6 +56,8 @@ impl super::Sink for Sink {
         Ok(())
     }
 
+    // There are two false positives reported by clippy::significant_drop_tightening here
+    #[allow(clippy::significant_drop_tightening)]
     fn finalize(&mut self) -> std::io::Result<()> {
         if let Some(links_writer_m) = &self.links_stream {
             let mut links_writer = links_writer_m.lock().expect("we do not use MT");

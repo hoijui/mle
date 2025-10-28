@@ -59,11 +59,11 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            markup_files: Default::default(),
+            markup_files: Vec::default(),
             links: Some(None),
             anchors: None,
-            ignore_links: Default::default(),
-            result_format: Default::default(),
+            ignore_links: Vec::default(),
+            result_format: result::Type::default(),
             result_extended: false,
             result_flush: false,
         }

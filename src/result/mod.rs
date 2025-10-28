@@ -194,6 +194,7 @@ pub trait Sink {
     fn finalize(&mut self) -> std::io::Result<()>;
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Serialize)]
 struct LinkExtendedRec<'a> {
     src_file: String,
@@ -268,6 +269,7 @@ impl Serialize for LinkRec<'_> {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Serialize)]
 struct LinkExtendedOwnedRec {
     src_file: String,
@@ -342,6 +344,7 @@ impl Serialize for LinkOwnedRec {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Serialize)]
 struct AnchorExtendedRec<'a> {
     src_file: String,
@@ -407,6 +410,7 @@ impl<'a> AnchorRec<'a> {
     }
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Serialize)]
 struct AnchorExtendedOwnedRec {
     src_file: String,

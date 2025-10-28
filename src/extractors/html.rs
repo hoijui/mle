@@ -184,6 +184,7 @@ impl<'a> Scanner<'a> {
 }
 
 impl super::LinkExtractor for LinkExtractor {
+    #[allow(clippy::too_many_lines)]
     async fn find_links_and_anchors(
         &self,
         file: &File<'_>,
