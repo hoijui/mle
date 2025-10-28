@@ -4,8 +4,6 @@
 
 use std::{io::Write, sync::Mutex};
 
-use serde::Serialize;
-
 use crate::config::Config;
 use crate::link::Link;
 use crate::{anchor::Anchor, result::Type};
@@ -18,16 +16,6 @@ pub struct Sink {
     anchors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
     links: Vec<LinkOwnedRec>,
     anchors: Vec<AnchorOwnedRec>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct RootSerLinks<'a> {
-    pub links: &'a Vec<Link>,
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct RootSerAnchors<'a> {
-    pub anchors: &'a Vec<Anchor>,
 }
 
 impl super::Sink for Sink {
