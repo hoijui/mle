@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
+use crate::result::Type;
 
 use super::Writer;
 
@@ -19,6 +20,7 @@ pub struct Sink {
 
 impl super::Sink for Sink {
     fn init(
+        _format: Type,
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,

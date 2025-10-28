@@ -33,9 +33,17 @@ type Writer = Option<Box<dyn Write + 'static>>;
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
 const EXT_CSV: &str = "csv";
+const EXT_TSV: &str = "tsv";
 const EXT_JSON: &str = "json";
 const EXT_RDF_TURTLE: &str = "ttl";
-const ALL_EXTS: [&str; 5] = [EXT_TEXT, EXT_MARKDOWN, EXT_CSV, EXT_JSON, EXT_RDF_TURTLE];
+const ALL_EXTS: [&str; 6] = [
+    EXT_TEXT,
+    EXT_MARKDOWN,
+    EXT_CSV,
+    EXT_TSV,
+    EXT_JSON,
+    EXT_RDF_TURTLE,
+];
 
 #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize)]
 pub enum Type {
@@ -43,7 +51,7 @@ pub enum Type {
     Text,
     Markdown,
     Csv,
-    // Tsv,
+    Tsv,
     Json,
     RdfTurtle,
 }
@@ -54,6 +62,7 @@ impl ValueEnum for Type {
             Self::Text,
             Self::Markdown,
             Self::Csv,
+            Self::Tsv,
             Self::Json,
             Self::RdfTurtle,
         ]
@@ -71,6 +80,7 @@ impl Type {
             Self::Text => EXT_TEXT,
             Self::Markdown => EXT_MARKDOWN,
             Self::Csv => EXT_CSV,
+            Self::Tsv => EXT_TSV,
             Self::Json => EXT_JSON,
             Self::RdfTurtle => EXT_RDF_TURTLE,
         }
@@ -127,7 +137,7 @@ pub fn sink(
     let sink_init = match config.result_format {
         Type::Text => txt::Sink::init,
         Type::Json => json::Sink::init,
-        Type::Csv => csv::Sink::init,
+        Type::Csv | Type::Tsv => csv::Sink::init,
         _ => Err(std::io::Error::new(
             ErrorKind::InvalidInput,
             "Result format not yet supported",
@@ -135,7 +145,7 @@ pub fn sink(
     };
     let links_writer = config.links.as_ref().map(construct_out_stream);
     let anchors_writer = config.anchors.as_ref().map(construct_out_stream);
-    let mut sink = sink_init(config, links_writer, anchors_writer)?;
+    let mut sink = sink_init(config.result_format, config, links_writer, anchors_writer)?;
     for link in links {
         // thread::sleep::sleep(std::time::Duration::new(0, 200000000));
         sink.sink_link(link)?;
@@ -157,6 +167,7 @@ pub trait Sink {
     /// # Errors
     /// If writing to a file or other (I)/O-device failed.
     fn init(
+        format: Type,
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,

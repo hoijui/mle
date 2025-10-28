@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,9 +6,9 @@ use std::{io::Write, sync::Mutex};
 
 use serde::Serialize;
 
-use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
+use crate::{anchor::Anchor, result::Type};
 
 use super::{AnchorOwnedRec, LinkOwnedRec, Writer};
 
@@ -32,6 +32,7 @@ pub struct RootSerAnchors<'a> {
 
 impl super::Sink for Sink {
     fn init(
+        _format: Type,
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,

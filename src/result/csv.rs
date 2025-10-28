@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use csv;
 
 use crate::config::Config;
+use crate::result::Type;
 use crate::{anchor::Anchor, link::Link};
 
 use super::{AnchorRec, LinkRec, Writer};
@@ -19,8 +20,36 @@ pub struct Sink {
     anchors_writer: Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>>,
 }
 
+impl Sink {
+    fn delimiter(format: Type) -> u8 {
+        match format {
+            Type::Csv => b';',
+            Type::Tsv => b'\t',
+            _ => panic!("Result format {format:?} is not supported by the CSV sink."),
+        }
+    }
+
+    fn writer(
+        format: Type,
+        stream_opt: Writer,
+    ) -> Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>> {
+        stream_opt
+            .map(|stream| {
+                csv::WriterBuilder::new()
+                    .delimiter(Self::delimiter(format))
+                    // .has_headers(true)
+                    // .quote_style(csv::QuoteStyle::Necessary)
+                    // .quote(b'"')
+                    // .double_quote(true)
+                    .from_writer(stream)
+            })
+            .map(Mutex::new)
+    }
+}
+
 impl super::Sink for Sink {
     fn init(
+        format: Type,
         config: &Config,
         links_stream: Writer,
         anchors_stream: Writer,
@@ -28,8 +57,8 @@ impl super::Sink for Sink {
         Ok(Box::new(Self {
             extended: config.result_extended,
             flush: config.result_flush,
-            links_writer: links_stream.map(csv::Writer::from_writer).map(Mutex::new),
-            anchors_writer: anchors_stream.map(csv::Writer::from_writer).map(Mutex::new),
+            links_writer: Self::writer(format, links_stream),
+            anchors_writer: Self::writer(format, anchors_stream),
         }) as Box<dyn super::Sink>)
     }
 
