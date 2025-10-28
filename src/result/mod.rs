@@ -160,7 +160,7 @@ pub fn sink(
 }
 
 pub trait Sink {
-    /// Initilaizes this sink.
+    /// Initializes this sink.
     /// This will be called once only,
     /// and before any `sink_*` function may be called.
     ///
