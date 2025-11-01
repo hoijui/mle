@@ -70,7 +70,7 @@ fn arg_markup_files() -> Arg {
     Arg::new(A_N_MARKUP_FILES)
         .help("The markup files to extract links and/or anchors from")
         .num_args(1..)
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .value_name("MARKUP_FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
@@ -97,7 +97,7 @@ fn arg_anchors() -> Arg {
         .value_name("FILE")
         .short(A_S_ANCHORS)
         .long(A_L_ANCHORS)
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .action(ArgAction::Set)
 }
 
@@ -122,7 +122,7 @@ fn arg_links_file() -> Arg {
         .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
-        .value_parser(value_parser!(std::path::PathBuf))
+        .value_parser(value_parser!(PathBuf))
         .short(A_S_LINKS_FILE)
         .long(A_L_LINKS_FILE)
         .action(ArgAction::Set)
@@ -204,9 +204,9 @@ fn arg_matcher() -> Command {
 
 fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files = vec![];
-    if let Some(arg_files) = args.remove_many::<std::path::PathBuf>(A_N_MARKUP_FILES) {
+    if let Some(arg_files) = args.remove_many::<PathBuf>(A_N_MARKUP_FILES) {
         for arg_file in arg_files {
-            files.push(arg_file.into());
+            files.push(arg_file);
         }
     }
     if files.is_empty() {
