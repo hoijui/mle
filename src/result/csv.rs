@@ -2,7 +2,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::io::Write;
 use std::sync::Mutex;
 
 use csv;
@@ -11,13 +10,13 @@ use crate::config::Config;
 use crate::result::Type;
 use crate::{anchor::Anchor, link::Link};
 
-use super::{AnchorRec, LinkRec, Writer};
+use super::{AnchorRec, LinkRec, Writer, WriterOpt};
 
 pub struct Sink {
     extended: bool,
     flush: bool,
-    links_writer: Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>>,
-    anchors_writer: Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>>,
+    links_writer: Option<Mutex<csv::Writer<Writer>>>,
+    anchors_writer: Option<Mutex<csv::Writer<Writer>>>,
 }
 
 impl Sink {
@@ -29,10 +28,7 @@ impl Sink {
         }
     }
 
-    fn writer(
-        format: Type,
-        stream_opt: Writer,
-    ) -> Option<Mutex<csv::Writer<Box<dyn Write + 'static>>>> {
+    fn writer(format: Type, stream_opt: WriterOpt) -> Option<Mutex<csv::Writer<Writer>>> {
         stream_opt
             .map(|stream| {
                 csv::WriterBuilder::new()
@@ -51,8 +47,8 @@ impl super::Sink for Sink {
     fn init(
         format: Type,
         config: &Config,
-        links_stream: Writer,
-        anchors_stream: Writer,
+        links_stream: WriterOpt,
+        anchors_stream: WriterOpt,
     ) -> std::io::Result<Box<dyn super::Sink>> {
         Ok(Box::new(Self {
             extended: config.result_extended,

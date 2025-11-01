@@ -8,12 +8,12 @@ use crate::config::Config;
 use crate::link::Link;
 use crate::{anchor::Anchor, result::Type};
 
-use super::{AnchorOwnedRec, LinkOwnedRec, Writer};
+use super::{AnchorOwnedRec, LinkOwnedRec, Writer, WriterOpt};
 
 pub struct Sink {
     extended: bool,
-    links_stream: Option<Mutex<Box<dyn Write + 'static>>>,
-    anchors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
+    links_stream: Option<Mutex<Writer>>,
+    anchors_stream: Option<Mutex<Writer>>,
     links: Vec<LinkOwnedRec>,
     anchors: Vec<AnchorOwnedRec>,
 }
@@ -22,8 +22,8 @@ impl super::Sink for Sink {
     fn init(
         _format: Type,
         config: &Config,
-        links_stream: Writer,
-        anchors_stream: Writer,
+        links_stream: WriterOpt,
+        anchors_stream: WriterOpt,
     ) -> std::io::Result<Box<dyn super::Sink>> {
         Ok(Box::new(Self {
             extended: config.result_extended,

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -28,7 +28,8 @@ use crate::{
     link::Link,
 };
 
-type Writer = Option<Box<dyn Write + 'static>>;
+type Writer = Box<dyn Write + 'static>;
+type WriterOpt = Option<Writer>;
 
 const EXT_TEXT: &str = "txt";
 const EXT_MARKDOWN: &str = "md";
@@ -110,7 +111,7 @@ impl FromStr for Type {
 }
 
 #[allow(clippy::ref_option)]
-fn construct_out_stream(specifier: &Option<PathBuf>) -> Box<dyn Write + 'static> {
+fn construct_out_stream(specifier: &Option<PathBuf>) -> Writer {
     specifier.as_ref().map_or_else(
         || Box::new(std::io::stdout()) as Box<dyn Write>,
         |file_path| Box::new(File::create(file_path).unwrap()) as Box<dyn Write>,
@@ -169,8 +170,8 @@ pub trait Sink {
     fn init(
         format: Type,
         config: &Config,
-        links_stream: Writer,
-        anchors_stream: Writer,
+        links_stream: WriterOpt,
+        anchors_stream: WriterOpt,
     ) -> std::io::Result<Box<dyn Sink>>
     where
         Self: Sized;

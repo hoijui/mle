@@ -10,20 +10,20 @@ use crate::config::Config;
 use crate::link::Link;
 use crate::result::Type;
 
-use super::Writer;
+use super::{Writer, WriterOpt};
 
 pub struct Sink {
     flush: bool,
-    links_stream: Option<Mutex<Box<dyn Write + 'static>>>,
-    anchors_stream: Option<Mutex<Box<dyn Write + 'static>>>,
+    links_stream: Option<Mutex<Writer>>,
+    anchors_stream: Option<Mutex<Writer>>,
 }
 
 impl super::Sink for Sink {
     fn init(
         _format: Type,
         config: &Config,
-        links_stream: Writer,
-        anchors_stream: Writer,
+        links_stream: WriterOpt,
+        anchors_stream: WriterOpt,
     ) -> std::io::Result<Box<dyn super::Sink>> {
         Ok(Box::new(Self {
             flush: config.result_flush,
