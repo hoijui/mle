@@ -4,6 +4,7 @@
 
 mod csv;
 mod json;
+mod markdown;
 mod txt;
 
 use std::{
@@ -138,8 +139,9 @@ pub fn sink(
     let sink_init = match config.result_format {
         Type::Text => txt::Sink::init,
         Type::Json => json::Sink::init,
+        Type::Markdown => markdown::Sink::init,
         Type::Csv | Type::Tsv => csv::Sink::init,
-        _ => Err(std::io::Error::new(
+        Type::RdfTurtle => Err(std::io::Error::new(
             ErrorKind::InvalidInput,
             "Result format not yet supported",
         ))?,
