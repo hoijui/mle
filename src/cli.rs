@@ -202,9 +202,9 @@ fn arg_matcher() -> Command {
         .args(ARGS.iter())
 }
 
-fn markup_files(args: &ArgMatches) -> io::Result<Vec<PathBuf>> {
+fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files = vec![];
-    if let Some(arg_files) = args.get_many::<std::path::PathBuf>(A_N_MARKUP_FILES) {
+    if let Some(arg_files) = args.remove_many::<std::path::PathBuf>(A_N_MARKUP_FILES) {
         for arg_file in arg_files {
             files.push(arg_file.into());
         }
@@ -232,7 +232,7 @@ fn print_version_and_exit(quiet: bool) {
 ///
 /// If fetching the CWD failed.
 pub fn parse_args() -> BoxResult<Config> {
-    let args = arg_matcher().get_matches();
+    let mut args = arg_matcher().get_matches();
 
     let quiet = args.get_flag(A_L_QUIET);
     let version = args.get_flag(A_L_VERSION);
@@ -240,39 +240,37 @@ pub fn parse_args() -> BoxResult<Config> {
         print_version_and_exit(quiet);
     }
 
-    let markup_files = markup_files(&args)?;
+    let markup_files = markup_files(&mut args)?;
     let links = if args.get_flag(A_L_NO_LINKS) {
         None
-    } else if let Some(path) = args.get_one::<PathBuf>(A_L_LINKS_FILE) {
+    } else if let Some(path) = args.remove_one::<PathBuf>(A_L_LINKS_FILE) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
             Some(None)
         } else {
-            Some(Some(path.clone()))
+            Some(Some(path))
         }
     } else {
         Some(None)
     };
     let anchors = if args.get_raw(A_L_ANCHORS).is_none() {
         None
-    } else if let Some(path) = args.get_one::<PathBuf>(A_L_ANCHORS) {
+    } else if let Some(path) = args.remove_one::<PathBuf>(A_L_ANCHORS) {
         if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
             Some(None)
         } else {
-            Some(Some(path.clone()))
+            Some(Some(path))
         }
     } else {
         Some(None)
     };
 
     let ignore_links: Vec<WildMatch> = args
-        .get_many::<WildMatch>(A_L_IGNORE_LINKS)
+        .remove_many::<WildMatch>(A_L_IGNORE_LINKS)
         .unwrap_or_default()
-        .map(ToOwned::to_owned)
         .collect();
 
     let result_format = args
-        .get_one::<result::Type>(A_L_RESULT_FORMAT)
-        .copied()
+        .remove_one::<result::Type>(A_L_RESULT_FORMAT)
         .unwrap_or_default();
     let result_extended = args.get_flag(A_L_RESULT_EXTENDED);
     let result_flush = args.get_flag(A_L_RESULT_FLUSH);
