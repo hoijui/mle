@@ -19,8 +19,8 @@ pub enum Error {
     MissingFileName(PathBuf),
     #[error("Input path does not exist: '{0:#?}'")]
     NonexistentPath(PathBuf),
-    #[error("Input path is not a file or directory: '{0:#?}'")]
-    NoFileNorDir(PathBuf),
+    // #[error("Input path is not a file or directory: '{0:#?}'")]
+    // NoFileNorDir(PathBuf),
     #[error("I/O Error: '{0:#?}'")]
     IO(#[from] std::io::Error),
 }
