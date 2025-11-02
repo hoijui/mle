@@ -2,14 +2,18 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use async_std::io::BufReadExt;
 use clap::builder::ValueParser;
 use clap::command;
 use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use const_format::formatcp;
+use futures::StreamExt;
+use futures::pin_mut;
 use mle::BoxResult;
 use mle::Config;
 use mle::ignore_link;
+use mle::path_buf::PathBuf;
 use mle::result;
 use std::collections::HashSet;
 use std::str::FromStr;
@@ -17,13 +21,9 @@ use std::sync::LazyLock;
 use std::{env, io};
 use wildmatch::WildMatch;
 
-// #[cfg(feature = "async")]
-// use async_std::path::PathBuf;
-use mle::path_buf::PathBuf;
-// #[cfg(not(feature = "async"))]
-// use std::path::PathBuf;
-
 const A_N_MARKUP_FILES: &str = "markup_files";
+const A_L_MARKUP_FILES_LIST: &str = "markup-files-list";
+const A_S_MARKUP_FILES_LIST: char = 'I';
 const A_L_VERSION: &str = "version";
 const A_S_VERSION: char = 'V';
 const A_S_QUIET: char = 'q';
@@ -75,6 +75,25 @@ fn arg_markup_files() -> Arg {
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
         .required(true)
+        .conflicts_with(A_L_MARKUP_FILES_LIST)
+}
+
+fn arg_markup_files_list() -> Arg {
+    Arg::new(A_L_MARKUP_FILES_LIST)
+        .help("A file listing markup files to be processed, one per line.")
+        .long_help(
+            "Path to a file containing a list of paths to markup files. \
+This is equal to giving the markup file paths as positional arguments directly on the CLI, \
+but is recommended for large amounts of files,
+because shells have limits of the amount and total length of CLI arguments.",
+        )
+        .num_args(0..=1)
+        .value_name("LIST_FILE")
+        .short(A_S_MARKUP_FILES_LIST)
+        .long(A_L_MARKUP_FILES_LIST)
+        .value_parser(value_parser!(PathBuf))
+        .action(ArgAction::Set)
+        .conflicts_with(A_N_MARKUP_FILES)
 }
 
 fn arg_no_links() -> Arg {
@@ -155,11 +174,12 @@ fn arg_result_flush() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
-static ARGS: LazyLock<[Arg; 10]> = LazyLock::new(|| {
+static ARGS: LazyLock<[Arg; 11]> = LazyLock::new(|| {
     [
         arg_version(),
         arg_quiet(),
         arg_markup_files(),
+        arg_markup_files_list(),
         arg_no_links(),
         arg_anchors(),
         arg_ignore_links(),
@@ -202,11 +222,28 @@ fn arg_matcher() -> Command {
         .args(ARGS.iter())
 }
 
-fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
+async fn read_lines<P>(
+    filename: P,
+) -> io::Result<async_std::io::Lines<async_std::io::BufReader<async_std::fs::File>>>
+where
+    P: AsRef<async_std::path::Path>,
+{
+    let file = async_std::fs::File::open(filename).await?;
+    Ok(async_std::io::BufReader::new(file).lines())
+}
+
+async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files = vec![];
     if let Some(arg_files) = args.remove_many::<PathBuf>(A_N_MARKUP_FILES) {
         for arg_file in arg_files {
             files.push(arg_file);
+        }
+    }
+    if let Some(list_file) = args.remove_one::<PathBuf>(A_L_MARKUP_FILES_LIST) {
+        let lines = read_lines(list_file).await?;
+        pin_mut!(lines);
+        while let Some(line) = lines.next().await {
+            files.push(line?.as_str().into());
         }
     }
     if files.is_empty() {
@@ -231,7 +268,7 @@ fn print_version_and_exit(quiet: bool) {
 /// # Errors
 ///
 /// If fetching the CWD failed.
-pub fn parse_args() -> BoxResult<Config> {
+pub async fn parse_args() -> BoxResult<Config> {
     let mut args = arg_matcher().get_matches();
 
     let quiet = args.get_flag(A_L_QUIET);
@@ -240,7 +277,7 @@ pub fn parse_args() -> BoxResult<Config> {
         print_version_and_exit(quiet);
     }
 
-    let markup_files = markup_files(&mut args)?;
+    let markup_files = markup_files(&mut args).await?;
     let links = if args.get_flag(A_L_NO_LINKS) {
         None
     } else if let Some(path) = args.remove_one::<PathBuf>(A_L_LINKS_FILE) {

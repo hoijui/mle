@@ -12,7 +12,7 @@ use mle::state::State;
 #[tokio::main]
 async fn main() -> BoxResult<()> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
-    let config = cli::parse_args()?;
+    let config = cli::parse_args().await?;
     let mut state = State::new(config);
     log::debug!("Config: {:?}", &state.config);
     mle::run(&mut state).await
