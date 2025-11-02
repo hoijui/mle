@@ -21,6 +21,17 @@ pub enum Type {
     ElementId,
 }
 
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TitleAuto => write!(f, "title-auto"),
+            Self::TitleManual => write!(f, "title-manual"),
+            Self::Direct => write!(f, "direct"),
+            Self::ElementId => write!(f, "element-id"),
+        }
+    }
+}
+
 /// Anchor target found in markup files
 ///
 /// In HTML, these look like:

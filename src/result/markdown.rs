@@ -280,7 +280,7 @@ because the chosen output format writes everything into one file."
         if self.extended {
             writeln!(
                 writer,
-                "| [`{}`]({}) | {} | {} | {} | {} | {} | {} | {} | {:#?} |",
+                "| [`{}`]({}) | {} | {} | {} | {} | {} | {} | {} | {} |",
                 anchor.source.file,
                 anchor.source.file,
                 anchor.source.pos.line,
