@@ -43,11 +43,14 @@ const A_L_RESULT_EXTENDED: &str = "result-extended";
 const A_S_RESULT_EXTENDED: char = 'E';
 const A_L_RESULT_FLUSH: &str = "result-flush";
 const A_S_RESULT_FLUSH: char = 'f';
+const HH_SPECIAL: &str = "Special";
+const HH_ADVANCED: &str = "Advanced";
 
 static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
 
 fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
+        .help_heading(HH_SPECIAL)
         .help(formatcp!(
             "Print version information and exit. \
 May be combined with -{A_S_QUIET},--{A_L_QUIET}, \
@@ -60,6 +63,7 @@ to really only output the version string."
 
 fn arg_quiet() -> Arg {
     Arg::new(A_L_QUIET)
+        .help_heading(HH_SPECIAL)
         .help("Minimize or suppress output to stdout")
         .long_help("Minimize or suppress output to stdout, and only shows log output on stderr.")
         .action(ArgAction::SetTrue)
@@ -99,6 +103,7 @@ because shells have limits of the amount and total length of CLI arguments.",
 
 fn arg_no_links() -> Arg {
     Arg::new(A_L_NO_LINKS)
+        .help_heading(HH_ADVANCED)
         .help("Do not extract links")
         .long_help(
             "Do not extract links. \
@@ -112,6 +117,7 @@ fn arg_no_links() -> Arg {
 
 fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
+        .help_heading(HH_ADVANCED)
         .help("Extract anchors")
         .num_args(0..=1)
         .value_name("FILE")
@@ -123,6 +129,7 @@ fn arg_anchors() -> Arg {
 
 fn arg_ignore_links() -> Arg {
     Arg::new(A_L_IGNORE_LINKS)
+        .help_heading(HH_ADVANCED)
         .help("List of links which will not be extracted; space separated")
         .long_help(
             "One or more wildcard-patterns/globs, matching links \
@@ -138,6 +145,7 @@ fn arg_ignore_links() -> Arg {
 
 fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
+        .help_heading(HH_ADVANCED)
         .help("Where to store the extracted links to")
         .num_args(1)
         .value_hint(ValueHint::FilePath)
@@ -161,6 +169,7 @@ fn arg_result_format() -> Arg {
 
 fn arg_result_extended() -> Arg {
     Arg::new(A_L_RESULT_EXTENDED)
+        .help_heading(HH_ADVANCED)
         .help("Output more info in result file/stream")
         .short(A_S_RESULT_EXTENDED)
         .long(A_L_RESULT_EXTENDED)
@@ -169,6 +178,7 @@ fn arg_result_extended() -> Arg {
 
 fn arg_result_flush() -> Arg {
     Arg::new(A_L_RESULT_FLUSH)
+        .help_heading(HH_ADVANCED)
         .help("Constantly flush (after each item) all the output streams, for the output formats that support it")
         .short(A_S_RESULT_FLUSH)
         .long(A_L_RESULT_FLUSH)
