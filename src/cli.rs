@@ -43,14 +43,14 @@ const A_L_RESULT_EXTENDED: &str = "result-extended";
 const A_S_RESULT_EXTENDED: char = 'E';
 const A_L_RESULT_FLUSH: &str = "result-flush";
 const A_S_RESULT_FLUSH: char = 'f';
-const HH_SPECIAL: &str = "Special";
+const HH_VERBOSITY: &str = "Verbosity";
 const HH_ADVANCED: &str = "Advanced";
 
 static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
 
 fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
-        .help_heading(HH_SPECIAL)
+        .help_heading(HH_VERBOSITY)
         .help(formatcp!(
             "Print version information and exit. \
 May be combined with -{A_S_QUIET},--{A_L_QUIET}, \
@@ -63,7 +63,7 @@ to really only output the version string."
 
 fn arg_quiet() -> Arg {
     Arg::new(A_L_QUIET)
-        .help_heading(HH_SPECIAL)
+        .help_heading(HH_VERBOSITY)
         .help("Minimize or suppress output to stdout")
         .long_help("Minimize or suppress output to stdout, and only shows log output on stderr.")
         .action(ArgAction::SetTrue)
