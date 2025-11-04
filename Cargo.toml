@@ -47,6 +47,7 @@ print_stderr = "warn"
 #      can give significantly better performance
 #      than any of the `str`-based methods.
 trivial_regex = { level = "allow", priority = 1 }
+multiple_crate_versions = { level = "allow", priority = 1 }
 
 [dependencies]
 async-std = { version = "1.13" }
