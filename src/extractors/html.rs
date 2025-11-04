@@ -60,29 +60,6 @@ impl<'a> Scanner<'a> {
         found
     }
 
-    pub fn take_and_ws(&mut self, token: &str) -> bool {
-        let mut found = self
-            .line
-            .get(self.column..self.column + token.len())
-            .is_some_and(|slc| slc.eq(token));
-        if found {
-            found = false;
-            let mut count = 0;
-            while let Some(chr) = self.chars.get(self.column + token.len() + count) {
-                if chr.is_whitespace() {
-                    count += 1;
-                } else {
-                    break;
-                }
-            }
-            if count > 0 || self.is_done() {
-                self.column += token.len();
-                found = true;
-            }
-        }
-        found
-    }
-
     pub fn take_single(&mut self, token: char) -> bool {
         let found = self
             .chars
@@ -122,18 +99,6 @@ impl<'a> Scanner<'a> {
             return false;
         }
         true
-    }
-
-    pub fn take_non_ws(&mut self) -> &'a str {
-        let mut count = 0;
-        while let Some(chr) = self.chars.get(self.column + count) {
-            if chr.is_whitespace() {
-                break;
-            }
-            count += 1;
-        }
-        self.column += count;
-        &self.line[self.column - count..self.column]
     }
 
     pub fn take_non_ws_or(&mut self, token: char) -> &'a str {
@@ -410,16 +375,6 @@ mod tests {
         assert!(scanner.take("Hello"));
         assert!(scanner.skip_ws());
         assert!(scanner.take("World"));
-        assert!(scanner.is_done());
-    }
-
-    #[test]
-    fn sc_non_ws() {
-        let mut scanner = Scanner::empty();
-        scanner.reset("Hello World");
-        assert_eq!(scanner.take_non_ws(), "Hello");
-        assert!(scanner.take_single(' '));
-        assert_eq!(scanner.take_non_ws(), "World");
         assert!(scanner.is_done());
     }
 
