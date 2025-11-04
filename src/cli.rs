@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use async_std::io::BufReadExt;
+use clap::ArgGroup;
 use clap::builder::ValueParser;
 use clap::command;
 use clap::value_parser;
@@ -220,6 +221,11 @@ fn arg_matcher() -> Command {
         .help_expected(true)
         .disable_version_flag(true)
         .args(ARGS.iter())
+        .group(
+            ArgGroup::new("markup-files")
+                .args([A_N_MARKUP_FILES, A_L_MARKUP_FILES_LIST])
+                .required(true),
+        )
 }
 
 async fn read_lines<P>(
