@@ -51,7 +51,8 @@ static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").
 fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
         .help_heading(HH_VERBOSITY)
-        .help(formatcp!(
+        .help("Print version information and exit")
+        .long_help(formatcp!(
             "Print version information and exit. \
 May be combined with -{A_S_QUIET},--{A_L_QUIET}, \
 to really only output the version string."
@@ -65,7 +66,10 @@ fn arg_quiet() -> Arg {
     Arg::new(A_L_QUIET)
         .help_heading(HH_VERBOSITY)
         .help("Minimize or suppress output to stdout")
-        .long_help("Minimize or suppress output to stdout, and only shows log output on stderr.")
+        .long_help(
+            "Minimize or suppress output to stdout, \
+and only shows log output on stderr.",
+        )
         .action(ArgAction::SetTrue)
         .short(A_S_QUIET)
         .long(A_L_QUIET)
@@ -85,14 +89,11 @@ fn arg_markup_files() -> Arg {
 
 fn arg_markup_files_list() -> Arg {
     Arg::new(A_L_MARKUP_FILES_LIST)
-        .help("A file listing markup files to be processed, one per line.")
-        .long_help(
-            "Path to a file containing a list of paths to markup files. \
-This is equal to giving the markup file paths as positional arguments directly on the CLI, \
-but is recommended for large amounts of files,
-because shells have limits of the amount and total length of CLI arguments.",
+        .help(
+            "A file containing a list of markup files \
+to extract links and/or anchors from; one per line.",
         )
-        .num_args(0..=1)
+        .num_args(1)
         .value_name("LIST_FILE")
         .short(A_S_MARKUP_FILES_LIST)
         .long(A_L_MARKUP_FILES_LIST)
@@ -107,7 +108,7 @@ fn arg_no_links() -> Arg {
         .help("Do not extract links")
         .long_help(
             "Do not extract links. \
-            See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
+See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
         )
         .short(A_S_NO_LINKS)
         .long(A_L_NO_LINKS)
@@ -118,7 +119,10 @@ fn arg_no_links() -> Arg {
 fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help_heading(HH_ADVANCED)
-        .help("Extract anchors")
+        .help(
+            "Enable extract of anchors, \
+and optionally the file to store them to",
+        )
         .num_args(0..=1)
         .value_name("FILE")
         .short(A_S_ANCHORS)
@@ -133,7 +137,7 @@ fn arg_ignore_links() -> Arg {
         .help("List of links which will not be extracted; space separated")
         .long_help(
             "One or more wildcard-patterns/globs, matching links \
-            which will not be extracted, separated by white-space.",
+which will not be extracted; separated by white-space.",
         )
         .num_args(1..)
         .value_parser(ValueParser::new(ignore_link::parse))
@@ -146,7 +150,7 @@ fn arg_ignore_links() -> Arg {
 fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
         .help_heading(HH_ADVANCED)
-        .help("Where to store the extracted links to")
+        .help("Which file to store the extracted links to")
         .num_args(1)
         .value_hint(ValueHint::FilePath)
         .value_name("FILE")
@@ -158,7 +162,7 @@ fn arg_links_file() -> Arg {
 
 fn arg_result_format() -> Arg {
     Arg::new(A_L_RESULT_FORMAT)
-        .help("In what data format to output the extracted data")
+        .help("Data format of the output")
         .num_args(1)
         .value_parser(value_parser!(result::Type))
         .value_name("FORMAT")
@@ -170,7 +174,7 @@ fn arg_result_format() -> Arg {
 fn arg_result_extended() -> Arg {
     Arg::new(A_L_RESULT_EXTENDED)
         .help_heading(HH_ADVANCED)
-        .help("Output more info in result file/stream")
+        .help("Output additional properties per link/anchor")
         .short(A_S_RESULT_EXTENDED)
         .long(A_L_RESULT_EXTENDED)
         .action(ArgAction::SetTrue)
@@ -179,7 +183,11 @@ fn arg_result_extended() -> Arg {
 fn arg_result_flush() -> Arg {
     Arg::new(A_L_RESULT_FLUSH)
         .help_heading(HH_ADVANCED)
-        .help("Constantly flush (after each item) all the output streams, for the output formats that support it")
+        .help("Flush output after each link/anchor.")
+        .long_help(
+            "Flush output after each link/anchor. \
+Not all output formats support this.",
+        )
         .short(A_S_RESULT_FLUSH)
         .long(A_L_RESULT_FLUSH)
         .action(ArgAction::SetTrue)
