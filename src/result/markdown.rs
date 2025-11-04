@@ -23,6 +23,7 @@ pub struct Sink {
 }
 
 impl Sink {
+    #[allow(clippy::significant_drop_tightening)]
     fn write_header(&self) -> std::io::Result<()> {
         let mut writer = self.stream.lock().expect("we do not use MT");
         writeln!(
@@ -54,6 +55,7 @@ impl Sink {
         }
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     fn write_links_header(&mut self) -> std::io::Result<()> {
         if self.links_header_written {
             return Ok(());
@@ -125,6 +127,7 @@ impl Sink {
         Ok(())
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     fn write_anchors_header(&mut self) -> std::io::Result<()> {
         if self.anchors_header_written {
             return Ok(());
@@ -222,6 +225,7 @@ because the chosen output format writes everything into one file."
         }) as Box<dyn super::Sink>)
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
         self.write_links_header()?;
         // let rec = LinkRec::new(link, self.extended);
@@ -273,6 +277,7 @@ because the chosen output format writes everything into one file."
         Ok(())
     }
 
+    #[allow(clippy::significant_drop_tightening)]
     fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
         self.write_anchors_header()?;
         let mut writer = self.stream.lock().expect("we do not use MT");
