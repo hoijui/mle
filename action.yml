@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+# SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 # SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 #
 # SPDX-License-Identifier: Unlicense
@@ -8,7 +8,6 @@ description: 'Extract links from markup files'
 inputs:
   args:
     description: 'arguments'
-    default: './'
 runs:
   using: 'docker'
   image: 'GithubAction-Dockerfile'

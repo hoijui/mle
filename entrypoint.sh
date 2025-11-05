@@ -4,9 +4,17 @@
 #
 # SPDX-License-Identifier: Unlicense
 
-if [ "$#" -gt 1 ]
+# slightly adapted version of <https://stackoverflow.com/a/47541882/586229>
+containsElementStartingWith () {
+    local prefix="$1"
+    shift
+    printf '%s\0' "$@" | grep -z -- '^'"$prefix"
+}
+
+# List project files if an input-listing file is not provided
+if containsElementStartingWith '-I' "$@" || containsElementStartingWith '--markup-files-list' "$@"
 then
-    mle "$@"
+    echo mle "$@"
 else
-    mle "$(git ls-files ./**.{html,md})"
+    echo mle "$@" "$(git ls-files ./**.{html,md} | tr '\n' ' ')"
 fi
