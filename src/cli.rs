@@ -277,13 +277,13 @@ async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-fn print_version_and_exit(quiet: bool) {
+fn print_version_and_exit(version: &str, quiet: bool) {
     #![allow(clippy::print_stdout)]
 
     if !quiet {
         print!("{} ", clap::crate_name!());
     }
-    println!("{}", mle::VERSION);
+    println!("{}", version);
     std::process::exit(0);
 }
 
@@ -298,7 +298,7 @@ pub async fn parse_args() -> BoxResult<Config> {
     let quiet = args.get_flag(A_L_QUIET);
     let version = args.get_flag(A_L_VERSION);
     if version {
-        print_version_and_exit(quiet);
+        print_version_and_exit(mle::VERSION, quiet);
     }
 
     let markup_files = markup_files(&mut args).await?;
