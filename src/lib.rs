@@ -6,6 +6,10 @@
 #![feature(type_alias_impl_trait)]
 
 pub mod anchor;
+// This is here, because we want to share some of it
+// to tools that depend on us as a library
+// and reuse parts of our CLI, for example `mlc`.
+pub mod cli;
 pub mod config;
 pub mod extractors;
 pub mod ignore_link;

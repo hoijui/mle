@@ -2,6 +2,16 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+//! Command line interface for mle.
+//!
+//! This module implements the command line interface for mle.
+//! Most of it is declared `pub`,
+//! because we want to be able to re-use it.
+//! We will want do that in CLIs that have link-extraction as a pre-step
+//! to their functionality,
+//! which is the case for example for [`mlc`](https://github.com/hoijui/mlc)
+//! (Markup Link Checker).
+
 use async_std::io::BufReadExt;
 use clap::ArgGroup;
 use clap::builder::ValueParser;
@@ -11,44 +21,44 @@ use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
 use const_format::formatcp;
 use futures::StreamExt;
 use futures::pin_mut;
-use mle::BoxResult;
-use mle::Config;
-use mle::ignore_link;
-use mle::path_buf::PathBuf;
-use mle::result;
+use crate::BoxResult;
+use crate::config::Config;
+use crate::ignore_link;
+use crate::path_buf::PathBuf;
+use crate::result;
 use std::collections::HashSet;
 use std::str::FromStr;
 use std::sync::LazyLock;
 use std::{env, io};
 use wildmatch::WildMatch;
 
-const A_N_MARKUP_FILES: &str = "markup_files";
-const A_L_MARKUP_FILES_LIST: &str = "markup-files-list";
-const A_S_MARKUP_FILES_LIST: char = 'I';
-const A_L_VERSION: &str = "version";
-const A_S_VERSION: char = 'V';
-const A_S_QUIET: char = 'q';
-const A_L_QUIET: &str = "quiet";
-const A_L_NO_LINKS: &str = "no-links";
-const A_S_NO_LINKS: char = 'n';
-const A_L_ANCHORS: &str = "anchors";
-const A_S_ANCHORS: char = 'a';
-const A_L_IGNORE_LINKS: &str = "ignore-links";
-const A_S_IGNORE_LINKS: char = 'i';
-const A_L_LINKS_FILE: &str = "links-file";
-const A_S_LINKS_FILE: char = 'P';
-const A_L_RESULT_FORMAT: &str = "result-format";
-const A_S_RESULT_FORMAT: char = 'F';
-const A_L_RESULT_EXTENDED: &str = "result-extended";
-const A_S_RESULT_EXTENDED: char = 'E';
-const A_L_RESULT_FLUSH: &str = "result-flush";
-const A_S_RESULT_FLUSH: char = 'f';
-const HH_VERBOSITY: &str = "Verbosity";
-const HH_ADVANCED: &str = "Advanced";
+pub const A_N_MARKUP_FILES: &str = "markup_files";
+pub const A_L_MARKUP_FILES_LIST: &str = "markup-files-list";
+pub const A_S_MARKUP_FILES_LIST: char = 'I';
+pub const A_L_VERSION: &str = "version";
+pub const A_S_VERSION: char = 'V';
+pub const A_S_QUIET: char = 'q';
+pub const A_L_QUIET: &str = "quiet";
+pub const A_L_NO_LINKS: &str = "no-links";
+pub const A_S_NO_LINKS: char = 'n';
+pub const A_L_ANCHORS: &str = "anchors";
+pub const A_S_ANCHORS: char = 'a';
+pub const A_L_IGNORE_LINKS: &str = "ignore-links";
+pub const A_S_IGNORE_LINKS: char = 'i';
+pub const A_L_LINKS_FILE: &str = "links-file";
+pub const A_S_LINKS_FILE: char = 'P';
+pub const A_L_RESULT_FORMAT: &str = "result-format";
+pub const A_S_RESULT_FORMAT: char = 'F';
+pub const A_L_RESULT_EXTENDED: &str = "result-extended";
+pub const A_S_RESULT_EXTENDED: char = 'E';
+pub const A_L_RESULT_FLUSH: &str = "result-flush";
+pub const A_S_RESULT_FLUSH: char = 'f';
+pub const HH_VERBOSITY: &str = "Verbosity";
+pub const HH_ADVANCED: &str = "Advanced";
 
-static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
+pub static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
 
-fn arg_version() -> Arg {
+pub fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
         .help_heading(HH_VERBOSITY)
         .help("Print version information and exit")
@@ -62,7 +72,7 @@ to really only output the version string."
         .action(ArgAction::SetTrue)
 }
 
-fn arg_quiet() -> Arg {
+pub fn arg_quiet() -> Arg {
     Arg::new(A_L_QUIET)
         .help_heading(HH_VERBOSITY)
         .help("Minimize or suppress output to stdout")
@@ -75,7 +85,7 @@ and only shows log output on stderr.",
         .long(A_L_QUIET)
 }
 
-fn arg_markup_files() -> Arg {
+pub fn arg_markup_files() -> Arg {
     Arg::new(A_N_MARKUP_FILES)
         .help("The markup files to extract links and/or anchors from")
         .num_args(1..)
@@ -87,7 +97,7 @@ fn arg_markup_files() -> Arg {
         .conflicts_with(A_L_MARKUP_FILES_LIST)
 }
 
-fn arg_markup_files_list() -> Arg {
+pub fn arg_markup_files_list() -> Arg {
     Arg::new(A_L_MARKUP_FILES_LIST)
         .help(
             "A file containing a list of markup files \
@@ -102,7 +112,7 @@ to extract links and/or anchors from; one per line.",
         .conflicts_with(A_N_MARKUP_FILES)
 }
 
-fn arg_no_links() -> Arg {
+pub fn arg_no_links() -> Arg {
     Arg::new(A_L_NO_LINKS)
         .help_heading(HH_ADVANCED)
         .help("Do not extract links")
@@ -116,7 +126,7 @@ See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
         .action(ArgAction::SetTrue)
 }
 
-fn arg_anchors() -> Arg {
+pub fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help_heading(HH_ADVANCED)
         .help(
@@ -131,7 +141,7 @@ and optionally the file to store them to",
         .action(ArgAction::Set)
 }
 
-fn arg_ignore_links() -> Arg {
+pub fn arg_ignore_links() -> Arg {
     Arg::new(A_L_IGNORE_LINKS)
         .help_heading(HH_ADVANCED)
         .help("List of links which will not be extracted; space separated")
@@ -147,7 +157,7 @@ which will not be extracted; separated by white-space.",
         .action(ArgAction::Append)
 }
 
-fn arg_links_file() -> Arg {
+pub fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
         .help_heading(HH_ADVANCED)
         .help("Which file to store the extracted links to")
@@ -160,7 +170,7 @@ fn arg_links_file() -> Arg {
         .action(ArgAction::Set)
 }
 
-fn arg_result_format() -> Arg {
+pub fn arg_result_format() -> Arg {
     Arg::new(A_L_RESULT_FORMAT)
         .help("Data format of the output")
         .num_args(1)
@@ -171,7 +181,7 @@ fn arg_result_format() -> Arg {
         .action(ArgAction::Set)
 }
 
-fn arg_result_extended() -> Arg {
+pub fn arg_result_extended() -> Arg {
     Arg::new(A_L_RESULT_EXTENDED)
         .help_heading(HH_ADVANCED)
         .help("Output additional properties per link/anchor")
@@ -180,7 +190,7 @@ fn arg_result_extended() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
-fn arg_result_flush() -> Arg {
+pub fn arg_result_flush() -> Arg {
     Arg::new(A_L_RESULT_FLUSH)
         .help_heading(HH_ADVANCED)
         .help("Flush output after each link/anchor.")
@@ -209,7 +219,7 @@ static ARGS: LazyLock<[Arg; 11]> = LazyLock::new(|| {
     ]
 });
 
-fn find_duplicate_short_options() -> Vec<char> {
+pub fn find_duplicate_short_options() -> Vec<char> {
     let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
     // standard option --help
     short_options.push('h');
@@ -228,7 +238,7 @@ fn find_duplicate_short_options() -> Vec<char> {
     duplicate_short_options.iter().copied().collect()
 }
 
-fn arg_matcher() -> Command {
+pub fn arg_matcher() -> Command {
     let duplicate_short_options = find_duplicate_short_options();
     assert!(
         duplicate_short_options.is_empty(),
@@ -256,7 +266,7 @@ where
     Ok(async_std::io::BufReader::new(file).lines())
 }
 
-async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
+pub async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files = vec![];
     if let Some(arg_files) = args.remove_many::<PathBuf>(A_N_MARKUP_FILES) {
         for arg_file in arg_files {
@@ -277,7 +287,7 @@ async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
-fn print_version_and_exit(version: &str, quiet: bool) {
+pub fn print_version_and_exit(version: &str, quiet: bool) {
     #![allow(clippy::print_stdout)]
 
     if !quiet {
@@ -298,7 +308,7 @@ pub async fn parse_args() -> BoxResult<Config> {
     let quiet = args.get_flag(A_L_QUIET);
     let version = args.get_flag(A_L_VERSION);
     if version {
-        print_version_and_exit(mle::VERSION, quiet);
+        print_version_and_exit(crate::VERSION, quiet);
     }
 
     let markup_files = markup_files(&mut args).await?;
