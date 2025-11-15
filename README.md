@@ -143,18 +143,31 @@ The following call will extract all links in markup files
 found under the current folder (including sub-directories):
 
 ``` bash
-mle ./**.{html,md}"
+mle ./**.{html,md}
 ```
 
 This extracts links from all git-tracked Markdown files,
-except those matching `README` or `LICENSE`.
+except those matching `README` or `LICENSE`,
+and write the result to stdout in CSV format.
 
 ``` bash
 # explicit version
-mle "$(git ls-files ./**.md | \
-    grep --invert-match --ignore-case --regexp README --regexp LICENSE)"
+g ls-files **.{html,md} -z \
+    | grep --null-data --invert-match --ignore-case --regexp README --regexp LICENSE \
+    | xargs -0 mle --result-format csv
 # same in short form
-mle "$(git ls-files ./**.md | grep -v -i -e README -e LICENSE)"
+g ls-files **.{html,md} -z | grep -z -v -i -e README -e LICENSE | xargs -0 mle --result-format csv
+```
+
+Here we write the list of files to a file first,
+and then pass that to `mle`.
+This is useful for when the list of files is used multiple times,
+or if it is very large,
+potentially exceeding the shells limit for arguments.
+
+``` bash
+g ls-files **.{html,md} -z | tr '\0' '\n' > /tmp/link-check_files.csv
+mle --markup-files-list /tmp/link-check_files.csv
 ```
 
 Call *mle* with the `--help` flag to display all available cli arguments:
