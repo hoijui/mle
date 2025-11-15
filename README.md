@@ -146,7 +146,7 @@ found under the current folder (including sub-directories):
 mle ./**.{html,md}"
 ```
 
-This extracts links from all git-tracked MarkDown files,
+This extracts links from all git-tracked Markdown files,
 except those matching `README` or `LICENSE`.
 
 ``` bash
