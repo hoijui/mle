@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2019 - 2021 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Many Links
 
 [local_file](many_links.md)

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2023 Robin Vobruba <hoijui.quaero@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
 
 # 2nd Auto-anchor
 

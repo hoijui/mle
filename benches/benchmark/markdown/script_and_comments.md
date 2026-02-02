@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 [this is a link](./script_and_comments.md)
 
 ``` js

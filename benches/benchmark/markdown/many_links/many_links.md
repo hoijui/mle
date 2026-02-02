@@ -1,3 +1,10 @@
+<!--
+SPDX-FileCopyrightText: 2019 - 2020 Armin Becher <becherarmin@gmail.com>
+SPDX-FileCopyrightText: 2020 Alex Melville <Melvillian@users.noreply.github.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Torrentur suum abstrahor quique Iuppiter rerum mediocris
 
 [many_links](./many_links.md)

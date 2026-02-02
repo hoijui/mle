@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2019 - 2024 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Contain reference style markdown links
 
 [I'm a reference-style link][Arbitrary case-insensitive reference text]

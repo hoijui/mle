@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2021 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 # Chapter 1
 
 [foo](https://fooRandomNotValidURLBla0.de/f0)

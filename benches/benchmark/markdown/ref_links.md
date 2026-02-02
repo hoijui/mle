@@ -1,3 +1,9 @@
+<!--
+SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
+
+SPDX-License-Identifier: MIT
+-->
+
 [link1][1] another Link: [link2][foo] 
 
 Use link again [link1 agin][1]
