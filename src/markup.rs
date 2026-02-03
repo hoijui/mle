@@ -146,6 +146,7 @@ impl Type {
             let file_name_os_str = file
                 .file_name()
                 .map(OsStr::to_string_lossy)
+                // .ok_or_else(|| Error::MissingFileName(file.into()))
                 .ok_or_else(|| {
                     std::io::Error::other(format!(
                         "Missing file-name for path: '{}'",
@@ -159,6 +160,7 @@ impl Type {
                 return Ok(true);
             }
 
+            // #[cfg(feature = "logging")]
             log::trace!(
                 "Not a file of a configured markup type: '{}'",
                 file.display()

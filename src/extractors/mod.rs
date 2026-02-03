@@ -26,6 +26,14 @@ impl ParseRes {
     }
 }
 
+// #[must_use]
+// pub fn invalid_links(all_links: &[Link]) -> Vec<&Link> {
+//     all_links
+//         .iter()
+//         .filter(|&link| link.is_invalid())
+//         .collect()
+// }
+
 pub fn remove_anchor(link: &mut String) -> Option<String> {
     link.find('#').map(|anchor_pos| {
         // let anchor = link.rsplit(pat: P)(suffix: P)(new_len: usize)
