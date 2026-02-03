@@ -6,7 +6,7 @@
 #[cfg(test)]
 mod helper;
 
-use crate::helper::file_traversal::find;
+use cli_utils::StreamIdent;
 use helper::benches_dir;
 use mle::config::Config;
 use mle::markup;
@@ -26,13 +26,13 @@ async fn end_to_end() {
             .try_into()
             .unwrap(),
     ];
-    let markup_files = find(root.as_path().into(), &markup_types, &ignore_paths)
+    let markup_files = markup::Type::find(root.as_path().into(), markup_types, ignore_paths)
         .await
         .unwrap();
     let config = Config {
         markup_files,
-        links: Some(None),
-        anchors: Some(None),
+        links: Some(StreamIdent::StdOut),
+        anchors: Some(StreamIdent::StdOut),
         result_format: result::Type::Json,
         ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
         ..Default::default()
@@ -48,13 +48,13 @@ async fn end_to_end_different_root() {
     let markup_types = vec![markup::Type::Markdown];
     let root = benches_dir().join("different_root");
     let ignore_paths = vec![];
-    let markup_files = find(root.as_path().into(), &markup_types, &ignore_paths)
+    let markup_files = markup::Type::find(root.as_path().into(), markup_types, ignore_paths)
         .await
         .unwrap();
     let config = Config {
         markup_files,
-        links: Some(None),
-        anchors: Some(None),
+        links: Some(StreamIdent::StdOut),
+        anchors: Some(StreamIdent::StdOut),
         result_format: result::Type::Json,
         ..Default::default()
     };

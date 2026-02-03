@@ -4,12 +4,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use clap::{ValueEnum, builder::PossibleValue};
+use cli_utils::{
+    file_traversal::{self, PathFilterRet, create_combined_filter},
+    ignore_path::IgnorePath,
+    path_buf::PathBuf,
+};
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, ffi::OsStr, str::FromStr, sync::Arc};
 use thiserror::Error;
 use url::Url;
 
-use crate::{markup, path_buf::PathBuf};
+use crate::markup;
 use async_std::{fs, path::Path};
 
 use crate::link::{FileLoc, Position};
@@ -55,7 +60,7 @@ pub struct File<'a> {
     pub start: Position,
 }
 
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum Type {
     #[default]
     Markdown,
@@ -85,9 +90,11 @@ impl Type {
     fn try_from_file_name(file_name: impl AsRef<str>) -> Result<Self, TypeExtractionError> {
         let ext_opt = Self::get_extension_from_filename(file_name.as_ref());
         if let Some(ext) = ext_opt {
+            let ext_lower = ext.to_lowercase();
+            log::warn!("Extracted file ext: {ext_lower}");
             for t in Self::value_variants() {
                 for known_ext in t.file_extensions() {
-                    if ext == known_ext {
+                    if ext_lower == known_ext {
                         return Ok(*t);
                     }
                 }
@@ -131,6 +138,54 @@ impl Type {
     #[must_use]
     pub fn is_markup_file(file_name: &str) -> bool {
         Self::try_from_file_name(file_name).is_ok()
+    }
+
+    #[must_use]
+    pub fn create_filter(types: Vec<Self>) -> Box<dyn Fn(&Path) -> PathFilterRet + Send + Sync> {
+        Box::new(move |file: &Path| {
+            let file_name_os_str = file
+                .file_name()
+                .map(OsStr::to_string_lossy)
+                .ok_or_else(|| {
+                    std::io::Error::other(format!(
+                        "Missing file-name for path: '{}'",
+                        file.display()
+                    ))
+                })?;
+
+            if let Ok(extracted_type) = Self::try_from_file_name(file_name_os_str.as_ref())
+                && types.contains(&extracted_type)
+            {
+                return Ok(true);
+            }
+
+            log::trace!(
+                "Not a file of a configured markup type: '{}'",
+                file.display()
+            );
+            Ok(false)
+        })
+    }
+
+    /// Searches for markup source files according to the configuration,
+    /// and stores them in `result`.
+    ///
+    /// # Errors
+    ///
+    /// If a file or path supplied does not exist,
+    /// or if any file supplied or found through scanning has no name (e.g. '.').
+    /// The code-logic should prevent the second case from ever happening.
+    pub async fn find(
+        root: &Path,
+        markup_types: Vec<Self>,
+        ignore_paths: Vec<IgnorePath>,
+    ) -> Result<Vec<PathBuf>, file_traversal::Error> {
+        let filters = vec![
+            Box::new(Self::create_filter(markup_types)),
+            Box::new(IgnorePath::create_filter(ignore_paths)),
+        ];
+        let combined_filter = create_combined_filter(filters);
+        file_traversal::find(root, &combined_filter).await
     }
 
     /// Analyzes whether a URL, if pointing to a file, is likely to contain

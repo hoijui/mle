@@ -41,14 +41,46 @@ pub fn remove_anchor(link: &mut String) -> Option<String> {
 /// # Errors
 ///
 /// If fetching the markup file content failed.
-pub async fn find_links(file: &File<'_>, conf: &Config) -> std::io::Result<ParseRes> {
+pub async fn scan_for_links<LR: AsyncFnMut(Link), AR: AsyncFnMut(Anchor)>(
+    file: &File<'_>,
+    conf: &Config,
+    links_receiver: &mut LR,
+    anchors_receiver: &mut AR,
+) -> std::io::Result<()> {
     let link_extractor = link_extractor_factory(file.markup_type);
 
     log::debug!(
         "Scanning file at location '{:#?}' for links ...",
         file.locator
     );
-    link_extractor.find_links_and_anchors(file, conf).await
+    link_extractor
+        .find_links_and_anchors(file, conf, links_receiver, anchors_receiver)
+        .await
+}
+
+/// Finds links (and optionally anchors),
+/// using the markup file specific link extractor internally.
+///
+/// # Errors
+///
+/// If fetching the markup file content failed.
+pub async fn gather_links(file: &File<'_>, conf: &Config) -> std::io::Result<ParseRes> {
+    let mut links = vec![];
+    let mut anchors = vec![];
+    let links_receiver = &mut async |link: Link| {
+        for link_ignorer in &conf.ignore_links {
+            let link_as_str = link.target.to_string();
+            if link_ignorer.matches(&link_as_str) {
+                return;
+            }
+        }
+        links.push(link);
+    };
+    let anchors_receiver = &mut async |anchor: Anchor| {
+        anchors.push(anchor);
+    };
+    scan_for_links(file, conf, links_receiver, anchors_receiver).await?;
+    Ok(ParseRes { links, anchors })
 }
 
 enum LinkExtractorCont {
@@ -57,14 +89,24 @@ enum LinkExtractorCont {
 }
 
 impl LinkExtractor for LinkExtractorCont {
-    async fn find_links_and_anchors(
+    async fn find_links_and_anchors<LR: AsyncFnMut(Link), AR: AsyncFnMut(Anchor)>(
         &self,
         file: &File<'_>,
         conf: &Config,
-    ) -> std::io::Result<ParseRes> {
+        links_receiver: &mut LR,
+        anchors_receiver: &mut AR,
+    ) -> std::io::Result<()> {
         match self {
-            Self::Markdown(internal) => internal.find_links_and_anchors(file, conf).await,
-            Self::Html(internal) => internal.find_links_and_anchors(file, conf).await,
+            Self::Markdown(internal) => {
+                internal
+                    .find_links_and_anchors(file, conf, links_receiver, anchors_receiver)
+                    .await
+            }
+            Self::Html(internal) => {
+                internal
+                    .find_links_and_anchors(file, conf, links_receiver, anchors_receiver)
+                    .await
+            }
         }
     }
 }
@@ -82,9 +124,11 @@ pub(crate) trait LinkExtractor {
     ///
     /// # Errors
     /// If fetching the markup file content failed.
-    async fn find_links_and_anchors(
+    async fn find_links_and_anchors<LR: AsyncFnMut(Link), AR: AsyncFnMut(Anchor)>(
         &self,
         file: &File<'_>,
         conf: &Config,
-    ) -> std::io::Result<ParseRes>;
+        links_receiver: &mut LR,
+        anchors_receiver: &mut AR,
+    ) -> std::io::Result<()>;
 }

@@ -3,8 +3,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-mod file_traversal;
-
 use criterion::{Criterion, criterion_group, criterion_main};
 use mle::config::Config;
 use mle::markup;
@@ -20,10 +18,9 @@ async fn end_to_end_benchmark() {
     let markup_types = vec![markup::Type::Markdown];
     let root = fs::canonicalize("./benches/benchmark/markdown/ignore_me_dir").unwrap();
     let ignore_paths = vec![];
-    let markup_files =
-        crate::file_traversal::find(root.as_path().into(), &markup_types, &ignore_paths)
-            .await
-            .unwrap();
+    let markup_files = markup::Type::find(root.as_path().into(), markup_types, ignore_paths)
+        .await
+        .unwrap();
     let config = Config {
         markup_files,
         ..Default::default()

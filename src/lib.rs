@@ -13,10 +13,8 @@ pub mod cli;
 pub mod config;
 pub mod extractors;
 pub mod ignore_link;
-pub mod ignore_path;
 pub mod link;
 pub mod markup;
-pub mod path_buf;
 pub mod result;
 pub mod state;
 
@@ -47,7 +45,7 @@ pub async fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxEr
     let mut errors: Vec<_> = vec![];
     for file in &conf.markup_files {
         match markup::File::try_from(file.clone()) {
-            Ok(markup_file) => match extractors::find_links(&markup_file, conf).await {
+            Ok(markup_file) => match extractors::gather_links(&markup_file, conf).await {
                 Ok(mut parsed) => {
                     links.append(&mut parsed.links);
                     anchor_targets.append(&mut parsed.anchors);
@@ -73,5 +71,7 @@ pub async fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxEr
 pub async fn run(state: &mut State) -> BoxResult<()> {
     let (links, anchors, errors) = find_all_links(&state.config).await;
     // TODO make this more stream-like, where each found link is directly sent to all output streams/files. See repvar code for how to do that.
-    result::sink(&state.config, &links, &anchors, &errors).map_err(Into::into)
+    result::sink(&state.config, &links, &anchors, &errors)
+        .await
+        .map_err(Into::into)
 }

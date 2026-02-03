@@ -12,22 +12,22 @@
 //! which is the case for example for [`mlc`](https://github.com/hoijui/mlc)
 //! (Markup Link Checker).
 
+use crate::BoxResult;
+use crate::config::Config;
+use crate::ignore_link;
+use crate::result;
 use async_std::io::BufReadExt;
 use clap::ArgGroup;
 use clap::builder::ValueParser;
 use clap::command;
 use clap::value_parser;
 use clap::{Arg, ArgAction, ArgMatches, Command, ValueHint};
+use cli_utils::StreamIdent;
+use cli_utils::path_buf::PathBuf;
 use const_format::formatcp;
 use futures::StreamExt;
 use futures::pin_mut;
-use crate::BoxResult;
-use crate::config::Config;
-use crate::ignore_link;
-use crate::path_buf::PathBuf;
-use crate::result;
 use std::collections::HashSet;
-use std::str::FromStr;
 use std::sync::LazyLock;
 use std::{env, io};
 use wildmatch::WildMatch;
@@ -56,8 +56,7 @@ pub const A_S_RESULT_FLUSH: char = 'f';
 pub const HH_VERBOSITY: &str = "Verbosity";
 pub const HH_ADVANCED: &str = "Advanced";
 
-pub static STDOUT_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from_str("-").unwrap());
-
+#[must_use]
 pub fn arg_version() -> Arg {
     Arg::new(A_L_VERSION)
         .help_heading(HH_VERBOSITY)
@@ -72,6 +71,7 @@ to really only output the version string."
         .action(ArgAction::SetTrue)
 }
 
+#[must_use]
 pub fn arg_quiet() -> Arg {
     Arg::new(A_L_QUIET)
         .help_heading(HH_VERBOSITY)
@@ -85,6 +85,7 @@ and only shows log output on stderr.",
         .long(A_L_QUIET)
 }
 
+#[must_use]
 pub fn arg_markup_files() -> Arg {
     Arg::new(A_N_MARKUP_FILES)
         .help("The markup files to extract links and/or anchors from")
@@ -97,6 +98,7 @@ pub fn arg_markup_files() -> Arg {
         .conflicts_with(A_L_MARKUP_FILES_LIST)
 }
 
+#[must_use]
 pub fn arg_markup_files_list() -> Arg {
     Arg::new(A_L_MARKUP_FILES_LIST)
         .help(
@@ -112,6 +114,7 @@ to extract links and/or anchors from; one per line.",
         .conflicts_with(A_N_MARKUP_FILES)
 }
 
+#[must_use]
 pub fn arg_no_links() -> Arg {
     Arg::new(A_L_NO_LINKS)
         .help_heading(HH_ADVANCED)
@@ -126,6 +129,7 @@ See -{A_S_ANCHORS},--{A_L_ANCHORS}.",
         .action(ArgAction::SetTrue)
 }
 
+#[must_use]
 pub fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help_heading(HH_ADVANCED)
@@ -139,8 +143,10 @@ and optionally the file to store them to",
         .long(A_L_ANCHORS)
         .value_parser(value_parser!(PathBuf))
         .action(ArgAction::Set)
+        .default_value(cli_utils::STREAM_PATH_STR)
 }
 
+#[must_use]
 pub fn arg_ignore_links() -> Arg {
     Arg::new(A_L_IGNORE_LINKS)
         .help_heading(HH_ADVANCED)
@@ -157,6 +163,7 @@ which will not be extracted; separated by white-space.",
         .action(ArgAction::Append)
 }
 
+#[must_use]
 pub fn arg_links_file() -> Arg {
     Arg::new(A_L_LINKS_FILE)
         .help_heading(HH_ADVANCED)
@@ -170,6 +177,7 @@ pub fn arg_links_file() -> Arg {
         .action(ArgAction::Set)
 }
 
+#[must_use]
 pub fn arg_result_format() -> Arg {
     Arg::new(A_L_RESULT_FORMAT)
         .help("Data format of the output")
@@ -181,6 +189,7 @@ pub fn arg_result_format() -> Arg {
         .action(ArgAction::Set)
 }
 
+#[must_use]
 pub fn arg_result_extended() -> Arg {
     Arg::new(A_L_RESULT_EXTENDED)
         .help_heading(HH_ADVANCED)
@@ -190,6 +199,7 @@ pub fn arg_result_extended() -> Arg {
         .action(ArgAction::SetTrue)
 }
 
+#[must_use]
 pub fn arg_result_flush() -> Arg {
     Arg::new(A_L_RESULT_FLUSH)
         .help_heading(HH_ADVANCED)
@@ -238,6 +248,12 @@ pub fn find_duplicate_short_options() -> Vec<char> {
     duplicate_short_options.iter().copied().collect()
 }
 
+/// Returns the argument matcher for the CLI.
+///
+/// # Panics
+///
+/// - if duplicate argument short options are found -
+///   which is a programmer error
 pub fn arg_matcher() -> Command {
     let duplicate_short_options = find_duplicate_short_options();
     assert!(
@@ -266,6 +282,11 @@ where
     Ok(async_std::io::BufReader::new(file).lines())
 }
 
+/// Returns a list of markup files provided through the CLI.
+///
+/// # Errors
+///
+/// - if a list file was provided, and there is an error while reading it
 pub async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     let mut files = vec![];
     if let Some(arg_files) = args.remove_many::<PathBuf>(A_N_MARKUP_FILES) {
@@ -293,7 +314,7 @@ pub fn print_version_and_exit(version: &str, quiet: bool) {
     if !quiet {
         print!("{} ", clap::crate_name!());
     }
-    println!("{}", version);
+    println!("{version}");
     std::process::exit(0);
 }
 
@@ -314,25 +335,23 @@ pub async fn parse_args() -> BoxResult<Config> {
     let markup_files = markup_files(&mut args).await?;
     let links = if args.get_flag(A_L_NO_LINKS) {
         None
-    } else if let Some(path) = args.remove_one::<PathBuf>(A_L_LINKS_FILE) {
-        if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
-            Some(None)
-        } else {
-            Some(Some(path))
-        }
     } else {
-        Some(None)
+        Some(StreamIdent::from((
+            args.remove_one::<PathBuf>(A_L_LINKS_FILE)
+                .map(Into::<async_std::path::PathBuf>::into)
+                .map(Into::<cli_utils::path_buf::PathBuf>::into),
+            false,
+        )))
     };
     let anchors = if args.get_raw(A_L_ANCHORS).is_none() {
         None
-    } else if let Some(path) = args.remove_one::<PathBuf>(A_L_ANCHORS) {
-        if path.as_os_str().eq(STDOUT_PATH.as_os_str()) {
-            Some(None)
-        } else {
-            Some(Some(path))
-        }
     } else {
-        Some(None)
+        Some(StreamIdent::from((
+            args.remove_one::<PathBuf>(A_L_ANCHORS)
+                .map(Into::<async_std::path::PathBuf>::into)
+                .map(Into::<cli_utils::path_buf::PathBuf>::into),
+            false,
+        )))
     };
 
     let ignore_links: Vec<WildMatch> = args

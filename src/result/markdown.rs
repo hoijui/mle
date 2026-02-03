@@ -2,12 +2,15 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::io::Write;
-use std::sync::Mutex;
+use async_std::io;
+use async_std::io::WriteExt;
+use async_trait::async_trait;
+use cli_utils::path_buf::PathBuf;
+use tokio::sync::Mutex;
 
+use crate::anchor::Anchor;
 use crate::config::Config;
 use crate::link::Link;
-use crate::{anchor::Anchor, path_buf::PathBuf};
 
 use super::{Type, Writer, WriterOpt};
 
@@ -24,51 +27,55 @@ pub struct Sink {
 
 impl Sink {
     #[allow(clippy::significant_drop_tightening)]
-    fn write_header(&self) -> std::io::Result<()> {
-        let mut writer = self.stream.lock().expect("we do not use MT");
+    async fn write_header(&self) -> io::Result<()> {
+        let mut writer = self.stream.lock().await;
         writeln!(
             writer,
             r"
 # Report of Found Links and/or Anchors
 "
-        )?;
+        )
+        .await?;
         // TODO Add more info here, like date and time the extraction was run, and version of the extraction tool used
         if self.extended {
             writeln!(
                 writer,
                 r"## Scanned markup files
 "
-            )?;
+            )
+            .await?;
             for markup_file in &self.markup_files {
-                writeln!(writer, "- `{}`", markup_file.display())?;
+                let line = format!("- `{}`", markup_file.display());
+                writer.write_all(line.as_bytes()).await?;
             }
         }
         Ok(())
     }
 
-    fn write_header_conditionally(&mut self) -> std::io::Result<()> {
+    async fn write_header_conditionally(&mut self) -> io::Result<()> {
         if self.header_written {
             Ok(())
         } else {
             self.header_written = true;
-            self.write_header()
+            self.write_header().await
         }
     }
 
     #[allow(clippy::significant_drop_tightening)]
-    fn write_links_header(&mut self) -> std::io::Result<()> {
+    async fn write_links_header(&mut self) -> io::Result<()> {
         if self.links_header_written {
             return Ok(());
         }
         self.links_header_written = true;
-        self.write_header_conditionally()?;
-        let mut writer = self.stream.lock().expect("we do not use MT");
+        self.write_header_conditionally().await?;
+        let mut writer = self.stream.lock().await;
         writeln!(
             writer,
             r"
 ## Links
 "
-        )?;
+        )
+        .await?;
         if self.extended {
             writeln!(
                 writer,
@@ -86,7 +93,8 @@ impl Sink {
 | Target-is-Local \
 | Target-is-Remote \
 |"
-            )?;
+            )
+            .await?;
             writeln!(
                 writer,
                 "| --- \
@@ -103,7 +111,8 @@ impl Sink {
 | --- \
 | --- \
 |"
-            )?;
+            )
+            .await?;
         } else {
             writeln!(
                 writer,
@@ -113,7 +122,8 @@ impl Sink {
 | Target \
 | Fragment \
 |"
-            )?;
+            )
+            .await?;
             writeln!(
                 writer,
                 "| --- \
@@ -122,25 +132,27 @@ impl Sink {
 | --- \
 | --- \
 |"
-            )?;
+            )
+            .await?;
         }
         Ok(())
     }
 
     #[allow(clippy::significant_drop_tightening)]
-    fn write_anchors_header(&mut self) -> std::io::Result<()> {
+    async fn write_anchors_header(&mut self) -> io::Result<()> {
         if self.anchors_header_written {
             return Ok(());
         }
         self.anchors_header_written = true;
-        self.write_header_conditionally()?;
-        let mut writer = self.stream.lock().expect("we do not use MT");
+        self.write_header_conditionally().await?;
+        let mut writer = self.stream.lock().await;
         writeln!(
             writer,
             r"
 ## Anchors
 "
-        )?;
+        )
+        .await?;
         if self.extended {
             writeln!(
                 writer,
@@ -154,7 +166,8 @@ impl Sink {
 | Name \
 | Type \
 |"
-            )?;
+            )
+            .await?;
             writeln!(
                 writer,
                 "| --- \
@@ -167,7 +180,8 @@ impl Sink {
 | --- \
 | --- \
 |"
-            )?;
+            )
+            .await?;
         } else {
             writeln!(
                 writer,
@@ -176,7 +190,8 @@ impl Sink {
 | Column \
 | Name \
 |"
-            )?;
+            )
+            .await?;
             writeln!(
                 writer,
                 "| --- \
@@ -184,23 +199,21 @@ impl Sink {
 | --- \
 | --- \
 |"
-            )?;
+            )
+            .await?;
         }
         Ok(())
     }
-
-    // fn write_footer(&mut self) -> std::io::Result<()> {
-    //     Ok(())
-    // }
 }
 
+#[async_trait]
 impl super::Sink for Sink {
-    fn init(
+    async fn init(
         _format: Type,
         config: &Config,
         links_stream: WriterOpt,
         anchors_stream: WriterOpt,
-    ) -> std::io::Result<Box<dyn super::Sink>> {
+    ) -> io::Result<Box<dyn super::Sink>> {
         if links_stream.is_some() && anchors_stream.is_some() {
             log::warn!(
                 "Ignoring destination for anchors, \
@@ -226,11 +239,10 @@ because the chosen output format writes everything into one file."
     }
 
     #[allow(clippy::significant_drop_tightening)]
-    fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
-        self.write_links_header()?;
-        // let rec = LinkRec::new(link, self.extended);
-        let mut writer = self.stream.lock().expect("we do not use MT");
-        // writeln!(writer, "{link}")?;
+    #[allow(clippy::similar_names)]
+    async fn sink_link(&mut self, link: &Link) -> io::Result<()> {
+        self.write_links_header().await?;
+        let mut writer = self.stream.lock().await;
         let target_without_fragment = link.target.without_fragment().to_string();
         let target_no_frag = if target_without_fragment.is_empty() {
             String::new()
@@ -240,9 +252,8 @@ because the chosen output format writes everything into one file."
         let target_frag = link.target.fragment().map_or_else(String::new, |fragment| {
             format!("[`{}`]({}) ", fragment, link.target)
         });
-        if self.extended {
-            writeln!(
-                writer,
+        let line = if self.extended {
+            format!(
                 "| [`{}`]({}) | {} | {} | {} | {} | {} | {} | {}| {}| {} | {} | {} | {} |",
                 link.source.file,
                 link.source.file,
@@ -258,10 +269,9 @@ because the chosen output format writes everything into one file."
                 link.target.is_url(),
                 link.target.is_local(),
                 link.target.is_remote(),
-            )?;
+            )
         } else {
-            writeln!(
-                writer,
+            format!(
                 "| [`{}`]({}) | {} | {} | {}| {}|",
                 link.source.file,
                 link.source.file,
@@ -269,22 +279,21 @@ because the chosen output format writes everything into one file."
                 link.source.pos.column,
                 target_no_frag,
                 target_frag,
-            )?;
-        }
+            )
+        };
+        writer.write_all(line.as_bytes()).await?;
         if self.flush {
-            writer.flush()?;
+            writer.flush().await?;
         }
         Ok(())
     }
 
     #[allow(clippy::significant_drop_tightening)]
-    fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
-        self.write_anchors_header()?;
-        let mut writer = self.stream.lock().expect("we do not use MT");
-        // writeln!(writer, "{anchor}")?;
-        if self.extended {
-            writeln!(
-                writer,
+    async fn sink_anchor(&mut self, anchor: &Anchor) -> io::Result<()> {
+        self.write_anchors_header().await?;
+        let mut writer = self.stream.lock().await;
+        let line = if self.extended {
+            format!(
                 "| [`{}`]({}) | {} | {} | {} | {} | {} | {} | {} | {} |",
                 anchor.source.file,
                 anchor.source.file,
@@ -296,26 +305,25 @@ because the chosen output format writes everything into one file."
                 anchor.source.file.is_remote(),
                 anchor.name,
                 anchor.r#type,
-            )?;
+            )
         } else {
-            writeln!(
-                writer,
+            format!(
                 "| [`{}`]({}) | {} | {} | {} |",
                 anchor.source.file,
                 anchor.source.file,
                 anchor.source.pos.line,
                 anchor.source.pos.column,
                 anchor.name,
-            )?;
-        }
+            )
+        };
+        writer.write_all(line.as_bytes()).await?;
         if self.flush {
-            writer.flush()?;
+            writer.flush().await?;
         }
         Ok(())
     }
 
-    fn finalize(&mut self) -> std::io::Result<()> {
-        // self.write_footer()
+    async fn finalize(&mut self) -> io::Result<()> {
         Ok(())
     }
 }

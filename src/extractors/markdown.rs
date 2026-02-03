@@ -56,11 +56,13 @@ impl LinkExtractor {
 }
 
 impl super::LinkExtractor for LinkExtractor {
-    async fn find_links_and_anchors(
+    async fn find_links_and_anchors<LR: AsyncFnMut(Link), AR: AsyncFnMut(Anchor)>(
         &self,
         file: &File<'_>,
         conf: &Config,
-    ) -> std::io::Result<super::ParseRes> {
+        mut links_receiver: &mut LR,
+        mut anchors_receiver: &mut AR,
+    ) -> std::io::Result<()> {
         let html_le = super::html::LinkExtractor();
 
         // let line_lengths: Vec<usize> = file.content.fetch()?.lines().map(str::len).collect();
@@ -109,8 +111,6 @@ impl super::LinkExtractor for LinkExtractor {
             Some(callback),
         );
 
-        let mut links: Vec<Link> = Vec::new();
-        let mut anchors: Vec<Anchor> = Vec::new();
         let mut gathering_for_header = false;
         let mut header_content: Vec<String> = Vec::new();
         for (evt, range) in parser.into_offset_iter() {
@@ -135,11 +135,11 @@ impl super::LinkExtractor for LinkExtractor {
                         | Tag::Image {link_type: _, dest_url, title: _, id: _}
                         if conf.extract_links() => {
                             let pos = pos_from_idx(range.start) + &file.start;
-                            links.push(Link::new(
+                            links_receiver(Link::new(
                                 file.locator.clone(),
                                 pos,
                                 &dest_url,
-                            ));
+                            )).await;
                         }
                         Tag::Heading {level: _, id, classes: _, attrs: _}
                         if conf.extract_anchors() => {
@@ -172,11 +172,11 @@ impl super::LinkExtractor for LinkExtractor {
                                     // id
                             };
                             header_content.clear();
-                            anchors.push(Anchor {
+                            anchors_receiver(Anchor {
                                 source,
                                 name: id_str,
                                 r#type,
-                            });
+                            }).await;
                         }
                         _ => (),
                     }
@@ -189,13 +189,7 @@ impl super::LinkExtractor for LinkExtractor {
                         content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
                     };
-                    let mut sub_parsed = html_le.find_links_and_anchors(&sub_markup, conf).await?;
-                    if conf.extract_links() {
-                        links.append(&mut sub_parsed.links);
-                    }
-                    if conf.extract_anchors() {
-                        anchors.append(&mut sub_parsed.anchors);
-                    }
+                    html_le.find_links_and_anchors(&sub_markup, conf, &mut links_receiver, &mut anchors_receiver).await?;
 
                     if gathering_for_header { // TODO ... OR_THIS (see TODO above)
                         header_content.push(content.into_string());
@@ -211,7 +205,7 @@ impl super::LinkExtractor for LinkExtractor {
                 _ => (),
             }
         }
-        Ok(super::ParseRes { links, anchors })
+        Ok(())
     }
 }
 
@@ -232,7 +226,7 @@ mod tests {
     async fn find_links(content: &str) -> Vec<Link> {
         let markup_file = File::dummy(content, markup::Type::Markdown);
         let conf = Config::default();
-        super::super::find_links(&markup_file, &conf)
+        super::super::gather_links(&markup_file, &conf)
             .await
             .map(|parsed| parsed.links)
             .expect("No error")

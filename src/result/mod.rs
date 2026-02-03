@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 2025 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -7,18 +7,17 @@ mod json;
 mod markdown;
 mod txt;
 
-use std::{
-    fs::File,
-    io::{ErrorKind, Write},
-    str::FromStr,
-};
+use async_std::io::{ErrorKind, Write};
+use async_trait::async_trait;
+use cli_utils::StreamIdent;
+use std::str::FromStr;
 
 // #[cfg(feature = "async")]
 // use async_std::path::PathBuf;
 // #[cfg(not(feature = "async"))]
 // use std::path::PathBuf;
-use crate::path_buf::PathBuf;
 
+use async_std::io;
 use clap::{ValueEnum, builder::PossibleValue};
 use serde::{Deserialize, Serialize};
 
@@ -29,7 +28,7 @@ use crate::{
     link::Link,
 };
 
-type Writer = Box<dyn Write + 'static>;
+type Writer = Box<dyn Write + Unpin + Send + Sync + 'static>;
 type WriterOpt = Option<Writer>;
 
 const EXT_TEXT: &str = "txt";
@@ -112,11 +111,13 @@ impl FromStr for Type {
 }
 
 #[allow(clippy::ref_option)]
-fn construct_out_stream(specifier: &Option<PathBuf>) -> Writer {
-    specifier.as_ref().map_or_else(
-        || Box::new(std::io::stdout()) as Box<dyn Write>,
-        |file_path| Box::new(File::create(file_path).unwrap()) as Box<dyn Write>,
-    )
+async fn construct_out_stream_opt(
+    specifier_opt: &Option<StreamIdent>,
+) -> io::Result<Option<Box<dyn io::Write + Unpin + Send + Sync>>> {
+    match specifier_opt.as_ref() {
+        None => Ok(None),
+        Some(specifier) => Ok(Some(specifier.create_output_writer().await?)),
+    }
 }
 
 /// Pretty-prints a list of errors to `log::error!`.
@@ -129,13 +130,14 @@ pub fn write_to_stderr(errors: &[BoxError]) {
 /// Write results to stdout or file.
 ///
 /// # Errors
+///
 /// (I/)O-error when writing to a file.
-pub fn sink(
+pub async fn sink(
     config: &Config,
     links: &[Link],
     anchors: &[Anchor],
     errors: &[BoxError],
-) -> std::io::Result<()> {
+) -> io::Result<()> {
     let sink_init = match config.result_format {
         Type::Text => txt::Sink::init,
         Type::Json => json::Sink::init,
@@ -146,55 +148,60 @@ pub fn sink(
             "Result format not yet supported",
         ))?,
     };
-    let links_writer = config.links.as_ref().map(construct_out_stream);
-    let anchors_writer = config.anchors.as_ref().map(construct_out_stream);
-    let mut sink = sink_init(config.result_format, config, links_writer, anchors_writer)?;
+    let links_writer = construct_out_stream_opt(&config.links).await?;
+    let anchors_writer = construct_out_stream_opt(&config.anchors).await?;
+    let mut sink = sink_init(config.result_format, config, links_writer, anchors_writer).await?;
     for link in links {
         // thread::sleep::sleep(std::time::Duration::new(0, 200000000));
-        sink.sink_link(link)?;
+        sink.sink_link(link).await?;
     }
     for anchor in anchors {
-        sink.sink_anchor(anchor)?;
+        sink.sink_anchor(anchor).await?;
     }
     for error in errors {
-        sink.sink_error(error)?;
+        sink.sink_error(error).await?;
     }
-    sink.finalize()
+    sink.finalize().await
 }
 
-pub trait Sink {
+#[async_trait]
+pub trait Sink: Send + Sync {
     /// Initializes this sink.
     /// This will be called once only,
     /// and before any `sink_*` function may be called.
     ///
     /// # Errors
+    ///
     /// If writing to a file or other (I)/O-device failed.
-    fn init(
+    async fn init(
         format: Type,
         config: &Config,
         links_stream: WriterOpt,
         anchors_stream: WriterOpt,
-    ) -> std::io::Result<Box<dyn Sink>>
+    ) -> io::Result<Box<dyn Sink>>
     where
         Self: Sized;
 
     /// Writes-out an extracted link.
     ///
     /// # Errors
+    ///
     /// If writing to the output stream for links failed.
-    fn sink_link(&mut self, link: &Link) -> std::io::Result<()>;
+    async fn sink_link(&mut self, link: &Link) -> io::Result<()>;
 
     /// Writes-out an extracted anchor.
     ///
     /// # Errors
+    ///
     /// If writing to the output stream for anchors failed.
-    fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()>;
+    async fn sink_anchor(&mut self, anchor: &Anchor) -> io::Result<()>;
 
     /// Writes-out an error generated while extracting links/anchors.
     ///
     /// # Errors
+    ///
     /// If writing to the output stream for errors failed.
-    fn sink_error(&mut self, error: &BoxError) -> std::io::Result<()> {
+    async fn sink_error(&mut self, error: &BoxError) -> io::Result<()> {
         log::error!("{error:#?}");
         Ok(())
     }
@@ -204,8 +211,9 @@ pub trait Sink {
     /// and no `sink_*` functions may be called after this function has been called.
     ///
     /// # Errors
+    ///
     /// If writing to a file or other (I)/O-device failed.
-    fn finalize(&mut self) -> std::io::Result<()>;
+    async fn finalize(&mut self) -> io::Result<()>;
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -410,7 +418,6 @@ impl<'a> AnchorRec<'a> {
                 src_is_local: anchor.source.file.is_local(),
                 src_is_remote: anchor.source.file.is_remote(),
                 name: &anchor.name,
-                // r#type: format!("{:?}", anchor.r#type),
                 r#type: anchor.r#type,
             })
         } else {
@@ -475,7 +482,6 @@ impl AnchorOwnedRec {
                 src_is_local: anchor.source.file.is_local(),
                 src_is_remote: anchor.source.file.is_remote(),
                 name: anchor.name.clone(),
-                // r#type: format!("{:?}", anchor.r#type),
                 r#type: anchor.r#type,
             })
         } else {

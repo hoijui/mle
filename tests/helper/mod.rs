@@ -3,8 +3,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-pub mod file_traversal;
-
 #[cfg(test)]
 use std::path::{Path, PathBuf};
 

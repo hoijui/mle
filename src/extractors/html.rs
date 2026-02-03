@@ -150,13 +150,13 @@ impl<'a> Scanner<'a> {
 
 impl super::LinkExtractor for LinkExtractor {
     #[allow(clippy::too_many_lines)]
-    async fn find_links_and_anchors(
+    async fn find_links_and_anchors<LR: AsyncFnMut(Link), AR: AsyncFnMut(Anchor)>(
         &self,
         file: &File<'_>,
         conf: &Config,
-    ) -> std::io::Result<super::ParseRes> {
-        let mut links: Vec<Link> = Vec::new();
-        let mut anchors: Vec<Anchor> = Vec::new();
+        links_receiver: &mut LR,
+        anchors_receiver: &mut AR,
+    ) -> std::io::Result<()> {
         let mut attribute: Option<Attribute> = None;
         let mut state: ParserState = ParserState::Text;
         let mut is_anchor = false;
@@ -265,24 +265,41 @@ impl super::LinkExtractor for LinkExtractor {
                             } + &file.start;
                             match attrib_cont {
                                 Attribute::Href => {
-                                    links.push(Link::new(file.locator.clone(), pos, attrib_target));
+                                    if conf.extract_links() {
+                                        links_receiver(Link::new(
+                                            file.locator.clone(),
+                                            pos,
+                                            attrib_target,
+                                        ))
+                                        .await;
+                                    }
                                 }
-                                Attribute::Name => anchors.push(Anchor {
-                                    source: link::Locator {
-                                        file: file.locator.clone(),
-                                        pos,
-                                    },
-                                    name: attrib_target.to_string(),
-                                    r#type: anchor::Type::Direct,
-                                }),
-                                Attribute::Id => anchors.push(Anchor {
-                                    source: link::Locator {
-                                        file: file.locator.clone(),
-                                        pos,
-                                    },
-                                    name: attrib_target.to_string(),
-                                    r#type: anchor::Type::ElementId,
-                                }),
+                                Attribute::Name => {
+                                    if conf.extract_anchors() {
+                                        anchors_receiver(Anchor {
+                                            source: link::Locator {
+                                                file: file.locator.clone(),
+                                                pos,
+                                            },
+                                            name: attrib_target.to_string(),
+                                            r#type: anchor::Type::Direct,
+                                        })
+                                        .await;
+                                    }
+                                }
+                                Attribute::Id => {
+                                    if conf.extract_anchors() {
+                                        anchors_receiver(Anchor {
+                                            source: link::Locator {
+                                                file: file.locator.clone(),
+                                                pos,
+                                            },
+                                            name: attrib_target.to_string(),
+                                            r#type: anchor::Type::ElementId,
+                                        })
+                                        .await;
+                                    }
+                                }
                                 Attribute::Other => {}
                             }
                             state = ParserState::Element;
@@ -292,7 +309,7 @@ impl super::LinkExtractor for LinkExtractor {
                 }
             }
         }
-        Ok(super::ParseRes { links, anchors })
+        Ok(())
     }
 }
 
@@ -305,12 +322,13 @@ mod tests {
     };
 
     use super::*;
+    use cli_utils::StreamIdent;
     use ntest::test_case;
 
     async fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
         let conf = Config::default();
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf)
+        super::super::gather_links(&markup_file, &conf)
             .await
             .map(|parsed| parsed.links)
     }
@@ -318,11 +336,11 @@ mod tests {
     async fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
         let conf = Config {
             links: None,
-            anchors: Some(None),
+            anchors: Some(StreamIdent::StdOut),
             ..Config::default()
         };
         let markup_file = File::dummy(content, Type::Html);
-        super::super::find_links(&markup_file, &conf)
+        super::super::gather_links(&markup_file, &conf)
             .await
             .map(|parsed| parsed.anchors)
     }

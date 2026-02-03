@@ -1,10 +1,9 @@
-// SPDX-FileCopyrightText: 2022 2025 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::path_buf::PathBuf;
-
+use cli_utils::{StreamIdent, path_buf::PathBuf};
 use serde::{Deserialize, Serialize};
 use wildmatch::WildMatch;
 
@@ -23,13 +22,13 @@ pub struct Config {
     /// - `None` => do not extract links,
     /// - `Some(None)` => extract links and write them to stdout,
     /// - `Some(Some(path))` => extract links and write them to file `path`.
-    pub links: Option<Option<PathBuf>>,
+    pub links: Option<StreamIdent>,
     /// Where to store anchors to.
     ///
     /// - `None` => do not extract anchors,
     /// - `Some(None)` => extract anchors and write them to stdout,
     /// - `Some(Some(path))` => extract anchors and write them to file `path`.
-    pub anchors: Option<Option<PathBuf>>,
+    pub anchors: Option<StreamIdent>,
     pub ignore_links: Vec<WildMatch>,
     pub result_format: result::Type,
     /// Whether to include non-essential information in the resulting report.
@@ -60,7 +59,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             markup_files: Vec::default(),
-            links: Some(None),
+            links: Some(StreamIdent::StdOut),
             anchors: None,
             ignore_links: Vec::default(),
             result_format: result::Type::default(),

@@ -1,10 +1,10 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::sync::Mutex;
-
-use csv;
+use async_trait::async_trait;
+use csv_async as csv;
+use tokio::sync::Mutex;
 
 use crate::config::Config;
 use crate::result::Type;
@@ -15,8 +15,8 @@ use super::{AnchorRec, LinkRec, Writer, WriterOpt};
 pub struct Sink {
     extended: bool,
     flush: bool,
-    links_writer: Option<Mutex<csv::Writer<Writer>>>,
-    anchors_writer: Option<Mutex<csv::Writer<Writer>>>,
+    links_writer: Option<Mutex<csv::AsyncSerializer<Writer>>>,
+    anchors_writer: Option<Mutex<csv::AsyncSerializer<Writer>>>,
 }
 
 impl Sink {
@@ -28,23 +28,24 @@ impl Sink {
         }
     }
 
-    fn writer(format: Type, stream_opt: WriterOpt) -> Option<Mutex<csv::Writer<Writer>>> {
+    fn writer(format: Type, stream_opt: WriterOpt) -> Option<Mutex<csv::AsyncSerializer<Writer>>> {
         stream_opt
             .map(|stream| {
-                csv::WriterBuilder::new()
+                csv::AsyncWriterBuilder::new()
                     .delimiter(Self::delimiter(format))
                     // .has_headers(true)
                     // .quote_style(csv::QuoteStyle::Necessary)
                     // .quote(b'"')
                     // .double_quote(true)
-                    .from_writer(stream)
+                    .create_serializer(stream)
             })
             .map(Mutex::new)
     }
 }
 
+#[async_trait]
 impl super::Sink for Sink {
-    fn init(
+    async fn init(
         format: Type,
         config: &Config,
         links_stream: WriterOpt,
@@ -58,39 +59,42 @@ impl super::Sink for Sink {
         }) as Box<dyn super::Sink>)
     }
 
-    fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
+    #[allow(clippy::significant_drop_tightening)]
+    async fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
         if let Some(links_writer_m) = &self.links_writer {
-            let mut links_writer = links_writer_m.lock().expect("we do not use MT");
+            let mut links_writer = links_writer_m.lock().await;
             let rec = LinkRec::new(link, self.extended);
-            links_writer.serialize(rec)?;
+            links_writer.serialize(rec).await?;
             if self.flush {
-                links_writer.flush()?;
+                links_writer.flush().await?;
             }
         }
         Ok(())
     }
 
-    fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
+    #[allow(clippy::significant_drop_tightening)]
+    async fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
         if let Some(ref anchors_writer_m) = self.anchors_writer {
-            let mut anchors_writer = anchors_writer_m.lock().expect("we do not use MT");
+            let mut anchors_writer = anchors_writer_m.lock().await;
             let rec = AnchorRec::new(anchor, self.extended);
-            anchors_writer.serialize(rec)?;
+            anchors_writer.serialize(rec).await?;
             if self.flush {
-                anchors_writer.flush()?;
+                anchors_writer.flush().await?;
             }
         }
         Ok(())
     }
 
-    fn finalize(&mut self) -> std::io::Result<()> {
+    #[allow(clippy::significant_drop_tightening)]
+    async fn finalize(&mut self) -> std::io::Result<()> {
         if let Some(links_writer_m) = &self.links_writer {
-            let mut links_writer = links_writer_m.lock().expect("we do not use MT");
-            links_writer.flush()?;
+            let mut links_writer = links_writer_m.lock().await;
+            links_writer.flush().await?;
         }
 
         if let Some(anchors_writer_m) = &self.anchors_writer {
-            let mut anchors_writer = anchors_writer_m.lock().expect("we do not use MT");
-            anchors_writer.flush()?;
+            let mut anchors_writer = anchors_writer_m.lock().await;
+            anchors_writer.flush().await?;
         }
 
         Ok(())

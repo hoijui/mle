@@ -3,11 +3,11 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use mle::path_buf::PathBuf;
 use std::{str::FromStr, sync::Arc};
 
+use cli_utils::path_buf::PathBuf;
 #[cfg(test)]
-use mle::extractors::find_links;
+use mle::extractors::gather_links;
 use mle::{
     config::Config,
     extractors::ParseRes,
@@ -24,7 +24,7 @@ async fn extract(md_file: PathBuf) -> std::io::Result<ParseRes> {
         ..Default::default()
     };
     let conf = Config::default();
-    find_links(&file, &conf).await
+    gather_links(&file, &conf).await
 }
 
 #[tokio::test]

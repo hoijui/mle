@@ -3,19 +3,22 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use cli_utils::BoxResult;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::ops::{Add, Sub};
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::{convert::Infallible, fmt, str::FromStr};
 
 use relative_path::RelativePathBuf;
 use url::Url;
 
-use crate::path_buf::PathBuf;
 use async_std::path::Path;
+use cli_utils::path_buf::PathBuf;
 
 use crate::markup;
+
+static ROOT: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("/"));
 
 /// The source file a link was found in
 #[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
@@ -88,7 +91,7 @@ pub struct Link {
 
 impl Default for FileLoc {
     fn default() -> Self {
-        Self::System(FileSystemLoc::Absolute(PathBuf::new()))
+        Self::System(FileSystemLoc::Absolute(PathBuf::new())) // FIXME Bad! that is not an absolute path
     }
 }
 
@@ -96,6 +99,120 @@ impl FileLoc {
     #[must_use]
     pub fn dummy() -> Arc<Self> {
         Arc::new(Self::default())
+    }
+
+    /// Parse a string as an URL, with this URL as the base URL.
+    ///
+    /// The inverse of this is [`make_relative`].
+    ///
+    /// # Notes
+    ///
+    /// - A trailing slash is significant.
+    ///   Without it, the last path component is considered to be a “file” name
+    ///   to be removed to get at the “directory” that is used as the base.
+    /// - A [scheme relative special URL](https://url.spec.whatwg.org/#scheme-relative-special-url-string)
+    ///   as input replaces everything in the base URL after the scheme.
+    /// - An absolute URL (with a scheme) as input replaces the whole base URL (even the scheme).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use url::Url;
+    /// # use url::ParseError;
+    ///
+    /// // Base without a trailing slash
+    /// # fn run() -> Result<(), ParseError> {
+    /// let base = Url::parse("https://example.net/a/b.html")?;
+    /// let url = base.join("c.png")?;
+    /// assert_eq!(url.as_str(), "https://example.net/a/c.png");  // Not /a/b.html/c.png
+    ///
+    /// // Base with a trailing slash
+    /// let base = Url::parse("https://example.net/a/b/")?;
+    /// let url = base.join("c.png")?;
+    /// assert_eq!(url.as_str(), "https://example.net/a/b/c.png");
+    ///
+    /// // Input as scheme relative special URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("//eve.com/b")?;
+    /// assert_eq!(url.as_str(), "https://eve.com/b");
+    ///
+    /// // Input as base url relative special URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("/v1/meta")?;
+    /// assert_eq!(url.as_str(), "https://alice.com/v1/meta");
+    ///
+    /// // Input as absolute URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("http://eve.com/b")?;
+    /// assert_eq!(url.as_str(), "http://eve.com/b");  // http instead of https
+    ///
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// If the function can not parse an URL from the given string
+    /// with this URL as the base URL, a [`ParseError`] variant will be returned.
+    ///
+    /// [`ParseError`]: enum.ParseError.html
+    /// [`make_relative`]: #method.make_relative
+    #[inline]
+    pub fn join(&self, relative_path: &str) -> BoxResult<Self> {
+        Ok(match self {
+            Self::Url(base_url) => Self::Url(base_url.join(relative_path)?),
+            Self::System(base_path) => Self::System(base_path.join(relative_path)?),
+        })
+    }
+
+    /// Returns the `Path` without its final component, if there is one.
+    ///
+    /// Returns [`None`] if the path terminates in a root or prefix.
+    ///
+    /// [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+    ///
+    /// # Panics
+    ///
+    /// If there is les then one source file path part.
+    #[must_use]
+    pub fn parent(&self) -> Option<Self> {
+        Some(match self {
+            Self::Url(url) => {
+                let mut parent_url = url.clone();
+                parent_url.set_path(
+                    &PathBuf::from(url.path())
+                        .parent()
+                        .expect("There always has to be at least one source file path part")
+                        .to_string_lossy(),
+                );
+                Self::Url(parent_url)
+            }
+            Self::System(file_system_loc) => Self::System(
+                file_system_loc
+                    .parent()
+                    .expect("There always has to be at least one source file path part"),
+            ),
+        })
+    }
+
+    /// Makes relative paths absolute and resolves `../` and `./` relative parts.
+    /// This is useful, for example when trying to group all `Target`s
+    /// that point to the same resource/file.
+    ///
+    /// # Errors
+    ///
+    /// - never
+    pub fn canonical(self: Arc<Self>, base: &PathBuf) -> BoxResult<Arc<Self>> {
+        Ok(
+            if let Self::System(FileSystemLoc::Relative(rel_source_path)) = &self.as_ref() {
+                Arc::new(Self::System(FileSystemLoc::Absolute(
+                    base.join(rel_source_path.as_str()),
+                )))
+            } else {
+                self
+            },
+        )
     }
 }
 
@@ -257,18 +374,80 @@ impl Target {
     /// Makes relative paths absolute and resolves `../` and `./` relative parts.
     /// This is useful, for example when trying to group all `Target`s
     /// that point to the same resource/file.
-    #[must_use]
-    pub fn canonical(&self, base: &Path) -> Cow<'_, Self> {
-        match self {
-            Self::FileSystem(fs_target) => match &fs_target.file {
-                FileSystemLoc::Relative(_path) => Cow::Owned(Self::FileSystem(FileSystemTarget {
-                    file: fs_target.file.to_absolute(base).into_owned(),
-                    anchor: fs_target.anchor.clone(),
-                })),
-                FileSystemLoc::Absolute(_path) => Cow::Borrowed(self),
-            },
-            _ => Cow::Borrowed(self),
+    ///
+    /// # Panics
+    ///
+    /// - Failed to extract the FS rot from an absolute path
+    /// - Failed to strip away the FS root from path
+    ///   from of which it was previously extracted
+    ///
+    /// # Errors
+    ///
+    /// - If canonicalization of a relative path fails
+    /// - If extracting the parent from that path fails
+    pub fn canonical(
+        &self,
+        re_root_abs_paths: bool,
+        source_file: Arc<FileLoc>,
+        rel_path_base: &PathBuf, /*base: &FileLoc*/
+    ) -> BoxResult<Cow<'_, Self>> {
+        eprintln!(
+            "\n\ncanonical({self}, {re_root_abs_paths}, '{source_file}', '{rel_path_base}') ..."
+        );
+        if let Self::FileSystem(fs_target) = self {
+            match &fs_target.file {
+                FileSystemLoc::Absolute(orig_abs_path) => {
+                    if re_root_abs_paths {
+                        // We need to remove the FS root from the absolute path first,
+                        // in order to be able to re-root it
+                        // (meaning: to replace the FS root with a directory).
+                        // This way, the path is treated as relative by the `join` function,
+                        // and appended to the new root,
+                        // instead of leaving it as is, because it is already absolute.
+                        // let root = &*ROOT;
+                        let root = orig_abs_path
+                            .iter()
+                            .next()
+                            .expect("Absolute path needs to have at least a (first) root part");
+                        let relativized_abs_path = orig_abs_path.strip_prefix(root).expect(
+                            "To be able to strip root from path of which it was extracted from",
+                        );
+                        eprintln!(
+                            "\t1 - {rel_path_base} * {orig_abs_path} -> {}",
+                            relativized_abs_path.display()
+                        );
+                        return Ok(Cow::Owned(Self::FileSystem(FileSystemTarget {
+                            // TODO Check if this works as intended (cause the joined-on path is already absolute, but we want it to act as if it was relative) -> now does, but only with the prefix-stripping!
+                            file: FileSystemLoc::Absolute(rel_path_base.join(relativized_abs_path)),
+                            anchor: fs_target.anchor.clone(),
+                        })));
+                    }
+                }
+                FileSystemLoc::Relative(relative_path) => {
+                    let base = source_file.canonical(rel_path_base)?;
+                    let base = base
+                        .parent()
+                        .ok_or_else(|| format!("link source-file has no parent: '{base}'"))?;
+                    match base.join(relative_path.as_str())? {
+                        // TODO FIXME Only join directly if it is a dir, else remove last path part first
+                        FileLoc::Url(abs_url) => {
+                            let mut abs_url = Self::from(abs_url);
+                            abs_url.set_fragment(fs_target.anchor.clone());
+                            eprintln!("\t2 - {abs_url}");
+                            return Ok(Cow::Owned(abs_url));
+                        }
+                        FileLoc::System(abs_path) => {
+                            eprintln!("\t3 - {abs_path}");
+                            return Ok(Cow::Owned(Self::FileSystem(FileSystemTarget {
+                                file: abs_path,
+                                anchor: fs_target.anchor.clone(),
+                            })));
+                        }
+                    }
+                }
+            }
         }
+        Ok(Cow::Borrowed(self))
     }
 
     /// Removes the fragment from a link, if one is present.
@@ -291,6 +470,24 @@ impl Target {
                 Cow::Owned(Self::FileSystem(fs_target))
             }
             _ => Cow::Borrowed(self),
+        }
+    }
+
+    /// Removes the fragment from a link, if one is present.
+    /// Otherwise it returns `self`.
+    pub fn set_fragment(&mut self, fragment: Option<String>) {
+        match self {
+            Self::Http(url)
+            | Self::EMail(url)
+            | Self::Ftp(url)
+            | Self::FileUrl(url)
+            | Self::UnknownUrlSchema(url) => {
+                url.set_fragment(fragment.as_deref());
+            }
+            Self::FileSystem(target) => {
+                target.anchor = fragment;
+            }
+            Self::Invalid(_) => (),
         }
     }
 
@@ -370,6 +567,83 @@ impl FileSystemLoc {
             Self::Relative(_) => {
                 panic!("FileSystemLoc::to_absolute(base) returned a Self::Relative -> BAD!")
             }
+        }
+    }
+
+    /// Parse a string as an URL, with this URL as the base URL.
+    ///
+    /// The inverse of this is [`make_relative`].
+    ///
+    /// # Notes
+    ///
+    /// - A trailing slash is significant.
+    ///   Without it, the last path component is considered to be a “file” name
+    ///   to be removed to get at the “directory” that is used as the base.
+    /// - A [scheme relative special URL](https://url.spec.whatwg.org/#scheme-relative-special-url-string)
+    ///   as input replaces everything in the base URL after the scheme.
+    /// - An absolute URL (with a scheme) as input replaces the whole base URL (even the scheme).
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use url::Url;
+    /// # use url::ParseError;
+    ///
+    /// // Base without a trailing slash
+    /// # fn run() -> Result<(), ParseError> {
+    /// let base = Url::parse("https://example.net/a/b.html")?;
+    /// let url = base.join("c.png")?;
+    /// assert_eq!(url.as_str(), "https://example.net/a/c.png");  // Not /a/b.html/c.png
+    ///
+    /// // Base with a trailing slash
+    /// let base = Url::parse("https://example.net/a/b/")?;
+    /// let url = base.join("c.png")?;
+    /// assert_eq!(url.as_str(), "https://example.net/a/b/c.png");
+    ///
+    /// // Input as scheme relative special URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("//eve.com/b")?;
+    /// assert_eq!(url.as_str(), "https://eve.com/b");
+    ///
+    /// // Input as base url relative special URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("/v1/meta")?;
+    /// assert_eq!(url.as_str(), "https://alice.com/v1/meta");
+    ///
+    /// // Input as absolute URL
+    /// let base = Url::parse("https://alice.com/a")?;
+    /// let url = base.join("http://eve.com/b")?;
+    /// assert_eq!(url.as_str(), "http://eve.com/b");  // http instead of https
+    ///
+    /// # Ok(())
+    /// # }
+    /// # run().unwrap();
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// If the function can not parse an URL from the given string
+    /// with this URL as the base URL, a [`ParseError`] variant will be returned.
+    ///
+    /// [`ParseError`]: enum.ParseError.html
+    /// [`make_relative`]: #method.make_relative
+    #[inline]
+    pub fn join(&self, relative_path: &str) -> BoxResult<Self> {
+        Ok(match self {
+            Self::Relative(rel_base_path) => Self::Relative(rel_base_path.join(relative_path)),
+            Self::Absolute(abs_base_path) => Self::Absolute(abs_base_path.join(relative_path)),
+        })
+    }
+
+    /// Returns the `Path` without its final component, if there is one.
+    ///
+    /// Returns [`None`] if the path terminates in a root or prefix.
+    ///
+    /// [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
+    pub fn parent(&self) -> Option<Self> {
+        match self {
+            Self::Relative(path) => path.parent().map(ToOwned::to_owned).map(Self::Relative),
+            Self::Absolute(path) => path.parent().map(Into::into).map(Self::Absolute),
         }
     }
 }

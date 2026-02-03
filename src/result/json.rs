@@ -2,7 +2,9 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::{io::Write, sync::Mutex};
+use async_std::io::WriteExt;
+use async_trait::async_trait;
+use tokio::sync::Mutex;
 
 use crate::config::Config;
 use crate::link::Link;
@@ -18,8 +20,9 @@ pub struct Sink {
     anchors: Vec<AnchorOwnedRec>,
 }
 
+#[async_trait]
 impl super::Sink for Sink {
-    fn init(
+    async fn init(
         _format: Type,
         config: &Config,
         links_stream: WriterOpt,
@@ -34,12 +37,12 @@ impl super::Sink for Sink {
         }) as Box<dyn super::Sink>)
     }
 
-    fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
+    async fn sink_link(&mut self, link: &Link) -> std::io::Result<()> {
         self.links.push(LinkOwnedRec::new(link, self.extended));
         Ok(())
     }
 
-    fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
+    async fn sink_anchor(&mut self, anchor: &Anchor) -> std::io::Result<()> {
         self.anchors
             .push(AnchorOwnedRec::new(anchor, self.extended));
         Ok(())
@@ -47,16 +50,16 @@ impl super::Sink for Sink {
 
     // There are two false positives reported by clippy::significant_drop_tightening here
     #[allow(clippy::significant_drop_tightening)]
-    fn finalize(&mut self) -> std::io::Result<()> {
+    async fn finalize(&mut self) -> std::io::Result<()> {
         if let Some(links_writer_m) = &self.links_stream {
-            let mut links_writer = links_writer_m.lock().expect("we do not use MT");
+            let mut links_writer = links_writer_m.lock().await;
             let json = serde_json::to_string_pretty(&self.links)?;
-            write!(links_writer, "{json}")?;
+            links_writer.write_all(json.as_bytes()).await?;
         }
         if let Some(anchors_writer_m) = &self.anchors_stream {
-            let mut anchors_writer = anchors_writer_m.lock().expect("we do not use MT");
+            let mut anchors_writer = anchors_writer_m.lock().await;
             let json = serde_json::to_string_pretty(&self.anchors)?;
-            write!(anchors_writer, "{json}")?;
+            anchors_writer.write_all(json.as_bytes()).await?;
         }
 
         Ok(())
