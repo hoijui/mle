@@ -580,6 +580,15 @@ impl FileLoc {
 }
 
 impl FileSystemLoc {
+    /// Returns a raw string representation of the underlying path primitive.
+    #[must_use]
+    pub fn get_raw(&self) -> Cow<'_, str> {
+        match self {
+            Self::Absolute(path) => path.as_os_str().to_string_lossy(),
+            Self::Relative(path) => path.as_str().into(),
+        }
+    }
+
     /// Analyzes whether self is likely to contain
     /// content in one of our supported markup languages,
     /// (usually) judging from the file-extension.
