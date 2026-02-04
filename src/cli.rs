@@ -304,6 +304,14 @@ pub async fn markup_files(args: &mut ArgMatches) -> io::Result<Vec<PathBuf>> {
     Ok(files)
 }
 
+/// Returns a list of globs for links to be ignored
+/// provided through the CLI.
+pub fn ignore_links(args: &mut ArgMatches) -> Vec<WildMatch> {
+    args.remove_many::<WildMatch>(A_L_IGNORE_LINKS)
+        .unwrap_or_default()
+        .collect()
+}
+
 pub fn print_version_and_exit(version: &str, quiet: bool) {
     #![allow(clippy::print_stdout)]
 
@@ -350,11 +358,7 @@ pub async fn parse_args() -> BoxResult<Config> {
         )))
     };
 
-    let ignore_links: Vec<WildMatch> = args
-        .remove_many::<WildMatch>(A_L_IGNORE_LINKS)
-        .unwrap_or_default()
-        .collect();
-
+    let ignore_links: Vec<WildMatch> = ignore_links(&mut args);
     let result_format = args
         .remove_one::<result::Type>(A_L_RESULT_FORMAT)
         .unwrap_or_default();
