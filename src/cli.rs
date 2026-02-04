@@ -17,7 +17,6 @@ use crate::config::Config;
 use crate::ignore_link;
 use crate::result;
 use async_std::io::BufReadExt;
-use clap::ArgGroup;
 use clap::builder::ValueParser;
 use clap::command;
 use clap::value_parser;
@@ -94,7 +93,7 @@ pub fn arg_markup_files() -> Arg {
         .value_name("MARKUP_FILE")
         .value_hint(ValueHint::DirPath)
         .action(ArgAction::Append)
-        .required(true)
+        .required_unless_present_any([A_L_VERSION, A_L_MARKUP_FILES_LIST])
         .conflicts_with(A_L_MARKUP_FILES_LIST)
 }
 
@@ -111,6 +110,7 @@ to extract links and/or anchors from; one per line.",
         .long(A_L_MARKUP_FILES_LIST)
         .value_parser(value_parser!(PathBuf))
         .action(ArgAction::Set)
+        .required_unless_present_any([A_L_VERSION, A_N_MARKUP_FILES])
         .conflicts_with(A_N_MARKUP_FILES)
 }
 
@@ -265,11 +265,6 @@ pub fn arg_matcher() -> Command {
         .help_expected(true)
         .disable_version_flag(true)
         .args(ARGS.iter())
-        .group(
-            ArgGroup::new("markup-files")
-                .args([A_N_MARKUP_FILES, A_L_MARKUP_FILES_LIST])
-                .required(true),
-        )
 }
 
 async fn read_lines<P>(
