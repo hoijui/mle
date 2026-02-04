@@ -213,8 +213,8 @@ Not all output formats support this.",
         .action(ArgAction::SetTrue)
 }
 
-static ARGS: LazyLock<[Arg; 11]> = LazyLock::new(|| {
-    [
+static ARGS: LazyLock<Vec<Arg>> = LazyLock::new(|| {
+    vec![
         arg_version(),
         arg_quiet(),
         arg_markup_files(),
@@ -229,8 +229,8 @@ static ARGS: LazyLock<[Arg; 11]> = LazyLock::new(|| {
     ]
 });
 
-pub fn find_duplicate_short_options() -> Vec<char> {
-    let mut short_options: Vec<char> = ARGS.iter().filter_map(clap::Arg::get_short).collect();
+pub fn find_duplicate_short_options(args: &[Arg]) -> Vec<char> {
+    let mut short_options: Vec<char> = args.iter().filter_map(clap::Arg::get_short).collect();
     // standard option --help
     short_options.push('h');
     // standard option --version
@@ -254,17 +254,18 @@ pub fn find_duplicate_short_options() -> Vec<char> {
 ///
 /// - if duplicate argument short options are found -
 ///   which is a programmer error
-pub fn arg_matcher() -> Command {
-    let duplicate_short_options = find_duplicate_short_options();
+#[must_use]
+pub fn arg_matcher(bin_name: &str, args: &[Arg]) -> Command {
+    let duplicate_short_options = find_duplicate_short_options(args);
     assert!(
         duplicate_short_options.is_empty(),
         "Duplicate argument short options: {duplicate_short_options:?}",
     );
     command!()
-        .bin_name(clap::crate_name!())
+        .bin_name(bin_name)
         .help_expected(true)
         .disable_version_flag(true)
-        .args(ARGS.iter())
+        .args(args.iter())
 }
 
 async fn read_lines<P>(
@@ -319,7 +320,7 @@ pub fn print_version_and_exit(version: &str, quiet: bool) {
 ///
 /// If fetching the CWD failed.
 pub async fn parse_args() -> BoxResult<Config> {
-    let mut args = arg_matcher().get_matches();
+    let mut args = arg_matcher(clap::crate_name!(), &ARGS).get_matches();
 
     let quiet = args.get_flag(A_L_QUIET);
     let version = args.get_flag(A_L_VERSION);
