@@ -20,14 +20,18 @@ pub struct Config {
     /// Where to store links to.
     ///
     /// - `None` => do not extract links,
-    /// - `Some(None)` => extract links and write them to stdout,
-    /// - `Some(Some(path))` => extract links and write them to file `path`.
+    /// - `Some(StreamIdent::StdOut)`
+    ///   => extract links and write them to stdout,
+    /// - `Some(StreamIdent::Path("/path/to/extracted_links_file.txt".into(), false))`
+    ///   => extract links and write them to file `path`.
     pub links: Option<StreamIdent>,
     /// Where to store anchors to.
     ///
     /// - `None` => do not extract anchors,
-    /// - `Some(None)` => extract anchors and write them to stdout,
-    /// - `Some(Some(path))` => extract anchors and write them to file `path`.
+    /// - `Some(StreamIdent::StdOut)`
+    ///   => extract anchors and write them to stdout,
+    /// - `Some(StreamIdent::Path("/path/to/extracted_anchors_file.txt".into(), false))`
+    ///   => extract anchors and write them to file `path`.
     pub anchors: Option<StreamIdent>,
     pub ignore_links: Vec<WildMatch>,
     pub result_format: result::Type,
