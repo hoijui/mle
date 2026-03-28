@@ -247,7 +247,7 @@ because the chosen output format writes everything into one file."
         let target_no_frag = if target_without_fragment.is_empty() {
             String::new()
         } else {
-            format!("[`{target_without_fragment}`]({target_without_fragment}) ",)
+            format!("[`{target_without_fragment}`]({target_without_fragment}) ")
         };
         let target_frag = link.target.fragment().map_or_else(String::new, |fragment| {
             format!("[`{}`]({}) ", fragment, link.target)
