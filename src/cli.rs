@@ -13,7 +13,7 @@
 //! (Markup Link Checker).
 
 use crate::BoxResult;
-use crate::config::Config;
+use crate::config::{Extractor as ExtractorConfig, Tool as ToolConfig};
 use crate::ignore_link;
 use crate::result;
 use async_std::io::BufReadExt;
@@ -327,7 +327,7 @@ pub fn print_version_and_exit(version: &str, quiet: bool) {
 /// # Errors
 ///
 /// If fetching the CWD failed.
-pub async fn parse_args() -> BoxResult<Config> {
+pub async fn parse_args() -> BoxResult<ToolConfig> {
     let mut args = arg_matcher(clap::crate_name!(), &ARGS).get_matches();
 
     let quiet = args.get_flag(A_L_QUIET);
@@ -365,11 +365,15 @@ pub async fn parse_args() -> BoxResult<Config> {
     let result_extended = args.get_flag(A_L_RESULT_EXTENDED);
     let result_flush = args.get_flag(A_L_RESULT_FLUSH);
 
-    Ok(Config {
-        markup_files,
+    Ok(ToolConfig {
+        extractor: ExtractorConfig {
+            markup_files,
+            links: links.is_some(),
+            anchors: anchors.is_some(),
+            ignore_links,
+        },
         links,
         anchors,
-        ignore_links,
         result_format,
         result_extended,
         result_flush,

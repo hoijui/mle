@@ -4,7 +4,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use mle::config::Config;
+use mle::config::Extractor as ExtractorConfig;
+use mle::config::Tool as Config;
 use mle::markup;
 use mle::state::State;
 use std::fs;
@@ -22,7 +23,10 @@ async fn end_to_end_benchmark() {
         .await
         .unwrap();
     let config = Config {
-        markup_files,
+        extractor: ExtractorConfig {
+            markup_files,
+            ..Default::default()
+        },
         ..Default::default()
     };
     let mut state = State::new(config);

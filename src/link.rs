@@ -7,7 +7,7 @@ use cli_utils::BoxResult;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 use std::ops::{Add, Sub};
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 use std::{convert::Infallible, fmt, str::FromStr};
 
 use relative_path::RelativePathBuf;
@@ -17,8 +17,6 @@ use async_std::path::Path;
 use cli_utils::path_buf::PathBuf;
 
 use crate::markup;
-
-static ROOT: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("/"));
 
 /// The source file a link was found in
 #[derive(Hash, PartialEq, Eq, Clone, Debug, PartialOrd, Ord, Serialize, Deserialize)]
@@ -429,9 +427,6 @@ impl Target {
         source_file: Arc<FileLoc>,
         rel_path_base: &PathBuf, /*base: &FileLoc*/
     ) -> BoxResult<Cow<'_, Self>> {
-        eprintln!(
-            "\n\ncanonical({self}, {re_root_abs_paths}, '{source_file}', '{rel_path_base}') ..."
-        );
         if let Self::FileSystem(fs_target) = self {
             match &fs_target.file {
                 FileSystemLoc::Absolute(orig_abs_path) => {
@@ -442,7 +437,6 @@ impl Target {
                         // This way, the path is treated as relative by the `join` function,
                         // and appended to the new root,
                         // instead of leaving it as is, because it is already absolute.
-                        // let root = &*ROOT;
                         let root = orig_abs_path
                             .iter()
                             .next()
@@ -450,19 +444,24 @@ impl Target {
                         let relativized_abs_path = orig_abs_path.strip_prefix(root).expect(
                             "To be able to strip root from path of which it was extracted from",
                         );
-                        eprintln!(
-                            "\t1 - {rel_path_base} * {orig_abs_path} -> {}",
-                            relativized_abs_path.display()
-                        );
                         return Ok(Cow::Owned(Self::FileSystem(FileSystemTarget {
-                            // TODO Check if this works as intended (cause the joined-on path is already absolute, but we want it to act as if it was relative) -> now does, but only with the prefix-stripping!
                             file: FileSystemLoc::Absolute(rel_path_base.join(relativized_abs_path)),
                             anchor: fs_target.anchor.clone(),
                         })));
                     }
                 }
                 FileSystemLoc::Relative(relative_path) => {
+                    log::debug!(
+                        "Target::canonical - FileSystemLoc::Relative - relative_path: '{relative_path}'"
+                    );
+                    log::debug!(
+                        "Target::canonical - FileSystemLoc::Relative - source_file: '{source_file}'"
+                    );
+                    log::debug!(
+                        "Target::canonical - FileSystemLoc::Relative - rel_path_base: '{rel_path_base}'"
+                    );
                     let base = source_file.canonical(rel_path_base)?;
+                    log::debug!("Target::canonical - FileSystemLoc::Relative - base 0: '{base}'");
                     // let base = if let FileLoc::System(FileSystemLoc::Relative(rel_source_path)) =
                     //     &link.source.file.as_ref()
                     // {
@@ -475,16 +474,20 @@ impl Target {
                     let base = base
                         .parent()
                         .ok_or_else(|| format!("link source-file has no parent: '{base}'"))?;
+                    log::debug!("Target::canonical - FileSystemLoc::Relative - base 1: '{base}'");
                     match base.join(relative_path.as_str())? {
-                        // TODO FIXME Only join directly if it is a dir, else remove last path part first
                         FileLoc::Url(abs_url) => {
                             let mut abs_url = Self::from(abs_url);
                             abs_url.set_fragment(fs_target.anchor.clone());
-                            eprintln!("\t2 - {abs_url}");
+                            log::debug!(
+                                "Target::canonical - FileSystemLoc::Relative - FileLoc::Url - abs_url: '{abs_url}'"
+                            );
                             return Ok(Cow::Owned(abs_url));
                         }
                         FileLoc::System(abs_path) => {
-                            eprintln!("\t3 - {abs_path}");
+                            log::debug!(
+                                "Target::canonical - FileSystemLoc::Relative - FileLoc::System - abs_url: '{abs_path}'"
+                            );
                             return Ok(Cow::Owned(Self::FileSystem(FileSystemTarget {
                                 file: abs_path,
                                 anchor: fs_target.anchor.clone(),
@@ -826,7 +829,7 @@ impl Default for Position {
 
 impl fmt::Display for Position {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}", self.line, self.column,)
+        write!(f, "{}:{}", self.line, self.column)
     }
 }
 
@@ -839,7 +842,7 @@ impl Position {
 
 impl fmt::Debug for Locator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?}:{}", self.file, self.pos,)
+        write!(f, "{:#?}:{}", self.file, self.pos)
     }
 }
 
@@ -881,12 +884,12 @@ impl FromStr for FileSystemTarget {
 
 impl fmt::Debug for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:#?}:{:#?}", self.source, self.target,)
+        write!(f, "{:#?}:{:#?}", self.source, self.target)
     }
 }
 
 impl fmt::Display for Link {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}:{}", self.source, self.target,)
+        write!(f, "{}:{}", self.source, self.target)
     }
 }

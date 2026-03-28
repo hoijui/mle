@@ -7,7 +7,7 @@ use std::sync::LazyLock;
 
 use crate::anchor;
 use crate::anchor::Anchor;
-use crate::config::Config;
+use crate::config::Extractor as Config;
 use crate::link::Link;
 use crate::link::Locator;
 use crate::link::Position;
@@ -116,7 +116,7 @@ impl super::LinkExtractor for LinkExtractor {
         for (evt, range) in parser.into_offset_iter() {
             match evt {
                 Event::Start(Tag::Heading {level: _, id, classes: _, attrs: _})
-                if conf.extract_anchors() && id.is_none() => {
+                if conf.anchors && id.is_none() => {
                     // if let Tag::Heading(_level, id, _classes) = tag {
                     gathering_for_header = true;
                     // }
@@ -133,7 +133,7 @@ impl super::LinkExtractor for LinkExtractor {
                     match tag {
                         Tag::Link {link_type: _, dest_url, title: _, id: _}
                         | Tag::Image {link_type: _, dest_url, title: _, id: _}
-                        if conf.extract_links() => {
+                        if conf.links => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             links_receiver(Link::new(
                                 file.locator.clone(),
@@ -142,7 +142,7 @@ impl super::LinkExtractor for LinkExtractor {
                             )).await;
                         }
                         Tag::Heading {level: _, id, classes: _, attrs: _}
-                        if conf.extract_anchors() => {
+                        if conf.anchors => {
                             let pos = pos_from_idx(range.start) + &file.start;
                             let source = Locator {
                                 file: file.locator.clone(),
@@ -197,10 +197,8 @@ impl super::LinkExtractor for LinkExtractor {
                 }
                 Event::Text(content)
                 | Event::Code(content)
-                | Event::FootnoteReference(content) => {
-                    if gathering_for_header {
-                        header_content.push(content.into_string());
-                    }
+                | Event::FootnoteReference(content) if gathering_for_header => {
+                    header_content.push(content.into_string());
                 }
                 _ => (),
             }

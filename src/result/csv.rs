@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use csv_async as csv;
 use tokio::sync::Mutex;
 
-use crate::config::Config;
+use crate::config::Tool as Config;
 use crate::result::Type;
 use crate::{anchor::Anchor, link::Link};
 

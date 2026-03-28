@@ -9,14 +9,48 @@ use wildmatch::WildMatch;
 
 use crate::result;
 
+/// The core config for the link extractor.
+///
+/// This part is used by the library/programmatic invocation
+/// of the extractor.
+/// See [`Tool`] for the extended configuration,
+/// used by the CLI invocation.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Config {
+pub struct Extractor {
     /// Markup files to extract links and/or anchors from.
     ///
     /// Use other commands to construct this list,
     /// like `ls` or `git ls-files`.
     pub markup_files: Vec<PathBuf>,
     // pub recursive: bool,
+    /// Where to store links to.
+    ///
+    /// - `None` => do not extract links,
+    /// - `Some(StreamIdent::StdOut)`
+    ///   => extract links and write them to stdout,
+    /// - `Some(StreamIdent::Path("/path/to/extracted_links_file.txt".into(), false))`
+    ///   => extract links and write them to file `path`.
+    pub links: bool,
+    /// Where to store anchors to.
+    ///
+    /// - `None` => do not extract anchors,
+    /// - `Some(StreamIdent::StdOut)`
+    ///   => extract anchors and write them to stdout,
+    /// - `Some(StreamIdent::Path("/path/to/extracted_anchors_file.txt".into(), false))`
+    ///   => extract anchors and write them to file `path`.
+    pub anchors: bool,
+    pub ignore_links: Vec<WildMatch>,
+}
+
+/// The extended config for the link extractor.
+///
+/// This part is used by the CLI invocation
+/// of the extractor.
+/// See [`Extractor`] for the library/programmatic invocation.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Tool {
+    /// The core part of the configuration.
+    pub extractor: Extractor,
     /// Where to store links to.
     ///
     /// - `None` => do not extract links,
@@ -33,7 +67,6 @@ pub struct Config {
     /// - `Some(StreamIdent::Path("/path/to/extracted_anchors_file.txt".into(), false))`
     ///   => extract anchors and write them to file `path`.
     pub anchors: Option<StreamIdent>,
-    pub ignore_links: Vec<WildMatch>,
     pub result_format: result::Type,
     /// Whether to include non-essential information in the resulting report.
     /// Non-essential are things like:
@@ -47,25 +80,23 @@ pub struct Config {
     pub result_flush: bool,
 }
 
-impl Config {
-    #[must_use]
-    pub const fn extract_links(&self) -> bool {
-        self.links.is_some()
-    }
-
-    #[must_use]
-    pub const fn extract_anchors(&self) -> bool {
-        self.anchors.is_some()
-    }
-}
-
-impl Default for Config {
+impl Default for Extractor {
     fn default() -> Self {
         Self {
             markup_files: Vec::default(),
+            links: true,
+            anchors: false,
+            ignore_links: Vec::default(),
+        }
+    }
+}
+
+impl Default for Tool {
+    fn default() -> Self {
+        Self {
+            extractor: Extractor::default(),
             links: Some(StreamIdent::StdOut),
             anchors: None,
-            ignore_links: Vec::default(),
             result_format: result::Type::default(),
             result_extended: false,
             result_flush: false,

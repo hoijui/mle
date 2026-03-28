@@ -6,10 +6,10 @@
 use std::{str::FromStr, sync::Arc};
 
 use cli_utils::path_buf::PathBuf;
+use mle::config::Extractor as Config;
 #[cfg(test)]
 use mle::extractors::gather_links;
 use mle::{
-    config::Config,
     extractors::ParseRes,
     link::{FileLoc, FileSystemLoc},
     markup::{Content, File, Type},

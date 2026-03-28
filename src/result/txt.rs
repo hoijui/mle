@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use tokio::sync::Mutex;
 
 use crate::anchor::Anchor;
-use crate::config::Config;
+use crate::config::Tool as Config;
 use crate::link::Link;
 use crate::result::Type;
 

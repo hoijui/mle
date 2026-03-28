@@ -1,10 +1,10 @@
-// SPDX-FileCopyrightText: 2022 - 2025 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2026 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::anchor::{self, Anchor};
-use crate::config::Config;
+use crate::config::Extractor as Config;
 use crate::link::{self, Link, Position};
 use crate::markup::File;
 
@@ -216,15 +216,15 @@ impl super::LinkExtractor for LinkExtractor {
                         } else if let Some(attrib_name) = scanner.take_non('=') {
                             log::debug!("attrib_name: '{attrib_name}'");
                             match attrib_name {
-                                "href" if is_anchor && conf.extract_links() => {
+                                "href" if is_anchor && conf.links => {
                                     state = ParserState::EqualSign;
                                     attribute = Some(Attribute::Href);
                                 }
-                                "name" if is_anchor && conf.extract_anchors() => {
+                                "name" if is_anchor && conf.anchors => {
                                     state = ParserState::EqualSign;
                                     attribute = Some(Attribute::Name);
                                 }
-                                "id" if conf.extract_anchors() => {
+                                "id" if conf.anchors => {
                                     state = ParserState::EqualSign;
                                     attribute = Some(Attribute::Id);
                                 }
@@ -265,7 +265,7 @@ impl super::LinkExtractor for LinkExtractor {
                             } + &file.start;
                             match attrib_cont {
                                 Attribute::Href => {
-                                    if conf.extract_links() {
+                                    if conf.links {
                                         links_receiver(Link::new(
                                             file.locator.clone(),
                                             pos,
@@ -275,7 +275,7 @@ impl super::LinkExtractor for LinkExtractor {
                                     }
                                 }
                                 Attribute::Name => {
-                                    if conf.extract_anchors() {
+                                    if conf.anchors {
                                         anchors_receiver(Anchor {
                                             source: link::Locator {
                                                 file: file.locator.clone(),
@@ -288,7 +288,7 @@ impl super::LinkExtractor for LinkExtractor {
                                     }
                                 }
                                 Attribute::Id => {
-                                    if conf.extract_anchors() {
+                                    if conf.anchors {
                                         anchors_receiver(Anchor {
                                             source: link::Locator {
                                                 file: file.locator.clone(),
@@ -322,7 +322,6 @@ mod tests {
     };
 
     use super::*;
-    use cli_utils::StreamIdent;
     use ntest::test_case;
 
     async fn find_links(content: &str) -> std::io::Result<Vec<Link>> {
@@ -335,8 +334,8 @@ mod tests {
 
     async fn find_anchors(content: &str) -> std::io::Result<Vec<Anchor>> {
         let conf = Config {
-            links: None,
-            anchors: Some(StreamIdent::StdOut),
+            links: false,
+            anchors: true,
             ..Config::default()
         };
         let markup_file = File::dummy(content, Type::Html);

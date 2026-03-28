@@ -7,7 +7,7 @@ mod html;
 mod markdown;
 
 use crate::anchor::Anchor;
-use crate::config::Config;
+use crate::config::Extractor as Config;
 use crate::link::Link;
 use crate::markup::{self, File};
 

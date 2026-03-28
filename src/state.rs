@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2022 Robin Vobruba <hoijui.quaero@gmail.com>
+// SPDX-FileCopyrightText: 2022 - 2026 Robin Vobruba <hoijui.quaero@gmail.com>
 // SPDX-FileCopyrightText: 2020 Armin Becher <becherarmin@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 
 use async_std::io;
 
-use crate::{anchor::Anchor, config::Config};
+use crate::{anchor::Anchor, config::Tool as Config};
 
 /// If a URL is not stored in the map (the URL does not appear as a key),
 /// it means that URL has not yet been checked.
@@ -39,8 +39,8 @@ impl State {
     #[must_use]
     pub fn new(config: Config) -> Self {
         Self {
-            remote_cache: RemoteCache::new(),
             config,
+            remote_cache: RemoteCache::new(),
         }
     }
 }

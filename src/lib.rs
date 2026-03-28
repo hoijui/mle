@@ -21,7 +21,7 @@ pub mod state;
 use crate::anchor::Anchor;
 use crate::link::Link;
 pub use colored::*;
-pub use config::Config;
+pub use config::Extractor as Config;
 use git_version::git_version;
 use state::State;
 pub use wildmatch::WildMatch;
@@ -69,7 +69,7 @@ pub async fn find_all_links(conf: &Config) -> (Vec<Link>, Vec<Anchor>, Vec<BoxEr
 ///
 /// If reading of any input or writing of the log or result-file failed.
 pub async fn run(state: &mut State) -> BoxResult<()> {
-    let (links, anchors, errors) = find_all_links(&state.config).await;
+    let (links, anchors, errors) = find_all_links(&state.config.extractor).await;
     // TODO make this more stream-like, where each found link is directly sent to all output streams/files. See repvar code for how to do that.
     result::sink(&state.config, &links, &anchors, &errors)
         .await

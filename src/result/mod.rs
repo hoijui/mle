@@ -24,7 +24,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     BoxError,
     anchor::{self, Anchor},
-    config::Config,
+    config::Tool as Config,
     link::Link,
 };
 

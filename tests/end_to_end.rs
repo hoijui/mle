@@ -8,7 +8,8 @@ mod helper;
 
 use cli_utils::StreamIdent;
 use helper::benches_dir;
-use mle::config::Config;
+use mle::config::Extractor as ExtractorConfig;
+use mle::config::Tool as Config;
 use mle::markup;
 use mle::result;
 use mle::state::State;
@@ -26,15 +27,20 @@ async fn end_to_end() {
             .try_into()
             .unwrap(),
     ];
+    let ignore_links = vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")];
     let markup_files = markup::Type::find(root.as_path().into(), markup_types, ignore_paths)
         .await
         .unwrap();
     let config = Config {
-        markup_files,
+        extractor: ExtractorConfig {
+            markup_files,
+            links: true,
+            anchors: true,
+            ignore_links,
+        },
         links: Some(StreamIdent::StdOut),
         anchors: Some(StreamIdent::StdOut),
         result_format: result::Type::Json,
-        ignore_links: vec![wildmatch::WildMatch::new("./doc/broken-local-link.doc")],
         ..Default::default()
     };
     let mut state = State::new(config);
@@ -52,7 +58,12 @@ async fn end_to_end_different_root() {
         .await
         .unwrap();
     let config = Config {
-        markup_files,
+        extractor: ExtractorConfig {
+            markup_files,
+            links: true,
+            anchors: true,
+            ..Default::default()
+        },
         links: Some(StreamIdent::StdOut),
         anchors: Some(StreamIdent::StdOut),
         result_format: result::Type::Json,

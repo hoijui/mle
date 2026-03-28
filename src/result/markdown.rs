@@ -9,7 +9,7 @@ use cli_utils::path_buf::PathBuf;
 use tokio::sync::Mutex;
 
 use crate::anchor::Anchor;
-use crate::config::Config;
+use crate::config::Tool as Config;
 use crate::link::Link;
 
 use super::{Type, Writer, WriterOpt};
@@ -226,7 +226,7 @@ because the chosen output format writes everything into one file."
         Ok(Box::new(Self {
             extended: config.result_extended,
             markup_files: if config.result_extended {
-                config.markup_files.clone()
+                config.extractor.markup_files.clone()
             } else {
                 vec![]
             },
