@@ -173,26 +173,6 @@ impl FileLoc {
     /// # Panics
     ///
     /// If there is les then one source file path part.
-    // pub fn parent(&self) -> BoxResult<Self> {
-    //     Ok(match self {
-    //         Self::Url(url) => {
-    //             let mut parent_url = url.clone();
-    //             parent_url.set_path(
-    //                 &PathBuf::from(url.path())
-    //                     .parent()
-    //                     .expect("There always has to be at least one source file path part")
-    //                     .to_string_lossy(),
-    //             );
-    //             Self::Url(parent_url)
-    //         }
-    //         Self::System(file_system_loc) => Self::System(
-    //             file_system_loc
-    //                 .parent()
-    //                 .expect("There always has to be at least one source file path part")
-    //                 .clone(),
-    //         ),
-    //     })
-    // }
     #[must_use]
     pub fn parent(&self) -> Option<Self> {
         Some(match self {
@@ -260,11 +240,6 @@ impl From<&Path> for FileLoc {
         Self::System(FileSystemLoc::from(path))
     }
 }
-// impl<P: AsRef<Path>> From<P> for FileLoc {
-//     fn from(path: P) -> Self {
-//         Self::System(FileSystemLoc::from(path))
-//     }
-// }
 
 impl From<Url> for FileLoc {
     fn from(url: Url) -> Self {
@@ -408,19 +383,6 @@ impl Target {
     ///
     /// - If canonicalization of a relative path fails
     /// - If extracting the parent from that path fails
-    // #[must_use]
-    // pub fn canonical(&self, base: &Path) -> Cow<'_, Self> {
-    //     match self {
-    //         Self::FileSystem(fs_target) => match &fs_target.file {
-    //             FileSystemLoc::Relative(_path) => Cow::Owned(Self::FileSystem(FileSystemTarget {
-    //                 file: fs_target.file.to_absolute(base).into_owned(),
-    //                 anchor: fs_target.anchor.clone(),
-    //             })),
-    //             FileSystemLoc::Absolute(_path) => Cow::Borrowed(self),
-    //         },
-    //         _ => Cow::Borrowed(self),
-    //     }
-    // }
     pub fn canonical(
         &self,
         re_root_abs_paths: bool,
@@ -469,15 +431,6 @@ impl Target {
                     );
                     let base = source_file.canonical(rel_path_base)?;
                     log::debug!("Target::canonical - FileSystemLoc::Relative - base 0: '{base}'");
-                    // let base = if let FileLoc::System(FileSystemLoc::Relative(rel_source_path)) =
-                    //     &link.source.file.as_ref()
-                    // {
-                    //     Arc::new(FileLoc::System(FileSystemLoc::Absolute(
-                    //         config.rel_path_base.join(rel_source_path.as_str()),
-                    //     )))
-                    // } else {
-                    //     Arc::clone(&link.source.file)
-                    // };
                     let base = base
                         .parent()
                         .ok_or_else(|| format!("link source-file has no parent: '{base}'"))?;
@@ -708,34 +661,10 @@ impl FileSystemLoc {
     /// Returns [`None`] if the path terminates in a root or prefix.
     ///
     /// [`None`]: https://doc.rust-lang.org/std/option/enum.Option.html#variant.None
-    // pub fn parent(&self) -> BoxResult<Self> {
-    //     Ok(match self {
-    //         Self::Relative(path) => Self::Relative(
-    //             path.parent()
-    //                 .expect("There always has to be at least one source file path part")
-    //                 .to_owned(),
-    //         ),
-    //         Self::Absolute(path) => Self::Absolute(
-    //             path.parent()
-    //                 .expect("There always has to be at least one source file path part")
-    //                 .into(),
-    //         ),
-    //     })
-    // }
     pub fn parent(&self) -> Option<Self> {
         match self {
             Self::Relative(path) => path.parent().map(ToOwned::to_owned).map(Self::Relative),
-            // Self::Relative(
-            // path.parent().map(ToOwned::to_owned)
-            // .expect("There always has to be at least one source file path part")
-            // .to_owned(),
-            // ),
             Self::Absolute(path) => path.parent().map(Into::into).map(Self::Absolute),
-            // Self::Absolute(
-            //     path.parent()
-            // .expect("There always has to be at least one source file path part")
-            // .into(),
-            // ),
         }
     }
 }
