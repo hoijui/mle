@@ -143,15 +143,15 @@ impl Type {
     #[must_use]
     pub fn create_filter(types: Vec<Self>) -> Box<dyn Fn(&Path) -> PathFilterRet + Send + Sync> {
         Box::new(move |file: &Path| {
-            let file_name_os_str = file
-                .file_name()
-                .map(OsStr::to_string_lossy)
-                .ok_or_else(|| {
-                    std::io::Error::other(format!(
-                        "Missing file-name for path: '{}'",
-                        file.display()
-                    ))
-                })?;
+            let file_name_os_str =
+                file.file_name()
+                    .map(OsStr::to_string_lossy)
+                    .ok_or_else(|| {
+                        std::io::Error::other(format!(
+                            "Missing file-name for path: '{}'",
+                            file.display()
+                        ))
+                    })?;
 
             if let Ok(extracted_type) = Self::try_from_file_name(file_name_os_str.as_ref())
                 && types.contains(&extracted_type)
