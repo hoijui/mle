@@ -371,7 +371,6 @@ pub async fn parse_args() -> BoxResult<ToolConfig> {
             links: links.is_some(),
             anchors: anchors.is_some(),
             ignore_links,
-            // result_extended,
         },
         links,
         anchors,

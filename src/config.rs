@@ -40,10 +40,6 @@ pub struct Extractor {
     ///   => extract anchors and write them to file `path`.
     pub anchors: bool,
     pub ignore_links: Vec<WildMatch>,
-    // /// Where absolute links are resolve to..
-    // ///
-    // /// If `None`, the file-system root is used.
-    // pub resolve_root: Option<PathBuf>,
 }
 
 /// The extended config for the link extractor.

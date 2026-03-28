@@ -389,9 +389,6 @@ impl Target {
         source_file: Arc<FileLoc>,
         rel_path_base: &PathBuf, /*base: &FileLoc*/
     ) -> BoxResult<Cow<'_, Self>> {
-        // eprintln!(
-        //     "\n\ncanonical({self}, {re_root_abs_paths}, '{source_file}', '{rel_path_base}') ..."
-        // );
         if let Self::FileSystem(fs_target) = self {
             match &fs_target.file {
                 FileSystemLoc::Absolute(orig_abs_path) => {
@@ -409,10 +406,6 @@ impl Target {
                         let relativized_abs_path = orig_abs_path.strip_prefix(root).expect(
                             "To be able to strip root from path of which it was extracted from",
                         );
-                        // eprintln!(
-                        //     "\t1 - {rel_path_base} * {orig_abs_path} -> {}",
-                        //     relativized_abs_path.display()
-                        // );
                         return Ok(Cow::Owned(Self::FileSystem(FileSystemTarget {
                             file: FileSystemLoc::Absolute(rel_path_base.join(relativized_abs_path)),
                             anchor: fs_target.anchor.clone(),
@@ -439,14 +432,12 @@ impl Target {
                         FileLoc::Url(abs_url) => {
                             let mut abs_url = Self::from(abs_url);
                             abs_url.set_fragment(fs_target.anchor.clone());
-                            // eprintln!("\t2 - {abs_url}");
                             log::debug!(
                                 "Target::canonical - FileSystemLoc::Relative - FileLoc::Url - abs_url: '{abs_url}'"
                             );
                             return Ok(Cow::Owned(abs_url));
                         }
                         FileLoc::System(abs_path) => {
-                            // eprintln!("\t3 - {abs_path}");
                             log::debug!(
                                 "Target::canonical - FileSystemLoc::Relative - FileLoc::System - abs_url: '{abs_path}'"
                             );
