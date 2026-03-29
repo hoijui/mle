@@ -3,8 +3,6 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-#![feature(type_alias_impl_trait)]
-
 pub mod anchor;
 // This is here, because we want to share some of it
 // to tools that depend on us as a library
