@@ -185,7 +185,7 @@ impl Type {
             Box::new(IgnorePath::create_filter(ignore_paths)),
         ];
         let combined_filter = create_combined_filter(filters);
-        file_traversal::find(root, &combined_filter).await
+        file_traversal::find_root_stripped(root, &combined_filter).await
     }
 
     /// Analyzes whether a URL, if pointing to a file, is likely to contain
