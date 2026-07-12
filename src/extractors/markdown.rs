@@ -189,7 +189,7 @@ impl super::LinkExtractor for LinkExtractor {
                         content: Content::InMemory(content.as_ref()),
                         start: cur_pos,
                     };
-                    html_le.find_links_and_anchors(&sub_markup, conf, &mut links_receiver, &mut anchors_receiver).await?;
+                    html_le.find_links_and_anchors(&sub_markup, conf, &mut *links_receiver, &mut *anchors_receiver).await?;
 
                     if gathering_for_header { // TODO ... OR_THIS (see TODO above)
                         header_content.push(content.into_string());
