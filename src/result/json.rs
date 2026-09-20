@@ -4,6 +4,7 @@
 
 use async_std::io::WriteExt;
 use async_trait::async_trait;
+use serde::Serialize;
 use tokio::sync::Mutex;
 
 use crate::config::Tool as Config;
@@ -12,11 +13,17 @@ use crate::{anchor::Anchor, result::Type};
 
 use super::{AnchorOwnedRec, LinkOwnedRec, Writer, WriterOpt};
 
+#[derive(Serialize)]
 pub struct Sink {
+    #[serde(skip)]
     extended: bool,
+    #[serde(skip)]
     links_stream: Option<Mutex<Writer>>,
+    #[serde(skip)]
     anchors_stream: Option<Mutex<Writer>>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     links: Vec<LinkOwnedRec>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
     anchors: Vec<AnchorOwnedRec>,
 }
 
@@ -51,17 +58,16 @@ impl super::Sink for Sink {
     // There are two false positives reported by clippy::significant_drop_tightening here
     #[allow(clippy::significant_drop_tightening)]
     async fn finalize(&mut self) -> std::io::Result<()> {
-        if let Some(links_writer_m) = &self.links_stream {
-            let mut links_writer = links_writer_m.lock().await;
-            let json = serde_json::to_string_pretty(&self.links)?;
-            links_writer.write_all(json.as_bytes()).await?;
-        }
-        if let Some(anchors_writer_m) = &self.anchors_stream {
-            let mut anchors_writer = anchors_writer_m.lock().await;
-            let json = serde_json::to_string_pretty(&self.anchors)?;
-            anchors_writer.write_all(json.as_bytes()).await?;
-        }
-
+        let mut writer = if let Some(links_writer_m) = &self.links_stream {
+            // NOTE This is also the branch used if both outptu streams are equal!
+            links_writer_m.lock().await
+        } else if let Some(anchors_writer_m) = &self.anchors_stream {
+            anchors_writer_m.lock().await
+        } else {
+            panic!("We need always either a links or an anchors stream to write to");
+        };
+        let json = serde_json::to_string_pretty(&self)?;
+        writer.write_all(json.as_bytes()).await?;
         Ok(())
     }
 }
