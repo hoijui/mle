@@ -143,7 +143,7 @@ and optionally supply the file to store them to (default: stdout)",
         .long(A_L_ANCHORS)
         .value_parser(value_parser!(PathBuf))
         .action(ArgAction::Set)
-        .default_value(cli_utils::STREAM_PATH_STR)
+        .default_missing_value(cli_utils::STREAM_PATH_STR)
 }
 
 #[must_use]
