@@ -134,8 +134,8 @@ pub fn arg_anchors() -> Arg {
     Arg::new(A_L_ANCHORS)
         .help_heading(HH_ADVANCED)
         .help(
-            "Enable extract of anchors, \
-and optionally the file to store them to",
+            "Enable extraction of anchors, \
+and optionally supply the file to store them to (default: stdout)",
         )
         .num_args(0..=1)
         .value_name("FILE")
