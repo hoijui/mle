@@ -6,9 +6,9 @@
 use std::{str::FromStr, sync::Arc};
 
 use cli_utils::path_buf::PathBuf;
-use mle::config::Extractor as Config;
 #[cfg(test)]
 use mle::extractors::gather_links;
+use mle::{config::Extractor as Config, link::Link};
 use mle::{
     extractors::ParseRes,
     link::{FileLoc, FileSystemLoc},
@@ -32,7 +32,7 @@ async fn no_links() {
     let md_file = PathBuf::from_str("./benches/benchmark/markdown/no_links/no_links.md")
         .expect("To never fail");
     let parsed = extract(md_file).await.expect("No errors");
-    assert!(parsed.links.is_empty());
+    assert_eq!(parsed.links, [] as [Link; 0]);
 }
 
 #[tokio::test]

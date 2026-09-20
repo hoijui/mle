@@ -244,14 +244,14 @@ mod tests {
     async fn inline_no_link() {
         let input = "]This is not a () link](! has no title attribute.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
     async fn commented_link() {
         let input = "]This is not a () <!--[link](link)-->.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -268,7 +268,7 @@ mod tests {
     async fn link_escaped() {
         let input = "This is not a \\[link\\](random_link).";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -290,7 +290,7 @@ mod tests {
     async fn link_relative_with_newline_and_space_wrong() {
         let input = "[link](doc/spaced name.md)";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -326,14 +326,14 @@ mod tests {
     async fn no_link_colon() {
         let input = "This is not a [link]:bla.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
     async fn inline_code() {
         let input = " `[code](http://example.net/)`, no link!.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -356,14 +356,14 @@ mod tests {
     async fn code_block() {
         let input = " ``` js\n[code](http://example.net/)```, no link!.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
     async fn html_code_block() {
         let input = "<script>\n[code](http://example.net/)</script>, no link!.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -378,7 +378,7 @@ mod tests {
     async fn link_in_code_block() {
         let input = "```\n[only code](http://example.net/)\n```.";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -502,14 +502,14 @@ mod tests {
         let link_str = "http://example.net/";
         let input = &format!("Foo Bar\n\n[tag-without-reference]: {link_str}");
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
     async fn referenced_link_no_tag_only_reference() {
         let input = "[link][reference]";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
         // TODO: Check broken links
     }
 
@@ -541,7 +541,7 @@ c) [X] checked upper
 [X] checked upper
 ";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -582,7 +582,7 @@ if (wrongly) detected as such.
 [X]: checked-upper
 ";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
@@ -623,7 +623,7 @@ if (wrongly) detected as such.
 [X]: checked-upper
 ";
         let result = find_links(input).await;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]

@@ -399,7 +399,7 @@ mod tests {
     async fn no_link() -> std::io::Result<()> {
         let input = "]This is not a <has> no link <h1>Bla</h1> attribute.";
         let result = find_links(input).await?;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
         Ok(())
     }
 
@@ -407,7 +407,7 @@ mod tests {
     async fn commented() -> std::io::Result<()> {
         let input = "df <!-- <a href=\"http://wiki.selfhtml.org\"> haha</a> -->";
         let result = find_links(input).await?;
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
         Ok(())
     }
 
@@ -415,7 +415,7 @@ mod tests {
     async fn empty_attrib() {
         let input = r#"<img src="img/file.jpg" alt="" width="800" />"#;
         let result = find_links(input).await.expect("No error");
-        assert!(result.is_empty());
+        assert_eq!(result, [] as [Link; 0]);
     }
 
     #[tokio::test]
