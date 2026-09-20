@@ -140,7 +140,6 @@ impl Type {
         Self::try_from_file_name(file_name).is_ok()
     }
 
-    #[must_use]
     pub fn create_filter(types: Vec<Self>) -> Box<dyn Fn(&Path) -> PathFilterRet + Send + Sync> {
         Box::new(move |file: &Path| {
             let file_name_os_str =
