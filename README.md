@@ -152,11 +152,11 @@ and write the result to stdout in CSV format.
 
 ``` bash
 # explicit version
-g ls-files **.{html,md} -z \
+git ls-files **.{html,md} -z \
     | grep --null-data --invert-match --ignore-case --regexp README --regexp LICENSE \
     | xargs -0 mle --result-format csv
 # same in short form
-g ls-files **.{html,md} -z | grep -z -v -i -e README -e LICENSE | xargs -0 mle --result-format csv
+git ls-files **.{html,md} -z | grep -z -v -i -e README -e LICENSE | xargs -0 mle --result-format csv
 ```
 
 Here we write the list of files to a file first,
@@ -166,7 +166,7 @@ or if it is very large,
 potentially exceeding the shells limit for arguments.
 
 ``` bash
-g ls-files **.{html,md} -z | tr '\0' '\n' > /tmp/link-check_files.csv
+git ls-files **.{html,md} -z | tr '\0' '\n' > /tmp/link-check_files.csv
 mle --markup-files-list /tmp/link-check_files.csv
 ```
 
