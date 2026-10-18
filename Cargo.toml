@@ -13,7 +13,6 @@ description = """
     from markup files (Markdown and HTML).
     """
 repository = "https://github.com/hoijui/mle"
-homepage = "https://github.com/hoijui/mle"
 documentation = "https://docs.rs/mle"
 keywords = ["link-extractor", "links", "markup", "html", "markdown"]
 categories = ["command-line-utilities", "text-processing", "filesystem"]
